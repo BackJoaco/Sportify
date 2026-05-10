@@ -1,0 +1,40 @@
+# Dependencias
+node_modules/
+
+# Variables de entorno
+.env
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Coverage tests
+coverage/
+
+# Build
+dist/
+build/
+
+# Archivos temporales
+tmp/
+temp/
+
+# Configuración de VSCode
+.vscode/
+
+# Configuración de JetBrains
+.idea/
+
+# Archivos de nodemon
+nodemon.json
+
+# Cache
+.cache/
+
+# Sistema operativo Windows
+desktop.ini
