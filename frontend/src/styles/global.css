@@ -1,0 +1,15 @@
+:root {
+  /* Primarios */
+  --cyan: #00D2FF;
+  --blue: #1E5BF0;
+  --cyan-hover: #4FD9FB;
+
+  /* Neutros */
+  --silver: #C0C0C0;
+  --gray: #7F8C8D;
+
+  /* Fondos */
+  --dark-blue: #1A2F50;
+  --white: #FFFFFF;
+  --off-white: #FDFDF2;
+}

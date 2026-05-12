@@ -33,6 +33,11 @@ export const User = sequelize.define('users', {
         allowNull: false,
         unique: true
     },
+    
+    fecha_nacimiento: {
+        type: DataTypes.DATEONLY,
+        allowNull: false
+    },
 
     password: {
         type: DataTypes.STRING,
