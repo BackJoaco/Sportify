@@ -16,13 +16,13 @@ export async function registerFlow(data) {
     const userExists = await userService.findByEmail(data.email);
 
     if (userExists) {
-        throw new Error('Email ya registrado');
+        throw new Error('El email ya se encuentra registrado');
     }
 
     const dniExists = await userService.findByDni(data.dni);
 
     if (dniExists) {
-        throw new Error('DNI ya registrado');
+        throw new Error('El DNI ya se encuentra registrado');
     }
 
     // 3. hash password

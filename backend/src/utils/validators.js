@@ -18,7 +18,7 @@ export function validateEmail(email) {
     const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
     if (!validEmail) {
-        throw new Error('El email no es válido');
+        throw new Error('El email no tiene un formato válido');
     }
 }
 
