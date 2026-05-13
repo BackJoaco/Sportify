@@ -8,6 +8,7 @@ import { sequelize } from '../config/database.js';
     - id
     - createdAt
     - updatedAt
+    - deletedAt (por paranoid)
 */
 
 export const User = sequelize.define('users', {
@@ -33,6 +34,11 @@ export const User = sequelize.define('users', {
         allowNull: false,
         unique: true
     },
+    
+    fecha_nacimiento: {
+        type: DataTypes.DATEONLY,
+        allowNull: false
+    },
 
     password: {
         type: DataTypes.STRING,
@@ -43,4 +49,10 @@ export const User = sequelize.define('users', {
         type: DataTypes.ENUM('ADMIN', 'CLIENTE'),
         defaultValue: 'CLIENTE'
     }
+
+}, {
+
+    timestamps: true,
+    paranoid: true
+
 });

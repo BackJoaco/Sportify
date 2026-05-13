@@ -1,41 +1,12 @@
-import { registerUserService,loginUserService } from '../services/user.service.js';
+import * as userService
+    from '../services/user.service.js';
 
-/*
-    Registro
-*/
-export const registerUserController = async (req,res) => {
+export async function getProfile(req, res) {
     try {
-        const user = await registerUserService(req.body);
-        res.status(201).json({
-            ok: true,
-            message: 'Usuario registrado',
-            data: user
-        });
+        const user = await userService.getProfile(req.user.id);
+        return res.json(user);
     } catch (error) {
-        res.status(500).json({
-            ok: false,
-            message: error.message
-        });
+        return res.status(404).json({ message: error.message });
     }
-};
+}
 
-/*
-    Login
-*/
-export const loginUserController = async (req,res) => {
-    try {
-        const { email,password} = req.body;
-
-        const result = await loginUserService( email, password );
-        res.status(200).json({
-            ok: true,
-            message: 'Login exitoso',
-            data: result
-        });
-    } catch (error) {
-        res.status(500).json({
-            ok: false,
-            message: error.message
-        });
-    }
-};

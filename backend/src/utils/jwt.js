@@ -1,15 +1,11 @@
 import jwt from 'jsonwebtoken';
 
-/*
-    Generar token
-*/
-export const generateToken = (payload) => {
- return jwt.sign(payload,process.env.JWT_SECRET,{ expiresIn: '1h' });
-};
+function generateToken(user) {
+    return jwt.sign({ id: user.id, rol: user.rol }, process.env.JWT_SECRET, { expiresIn: '2h' });
+}
 
-/*
-    Verificar token
-*/
-export const verifyToken = (token) => {
-    return jwt.verify(token,process.env.JWT_SECRET);
-};
+function verifyToken(token) {
+    return jwt.verify(token, process.env.JWT_SECRET);
+}
+
+export { generateToken, verifyToken };

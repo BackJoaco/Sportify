@@ -1,17 +1,18 @@
 import { User } from '../models/user.model.js';
 
-/*
-    Crear usuario en DB
-*/
-export const createUserRepository = async (userData) => {
-    return await User.create(userData);
-};
+export async function create(data) {
+    return User.create(data);
+}
 
-/*
-    Buscar usuario por email
-*/
-export const findUserByEmailRepository = async (email) => {
-    return await User.findOne({
-        where: { email }
-    });
-};
+export async function findByEmail(email) {
+    return User.findOne({ where: { email } });
+}
+
+export async function findByDni(dni) {
+    return User.findOne({ where: { dni } });
+}
+
+export async function findById(id) {
+    return User.findByPk(id);
+}
+
