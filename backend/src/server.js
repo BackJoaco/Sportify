@@ -14,9 +14,9 @@ const startServer = async () => {
 
         console.log('✅ Base de datos conectada');
 
-        await sequelize.sync(); // crea tablas si no existen
+       // await sequelize.sync(); // crea tablas si no existen
        // await sequelize.sync({ alter: true }); // sincroniza modelos con tablas (cuidado con datos existentes)
-       //await sequelize.sync({ force: true }); // borra y recrea tablas (solo para desarrollo)
+       await sequelize.sync({ force: true }); // borra y recrea tablas (solo para desarrollo)
 
         console.log('✅ Modelos sincronizados');
 
