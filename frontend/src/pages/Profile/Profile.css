@@ -1,0 +1,93 @@
+.profile-container {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: var(--off-white);
+}
+
+.profile-card {
+  background: var(--white);
+  padding: 40px;
+  border-radius: 12px;
+  width: 380px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.profile-card h1 {
+  text-align: center;
+  color: var(--dark-blue);
+  font-size: 28px;
+  margin: 0;
+}
+
+.profile-card h2 {
+  text-align: center;
+  color: var(--blue);
+  font-size: 18px;
+  margin: 10px 0 0 0;
+}
+
+.profile-info {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  background: var(--off-white);
+  border-radius: 8px;
+  border-left: 4px solid var(--blue);
+}
+
+.info-item label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-item p {
+  font-size: 14px;
+  color: var(--dark-blue);
+  margin: 0;
+  font-weight: 500;
+}
+
+.profile-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.profile-actions button {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+  font-size: 14px;
+}
+
+.btn-logout {
+  background: var(--blue);
+  color: white;
+}
+
+.btn-logout:hover {
+  background: var(--cyan);
+}
+
+.btn-logout:active {
+  transform: scale(0.98);
+}

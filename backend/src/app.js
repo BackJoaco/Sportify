@@ -4,7 +4,7 @@ import cors from 'cors';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import authRoutes from './routes/auth.route.js';
-import userRoutes from './routes/user.route.js';
+import usuarioRoutes from './routes/usuario.route.js';
 
 const app = express();
 
@@ -26,7 +26,7 @@ app.get('/api/status', (req, res) => {
     res.json({ ok: true, message: 'API funcionando correctamente' });
 });
 app.use('/api/auth', authRoutes);
-app.use('/api/user', userRoutes);
+app.use('/api/usuario', usuarioRoutes);
 app.use((req, res) => {
     res.status(404).json({ ok: false, message: 'Ruta no encontrada' });
 });

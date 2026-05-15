@@ -2,6 +2,7 @@ import { useState } from "react";
 import { register } from "../../api/auth.api";
 import { useNavigate } from "react-router-dom";
 import "./register.css";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 import Swal from "sweetalert2";
 
 export default function Register() {
@@ -14,6 +15,7 @@ export default function Register() {
     password: "",
   });
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   async function handleSubmit(e) {
@@ -23,6 +25,8 @@ export default function Register() {
 
     try {
       await register(form);
+
+      setLoading(false);
 
       Swal.fire({
         toast: true,
@@ -110,19 +114,29 @@ export default function Register() {
 
         <div className="input-group">
           <label>Contraseña</label>
-          <input
-            type="password"
-            placeholder="Ingresá tu contraseña"
-            required
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
-          />
+          <div className="password-wrapper">
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="Ingresá tu contraseña"
+              required
+              value={form.password}
+              onChange={(e) =>
+                setForm({ ...form, password: e.target.value })
+              }
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
+            </button>
+          </div>
         </div>
 
         <button type="submit" disabled={loading}>
           {loading ? "Registrando..." : "Registrarse"}
         </button>
 
-        {/* 👇 link a login */}
         <p className="register-footer">
           ¿Ya tenés cuenta?{" "}
           <span onClick={() => navigate("/login")}>

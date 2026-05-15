@@ -7,7 +7,6 @@ export async function register(data) {
     credentials: "include",
     body: JSON.stringify(data),
   });
-  console.log("${API_URL}/auth/register", data, res);
   if (!res.ok) throw await res.json();
   return res.json();
 }
