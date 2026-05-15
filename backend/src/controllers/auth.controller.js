@@ -8,7 +8,7 @@ export async function register(req, res) {
     try {
         const result = await registerFlow(req.body);
         setAuthCookie(res, result.token);
-        return res.status(201).json({ user: result.user });
+        return res.status(201).json({ message: 'Registro exitoso' });
     } catch (error) {
         return res.status(400).json({ message: error.message });
     }
@@ -19,7 +19,7 @@ export async function login(req, res) {
         const result = await loginFlow(req.body);
 
         setAuthCookie(res, result.token);
-        return res.json({ user: result.user });
+        return res.json({ message: 'Login exitoso' });
     } catch (error) {
         return res.status(401).json({ message: error.message });
     }

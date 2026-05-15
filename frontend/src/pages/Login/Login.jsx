@@ -3,11 +3,13 @@ import { login } from "../../api/auth.api";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 import "./Login.css";
 
 export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
-  const { loadUser } = useAuth();
+  const { loadUsuario } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   async function handleSubmit(e) {
@@ -15,8 +17,8 @@ export default function Login() {
 
     try {
       await login(form);
-      await loadUser();
-      navigate("/profile");
+      await loadUsuario();
+      navigate("/perfil");
     } catch (err) {
       Swal.fire({
         icon: "error",
@@ -42,13 +44,23 @@ export default function Login() {
 
         <div className="input-group">
           <label>Contraseña</label>
-
-          <input
-            type="password"
-            placeholder="Ingresá tu contraseña"
-            required
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
-          />
+          <div className="password-wrapper">
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="Ingresá tu contraseña"
+              required
+              value={form.password}
+              onChange={(e) =>
+                setForm({ ...form, password: e.target.value })
+              }
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
+            </button>
+          </div>
         </div>
 
         <button>Iniciar sesión</button>

@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt';
 
-import * as userService from '../../services/user.service.js';
+import * as usuarioService from '../../services/usuario.service.js';
 import * as authService from '../../services/auth.service.js';
 
 import { validateEmail, validatePassword, validateAdult } from '../../utils/validators.js';
@@ -13,13 +13,13 @@ export async function registerFlow(data) {
     validateAdult(data.fecha_nacimiento);
     
     // 2. verificar existencia
-    const userExists = await userService.findByEmail(data.email);
+    const usuarioExists = await usuarioService.findByEmail(data.email);
 
-    if (userExists) {
+    if (usuarioExists) {
         throw new Error('El email ya se encuentra registrado');
     }
 
-    const dniExists = await userService.findByDni(data.dni);
+    const dniExists = await usuarioService.findByDni(data.dni);
 
     if (dniExists) {
         throw new Error('El DNI ya se encuentra registrado');
@@ -30,15 +30,15 @@ export async function registerFlow(data) {
         await bcrypt.hash(data.password, 10);
 
     // 4. crear usuario
-    const user =
-        await userService.create({
+    const usuario =
+        await usuarioService.create({
             ...data,
-            password: hashedPassword
+            contrasena: hashedPassword
         });
 
     // 5. token
     const token =
-        authService.generateToken(user);
+        authService.generateToken(usuario);
 
-    return { user, token };
+    return { usuario: usuario, token };
 }

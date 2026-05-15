@@ -1,35 +1,35 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { getProfile } from "../api/user.api";
+import { getProfile } from "../api/usuario.api";
 import { logout as logoutApi } from "../api/auth.api";
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-    const [user, setUser] = useState(null);
+    const [usuario, setUsuario] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    async function loadUser() {
+    async function loadUsuario() {
         try {
             const data = await getProfile();
-            setUser(data);
+            setUsuario(data);
         } catch {
-            setUser(null);
+            setUsuario(null);
         } finally {
             setLoading(false);
         }
     }
 
     useEffect(() => {
-        loadUser();
+        loadUsuario();
     }, []);
 
 
     async function logout() {
         await logoutApi();
-        setUser(null);
+        setUsuario(null);
     }
 
     return (
-        <AuthContext.Provider value={{ user, setUser, loadUser, loading, logout }}>
+        <AuthContext.Provider value={{ usuario, setUsuario, loadUsuario, loading, logout }}>
             {children}
         </AuthContext.Provider>
     );
