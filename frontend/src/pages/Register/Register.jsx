@@ -26,8 +26,6 @@ export default function Register() {
     try {
       await register(form);
 
-      setLoading(false);
-
       Swal.fire({
         toast: true,
         position: "top-end",
