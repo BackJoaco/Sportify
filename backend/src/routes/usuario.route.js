@@ -7,6 +7,6 @@ import { authMiddleware } from '../middleware/auth.middleware.js';
 const router = Router();
 
 router.get('/perfil', authMiddleware, usuarioController.getProfile);
-
+router.put('/perfil', authMiddleware, usuarioController.updateProfile);
 
 export default router;

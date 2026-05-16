@@ -16,3 +16,7 @@ export async function findById(id) {
     return Usuario.findByPk(id);
 }
 
+export async function updateUsuario(id, data) {
+    const usuario = await Usuario.findByPk(id);
+    return usuario.update(data);
+}

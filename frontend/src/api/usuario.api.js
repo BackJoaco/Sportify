@@ -13,3 +13,22 @@ export async function getProfile() {
 
   return data;
 }
+
+export async function updateProfile(datos) {
+  const res = await fetch(`${API_URL}/usuario/perfil`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify(datos),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw data;
+  }
+
+  return data;
+}
