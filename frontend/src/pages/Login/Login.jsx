@@ -36,6 +36,7 @@ export default function Login() {
           <label>Email</label>
 
           <input
+            value={form.email}
             placeholder="Ingresá tu email"
             required
             onChange={(e) => setForm({ ...form, email: e.target.value })}

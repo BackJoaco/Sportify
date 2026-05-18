@@ -1,6 +1,6 @@
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { updateProfile } from "../../api/usuario.api";
 import "./Profile.css";
 
@@ -11,6 +11,7 @@ export default function Profile() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
+    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
     
     const [formData, setFormData] = useState({
         nombre: usuario?.nombre || "",
@@ -18,11 +19,34 @@ export default function Profile() {
         contrasena: "",
     });
 
+    useEffect(() => {
+        if (usuario) {
+            setFormData({
+                nombre: usuario.nombre,
+                apellido: usuario.apellido,
+                contrasena: "",
+            });
+        }
+    }, [usuario]);
+
     if (!usuario) return null;
 
-    async function handleLogout() {
-        await logout();
-        navigate("/login");
+    function handleLogout() {
+        setShowLogoutConfirm(true);
+    }
+
+    async function confirmLogout() {
+        try {
+            await logout();
+            navigate("/login");
+        } catch (err) {
+            console.error("Error al cerrar sesión:", err);
+            setShowLogoutConfirm(false);
+        }
+    }
+
+    function cancelLogout() {
+        setShowLogoutConfirm(false);
     }
 
     function handleInputChange(e) {
@@ -201,6 +225,22 @@ export default function Profile() {
                             </button>
                         </div>
                     </form>
+                )}
+
+                {showLogoutConfirm && (
+                    <div className="confirm-modal">
+                        <div className="confirm-dialog">
+                            <p>¿Seguro que deseas cerrar sesión?</p>
+                            <div className="confirm-actions">
+                                <button type="button" className="btn-confirm-yes" onClick={confirmLogout}>
+                                    Sí
+                                </button>
+                                <button type="button" className="btn-confirm-no" onClick={cancelLogout}>
+                                    No
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 )}
             </div>
         </div>
