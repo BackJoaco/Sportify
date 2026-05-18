@@ -6,8 +6,7 @@ import { setAuthCookie, clearAuthCookie } from '../utils/cookies.js';
 
 export async function register(req, res) {
     try {
-        const result = await registerFlow(req.body);
-        setAuthCookie(res, result.token);
+        await registerFlow(req.body);
         return res.status(201).json({ message: 'Registro exitoso' });
     } catch (error) {
         return res.status(400).json({ message: error.message });

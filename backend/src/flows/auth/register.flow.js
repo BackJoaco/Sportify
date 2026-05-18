@@ -1,7 +1,6 @@
 import bcrypt from 'bcrypt';
 
 import * as usuarioService from '../../services/usuario.service.js';
-import * as authService from '../../services/auth.service.js';
 
 import { validateEmail, validatePassword, validateAdult } from '../../utils/validators.js';
 
@@ -9,6 +8,9 @@ export async function registerFlow(data) {
 
     // 1. validaciones
     validateEmail(data.email);
+    if (!data.confirmPassword || data.password !== data.confirmPassword) {
+        throw new Error('Las contraseñas no coinciden');
+    }
     validatePassword(data.password);
     validateAdult(data.fecha_nacimiento);
     
@@ -32,13 +34,13 @@ export async function registerFlow(data) {
     // 4. crear usuario
     const usuario =
         await usuarioService.create({
-            ...data,
+            nombre: data.nombre,
+            apellido: data.apellido,
+            dni: data.dni,
+            email: data.email,
+            fecha_nacimiento: data.fecha_nacimiento,
             contrasena: hashedPassword
         });
 
-    // 5. token
-    const token =
-        authService.generateToken(usuario);
-
-    return { usuario: usuario, token };
+    return { usuario };
 }

@@ -13,6 +13,7 @@ export default function Register() {
     dni: "",
     fecha_nacimiento: "",
     password: "",
+    confirmPassword: "",
   });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -20,6 +21,19 @@ export default function Register() {
 
   async function handleSubmit(e) {
     e.preventDefault();
+
+    if (form.password !== form.confirmPassword) {
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "error",
+        title: "Las contraseñas no coinciden",
+        showConfirmButton: false,
+        timer: 2500,
+        timerProgressBar: true,
+      });
+      return;
+    }
 
     setLoading(true);
 
@@ -126,6 +140,27 @@ export default function Register() {
               value={form.password}
               onChange={(e) =>
                 setForm({ ...form, password: e.target.value })
+              }
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
+            </button>
+          </div>
+        </div>
+
+        <div className="input-group">
+          <label>Confirmar contraseña</label>
+          <div className="password-wrapper">
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="Reingresá tu contraseña"
+              required
+              value={form.confirmPassword}
+              onChange={(e) =>
+                setForm({ ...form, confirmPassword: e.target.value })
               }
             />
             <button
