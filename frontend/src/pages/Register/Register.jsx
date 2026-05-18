@@ -36,6 +36,7 @@ export default function Register() {
         timerProgressBar: true,
       });
 
+      setLoading(false);
       setTimeout(() => {
         navigate("/login");
       }, 2500);
@@ -65,6 +66,7 @@ export default function Register() {
           <label>Nombre</label>
 
           <input
+            value={form.nombre}
             placeholder="Ingresá tu nombre"
             required
             onChange={(e) => setForm({ ...form, nombre: e.target.value })}
@@ -74,6 +76,7 @@ export default function Register() {
         <div className="input-group">
           <label>Apellido</label>
           <input
+            value={form.apellido}
             placeholder="Ingresá tu apellido"
             required
             onChange={(e) => setForm({ ...form, apellido: e.target.value })}
@@ -83,6 +86,7 @@ export default function Register() {
         <div className="input-group">
           <label>Email</label>
           <input
+            value={form.email}
             placeholder="Ingresá tu email"
             required
             onChange={(e) => setForm({ ...form, email: e.target.value })}
@@ -93,6 +97,7 @@ export default function Register() {
           <label>DNI</label>
           <input
             type="number"
+            value={form.dni}
             placeholder="Ingresá tu DNI"
             required
             onChange={(e) => setForm({ ...form, dni: e.target.value })}
@@ -103,6 +108,7 @@ export default function Register() {
           <label>Fecha de nacimiento</label>
           <input
             type="date"
+            value={form.fecha_nacimiento}
             required
             onChange={(e) =>
               setForm({ ...form, fecha_nacimiento: e.target.value })
