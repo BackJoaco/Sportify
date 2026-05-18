@@ -1,6 +1,8 @@
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import Swal from "sweetalert2";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { updateProfile } from "../../api/usuario.api";
 import "./Profile.css";
 
@@ -9,14 +11,14 @@ export default function Profile() {
     const navigate = useNavigate();
     const [isEditing, setIsEditing] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
-    const [success, setSuccess] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
     
     const [formData, setFormData] = useState({
         nombre: usuario?.nombre || "",
         apellido: usuario?.apellido || "",
         contrasena: "",
+        confirmContrasena: "",
     });
 
     useEffect(() => {
@@ -25,6 +27,7 @@ export default function Profile() {
                 nombre: usuario.nombre,
                 apellido: usuario.apellido,
                 contrasena: "",
+                confirmContrasena: "",
             });
         }
     }, [usuario]);
@@ -55,14 +58,10 @@ export default function Profile() {
             ...prev,
             [name]: value
         }));
-        setError("");
-        setSuccess("");
     }
 
     async function handleSubmit(e) {
         e.preventDefault();
-        setError("");
-        setSuccess("");
         setLoading(true);
 
         try {
@@ -77,28 +76,65 @@ export default function Profile() {
             }
             
             if (formData.contrasena.trim()) {
+                if (formData.contrasena !== formData.confirmContrasena) {
+                    setLoading(false);
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'error',
+                        title: 'Las contraseñas no coinciden',
+                        showConfirmButton: false,
+                        timer: 2500,
+                        timerProgressBar: true,
+                    });
+                    return;
+                }
                 datosActualizar.contrasena = formData.contrasena.trim();
             }
 
             if (Object.keys(datosActualizar).length === 0) {
-                setError("No hay cambios para guardar");
                 setLoading(false);
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'error',
+                    title: 'No hay cambios para guardar',
+                    showConfirmButton: false,
+                    timer: 2500,
+                    timerProgressBar: true,
+                });
                 return;
             }
 
             const usuarioActualizado = await updateProfile(datosActualizar);
             setUsuario(usuarioActualizado);
-            setSuccess("Datos actualizados exitosamente");
             setFormData({
                 nombre: usuarioActualizado.nombre,
                 apellido: usuarioActualizado.apellido,
                 contrasena: "",
+                confirmContrasena: "",
             });
             setIsEditing(false);
-
-            setTimeout(() => setSuccess(""), 3000);
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: 'Datos actualizados exitosamente',
+                showConfirmButton: false,
+                timer: 2500,
+                timerProgressBar: true,
+            });
         } catch (err) {
-            setError(err.message || "Error al actualizar los datos");
+            setLoading(false);
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'error',
+                title: err.message || 'Error al actualizar los datos',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+            });
         } finally {
             setLoading(false);
         }
@@ -109,10 +145,9 @@ export default function Profile() {
             nombre: usuario.nombre,
             apellido: usuario.apellido,
             contrasena: "",
+            confirmContrasena: "",
         });
         setIsEditing(false);
-        setError("");
-        setSuccess("");
     }
     
     return (
@@ -121,8 +156,6 @@ export default function Profile() {
                 <h1>{isEditing ? "Modificar Perfil" : "Mi Perfil"}</h1>
                 {!isEditing && <h2>¡Bienvenido, {usuario?.nombre}!</h2>}
                 
-                {error && <div className="alert alert-error">{error}</div>}
-                {success && <div className="alert alert-success">{success}</div>}
                 
                 {!isEditing ? (
                     <>
@@ -197,14 +230,42 @@ export default function Profile() {
                             <label htmlFor="contrasena">
                                 Contraseña (déjalo en blanco para no cambiarla)
                             </label>
-                            <input
-                                type="password"
-                                id="contrasena"
-                                name="contrasena"
-                                value={formData.contrasena}
-                                onChange={handleInputChange}
-                                placeholder="Mínimo 6 caracteres, 1 carácter especial"
-                            />
+                            <div className="password-wrapper">
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    id="contrasena"
+                                    name="contrasena"
+                                    value={formData.contrasena}
+                                    onChange={handleInputChange}
+                                    placeholder="Mínimo 6 caracteres, 1 carácter especial"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                >
+                                    {showPassword ? <FaEyeSlash /> : <FaEye />}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="form-group">
+                            <label htmlFor="confirmContrasena">Confirmar contraseña</label>
+                            <div className="password-wrapper">
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    id="confirmContrasena"
+                                    name="confirmContrasena"
+                                    value={formData.confirmContrasena}
+                                    onChange={handleInputChange}
+                                    placeholder="Reingresá la contraseña"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                >
+                                    {showPassword ? <FaEyeSlash /> : <FaEye />}
+                                </button>
+                            </div>
                         </div>
 
                         <div className="profile-actions">
