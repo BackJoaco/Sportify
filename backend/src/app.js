@@ -5,6 +5,7 @@ import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import authRoutes from './routes/auth.route.js';
 import usuarioRoutes from './routes/usuario.route.js';
+import actividadRoutes from './routes/actividad.route.js';
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.get('/api/status', (req, res) => {
 });
 app.use('/api/auth', authRoutes);
 app.use('/api/usuario', usuarioRoutes);
+app.use('/api/actividad', actividadRoutes);
 app.use((req, res) => {
     res.status(404).json({ ok: false, message: 'Ruta no encontrada' });
 });
