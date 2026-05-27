@@ -7,3 +7,7 @@ export async function create(data) {
 export async function getActivities() {
     return Actividad.findAll();
 }
+
+export async function deleteActivity(id) {
+    return Actividad.destroy({ where: { id } });
+}
