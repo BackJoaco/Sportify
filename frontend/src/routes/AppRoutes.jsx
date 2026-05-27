@@ -5,6 +5,8 @@ import Profile from "../pages/Profile/Profile";
 import NotFound from "../pages/NotFound/NotFound";
 import PublicRoute from "./PublicRoute";
 import PrivateRoute from "./PrivateRoute";
+import CreateTurn from "../pages/CreateTurn/CreateTurn";
+import ListTurn from "../pages/ListTurn/ListTurn";
 
 export default function AppRoutes() {
   return (
@@ -37,6 +39,24 @@ export default function AppRoutes() {
         element={
           <PrivateRoute>
             <Profile />
+          </PrivateRoute>
+        }
+      />
+
+      <Route
+        path="/turnos/crear"
+        element={
+          <PrivateRoute>
+            <CreateTurn />
+          </PrivateRoute>
+        }
+      />
+
+      <Route
+        path="/turnos"
+        element={
+          <PrivateRoute>
+            <ListTurn />
           </PrivateRoute>
         }
       />
