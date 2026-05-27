@@ -1,18 +1,22 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { createTurno } from "../../api/turno.api";
 import "./CreateTurn.css";
+import { getActividades } from "../../api/actividad.api";
 
 export default function CreateTurno() {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
-    
+    const [actividades, setActividades] = useState([]);
+    const [loadingg, setLoadingg] = useState(true);
+
     const [formData, setFormData] = useState({
         entrenador: "",
         fecha: "",
         hora_inicio: "",
         cupo_maximo: "",
+        actividad_id: "",
     });
 
     function handleInputChange(e) {
@@ -25,13 +29,14 @@ export default function CreateTurno() {
 
     async function handleSubmit(e) {
         e.preventDefault();
-        setLoading(true);
+        setLoading(true); 
 
         try {
             // Aseguramos que el cupo máximo se envíe como número
             const payload = {
                 ...formData,
-                cupo_maximo: parseInt(formData.cupo_maximo, 10)
+                cupo_maximo: parseInt(formData.cupo_maximo, 10),
+                actividad_id: parseInt(formData.actividad_id, 10)
             };
 
             await createTurno(payload);
@@ -67,6 +72,31 @@ export default function CreateTurno() {
         navigate("/turnos"); // Vuelve atrás si cancela
     }
 
+    useEffect(() => {
+        async function cargarActividades() {
+          try {
+            const data = await getActividades();
+            // El || [] evita errores si la API devuelve undefined o null
+            setActividades(data || []);
+          } catch (err) {
+            Swal.fire({
+              toast: true,
+              position: "top-end",
+              icon: "error",
+              title: err.message || "Error al cargar las actividades",
+              showConfirmButton: false,
+              timer: 3000,
+              timerProgressBar: true,
+            });
+            setActividades([]); // Asegurar array vacío en caso de error
+          } finally {
+            setLoadingg(false);
+          }
+        }
+    
+        cargarActividades();
+      }, []);
+
     return (
         <div className="turno-container">
             <div className="turno-card">
@@ -86,6 +116,26 @@ export default function CreateTurno() {
                             maxLength="100"
                             required
                         />
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="actividad">Actividad</label>
+                        <select
+                            id="actividad"
+                            name="actividad"
+                            value={formData.actividad}
+                            onChange={handleInputChange}
+                            required
+                            >
+                            <option value="" >
+                                Seleccioná una actividad...
+                            </option>
+                            {actividades.map((actividad) => (
+                                <option key={actividad.id} value={actividad.nombre}>
+                                    {actividad.nombre}
+                                </option>
+                            ))}
+                        </select>
                     </div>
 
                     <div className="form-row">
