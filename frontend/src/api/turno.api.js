@@ -9,7 +9,7 @@ export async function createTurno(datos) {
     credentials: "include",
     body: JSON.stringify(datos),
   });
-
+  console.log(datos);
   const data = await res.json();
 
   if (!res.ok) {

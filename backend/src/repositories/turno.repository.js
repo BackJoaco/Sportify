@@ -4,12 +4,6 @@ export async function create(data) {
     return Turno.create(data);
 }
 
-const turnos = await Turno.findAll({
-    include: [{
-        model: Actividad,
-        attributes: ['id', 'nombre']
-    }]
-});
 export async function getTurnos() {
     return Turno.findAll({
         include: [{
@@ -17,4 +11,10 @@ export async function getTurnos() {
             attributes: ['id', 'nombre']
         }]
     })
+}
+
+export async function existsTurnByActivityId(actividadId) {
+    const turno = await Turno.findOne({ where: { actividad_id: actividadId } });
+
+    return !!turno;
 }
