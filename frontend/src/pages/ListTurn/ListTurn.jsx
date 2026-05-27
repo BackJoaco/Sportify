@@ -1,103 +1,238 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-import { FaTrash, FaEdit, FaPlus } from "react-icons/fa";
+import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { getTurnos } from "../../api/turno.api";
 import "./ListTurn.css";
 
-export default function ListTurnos() {
-    const [turnos, setTurnos] = useState([]);
-    const [loading, setLoading] = useState(true);
+const COLORES_ACTIVIDADES = [
+    "#1E5BF0", // Blue
+    "#2ECC71", // Green
+    "#E74C3C", // Red
+    "#F39C12", // Orange
+    "#9B59B6", // Purple
+    "#00D2FF", // Cyan
+    "#E67E22", // Dark Orange
+    "#16A085", // Teal
+];
+
+export default function CalendarioTurnos() {
     const navigate = useNavigate();
+    const [turnos, setTurnos] = useState([]);
+    const [actividades, setActividades] = useState([]);
+    const [filtroActividad, setFiltroActividad] = useState("");
+    const [loading, setLoading] = useState(true);
+
+    const [fechaInicioSemana, setFechaInicioSemana] = useState(obtenerLunes(new Date()));
 
     useEffect(() => {
-        cargarTurnos();
+        cargarDatos();
     }, []);
 
-    async function cargarTurnos() {
+    async function cargarDatos() {
         try {
             setLoading(true);
-            const data = await getTurnos();
-            setTurnos(data);
+            const turnosData = await getTurnos();
+            console.log("🔴 RAW DATA DESDE LA API:", turnosData);
+            setTurnos(turnosData);
+
+            const actividadesUnicas = [];
+            const idsVistos = new Set();
+
+            turnosData.forEach(turno => {
+                const id = turno.actividad_id || turno.ActividadId;
+                // Si el backend trae el modelo relacionado, usamos su nombre. Si no, un genérico.
+                const nombre = turno.Actividad?.nombre || `Actividad ${id}`;
+
+                if (id && !idsVistos.has(id)) {
+                    idsVistos.add(id);
+                    actividadesUnicas.push({ id, nombre });
+                }
+            });
+            
+            setActividades(actividadesUnicas);
         } catch (err) {
             Swal.fire({
                 toast: true,
                 position: 'top-end',
                 icon: 'error',
-                title: err.message || 'Error al cargar los turnos',
+                title: err.message || 'Error al cargar los datos',
                 showConfirmButton: false,
                 timer: 3000,
-                timerProgressBar: true,
             });
         } finally {
             setLoading(false);
         }
     }
 
-    
+    function obtenerLunes(fecha) {
+        const d = new Date(fecha);
+        const day = d.getDay();
+        const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+        return new Date(d.setDate(diff));
+    }
 
-    // Formatear la fecha para que se lea mejor (Opcional)
-    const formatearFecha = (fecha) => {
-        const [year, month, day] = fecha.split('-');
-        return `${day}/${month}/${year}`;
-    };
+    function agregarDias(fecha, dias) {
+        const resultado = new Date(fecha);
+        resultado.setDate(resultado.getDate() + dias);
+        return resultado;
+    }
+
+    const hoy = new Date();
+    const lunesActual = obtenerLunes(hoy);
+    const puedeVolverAtras = fechaInicioSemana > lunesActual;
+
+    function weekNext() {
+        setFechaInicioSemana(prev => agregarDias(prev, 7));
+    }
+
+    function weekPrev() {
+        if (puedeVolverAtras) {
+            setFechaInicioSemana(prev => agregarDias(prev, -7));
+        }
+    }
+
+    const horas = Array.from({ length: 14 }, (_, i) => i + 8); // 8 a 21
+    const diasSemana = [
+        { nombre: "Lunes", fecha: fechaInicioSemana },
+        { nombre: "Martes", fecha: agregarDias(fechaInicioSemana, 1) },
+        { nombre: "Miércoles", fecha: agregarDias(fechaInicioSemana, 2) },
+        { nombre: "Jueves", fecha: agregarDias(fechaInicioSemana, 3) },
+        { nombre: "Viernes", fecha: agregarDias(fechaInicioSemana, 4) }
+    ];
+
+    function getColorActividad(id) {
+        const numeroId = parseInt(id, 10);
+        if (isNaN(numeroId)) {
+            return "var(--gray)";
+        }
+        const index = numeroId % COLORES_ACTIVIDADES.length;
+        return COLORES_ACTIVIDADES[index];
+    }
+
+    const turnosFiltrados = turnos.filter(turno => {
+        // Si hay un filtro seleccionado en el select, y el turno no coincide, lo ocultamos
+        if (filtroActividad && turno.actividad_id?.toString() !== filtroActividad) {
+            return false;
+        }
+        // Si no hay filtro, mostramos todos (incluso los que tienen actividad_id en null)
+        return true;
+    });
+
+    function obtenerTurnosParaCelda(fecha, hora) {
+        // 1. Armamos el formato "YYYY-MM-DD" exacto
+        const year = fecha.getFullYear();
+        const month = String(fecha.getMonth() + 1).padStart(2, '0');
+        const day = String(fecha.getDate()).padStart(2, '0');
+        const fechaStr = `${year}-${month}-${day}`;
+
+        // 2. Extraemos solo la HORA a buscar (ej: "08", "09", "10")
+        const horaBuscada = String(hora).padStart(2, '0');
+
+        return turnosFiltrados.filter(t => {
+            if (!t.fecha || !t.hora_inicio) return false;
+
+            // Extraemos solo los primeros 2 caracteres de la hora del turno (ej: de "08:30:00" sacamos "08")
+            const horaTurno = t.hora_inicio.substring(0, 2);
+
+            // Verificamos que coincida el día exacto y la misma franja horaria
+            const coincideFecha = t.fecha === fechaStr;
+            const coincideHora = horaTurno === horaBuscada;
+
+            return coincideFecha && coincideHora;
+        });
+    }
+
+    function handleTurnoClick(id) {
+        console.log(`Clic en el turno ID: ${id}`);
+    }
+
+    if (loading) return <div className="loading-state">Cargando calendario...</div>;
 
     return (
-        <div className="list-container">
-            <div className="list-card">
-                <div className="list-header">
-                    <h1>Gestión de Turnos</h1>
-                    <button 
-                        className="btn-create" 
-                        onClick={() => navigate("/turnos/crear")}
+        <div className="calendario-container">
+            <div className="calendario-header">
+                <div className="filtro-container">
+                    <select
+                        className="filtro-select"
+                        value={filtroActividad}
+                        onChange={(e) => setFiltroActividad(e.target.value)}
                     >
-                        <FaPlus /> Nuevo Turno
-                    </button>
+                        <option value="">Filtrar por actividades (Todas)</option>
+                        {actividades.map((act, index) => (
+                            <option key={act.id || index} value={act.id || index}>
+                                {act.nombre}
+                            </option>
+                        ))}
+                    </select>
                 </div>
 
-                {loading ? (
-                    <div className="loading-state">Cargando turnos...</div>
-                ) : turnos.length === 0 ? (
-                    <div className="empty-state">
-                        <p>No hay turnos registrados en el sistema.</p>
+                <div className="leyenda-actividades">
+                    {actividades.map((act, index) => (
+                        <div key={act.id || `leyenda-${index}`} className="leyenda-item">
+                            <span
+                                className="leyenda-color"
+                                style={{ backgroundColor: getColorActividad(act.id) }}
+                            ></span>
+                            <span className="leyenda-texto">{act.nombre}</span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            <div className="mes-indicador">
+                Semana del {fechaInicioSemana.toLocaleDateString()}
+            </div>
+
+            <div className="calendario-grid">
+                <div className="calendario-celda header-celda esquina"></div>
+
+                {diasSemana.map((dia, index) => (
+                    <div key={`header-dia-${index}`} className="calendario-celda header-celda">
+                        <div className="dia-nombre">{dia.nombre}</div>
+                        <div className="dia-fecha">{dia.fecha.getDate()}</div>
                     </div>
-                ) : (
-                    <div className="table-responsive">
-                        <table className="turnos-table">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Entrenador</th>
-                                    <th>Fecha</th>
-                                    <th>Hora de Inicio</th>
-                                    <th>Cupo</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {turnos.map((turno) => (
-                                    <tr key={turno.id}>
-                                        <td>#{turno.id}</td>
-                                        <td className="fw-bold">{turno.entrenador}</td>
-                                        <td>{formatearFecha(turno.fecha)}</td>
-                                        <td>{turno.hora_inicio.substring(0, 5)} hs</td>
-                                        <td>{turno.cupo_maximo} alumnos</td>
-                                        <td className="actions-cell">
-                                            <button 
-                                                className="btn-icon edit" 
-                                                title="Editar"
-                                                onClick={() => navigate(`/turnos/editar/${turno.id}`)}
-                                            >
-                                                <FaEdit />
-                                            </button>
-                            
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                ))}
+
+                {horas.map(hora => (
+                    <div key={`fila-${hora}`} className="calendario-fila">
+                        <div className="calendario-celda hora-celda">
+                            {hora}:00
+                        </div>
+                        {diasSemana.map((dia) => {
+                            const turnosEnCelda = obtenerTurnosParaCelda(dia.fecha, hora);
+
+                            return (
+                                <div key={`${hora}-${dia.nombre}`} className="calendario-celda dia-celda">
+                                    {turnosEnCelda.map(turno => (
+                                        <div
+                                            key={turno.id}
+                                            className="turno-badge"
+                                            style={{ backgroundColor: getColorActividad(turno.actividad_id || turno.ActividadId) }}
+                                            onClick={() => handleTurnoClick(turno.id)}
+                                        >
+                                            {/* El operador ?. evita que la app explote si Actividad no viene del backend */}
+                                            {turno.Actividad?.nombre || (turno.actividad_id ? `Actividad (#${turno.actividad_id})` : 'Sin Actividad')}
+                                        </div>
+                                    ))}
+                                </div>
+                            );
+                        })}
                     </div>
-                )}
+                ))}
+            </div>
+
+            <div className="calendario-navegacion">
+                <button
+                    className="btn-nav"
+                    onClick={weekPrev}
+                    disabled={!puedeVolverAtras}
+                >
+                    <FaChevronLeft /> Anterior
+                </button>
+                <button className="btn-nav" onClick={weekNext}>
+                    Siguiente <FaChevronRight />
+                </button>
             </div>
         </div>
     );

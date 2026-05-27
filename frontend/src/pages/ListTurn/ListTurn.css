@@ -1,130 +1,185 @@
-.list-container {
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  min-height: 100vh;
-  background-color: var(--off-white);
-  padding: 2rem;
+.calendario-container {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    background-color: var(--white);
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
 }
 
-.list-card {
-  background-color: var(--white);
-  padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 1000px;
+/* Header: Filtros y Leyenda */
+.calendario-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
 }
 
-.list-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  border-bottom: 2px solid var(--off-white);
+.filtro-select {
+    padding: 0.6rem 1rem;
+    border: 2px solid var(--dark-blue);
+    border-radius: 8px;
+    font-size: 1rem;
+    color: var(--dark-blue);
+    background-color: var(--white);
+    cursor: pointer;
+    outline: none;
+    font-weight: 600;
 }
 
-.list-header h1 {
-  color: var(--dark-blue);
-  font-size: 1.8rem;
-  margin: 0;
+.leyenda-actividades {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
 }
 
-.btn-create {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background-color: var(--cyan);
-  color: var(--dark-blue);
-  border: none;
-  padding: 0.6rem 1.2rem;
-  border-radius: 6px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
+.leyenda-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
-.btn-create:hover {
-  background-color: var(--cyan-hover);
+.leyenda-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: inline-block;
 }
 
-.loading-state, .empty-state {
-  text-align: center;
-  padding: 3rem;
-  color: var(--gray);
-  font-size: 1.1rem;
+.leyenda-texto {
+    color: var(--dark-blue);
+    font-weight: 500;
+    text-transform: capitalize;
 }
 
-.table-responsive {
-  overflow-x: auto;
+.mes-indicador {
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--dark-blue);
+    margin-bottom: 1rem;
 }
 
-.turnos-table {
-  width: 100%;
-  border-collapse: collapse;
-  text-align: left;
+/* Grilla del Calendario */
+.calendario-grid {
+    display: grid;
+    /* 1 columna para horas (auto) y 5 fracciones iguales para los días */
+    grid-template-columns: 80px repeat(5, 1fr);
+    border: 2px solid var(--dark-blue);
+    border-radius: 12px;
+    overflow: hidden; /* Para mantener los bordes redondeados */
+    background-color: var(--white);
 }
 
-.turnos-table th {
-  background-color: var(--off-white);
-  color: var(--dark-blue);
-  padding: 1rem;
-  font-weight: 600;
-  border-bottom: 2px solid var(--silver);
+.calendario-fila {
+    display: contents; /* Permite que los hijos se alineen a la grilla principal */
 }
 
-.turnos-table td {
-  padding: 1rem;
-  border-bottom: 1px solid var(--off-white);
-  color: var(--dark-blue);
-  vertical-align: middle;
+.calendario-celda {
+    border-right: 1px solid var(--dark-blue);
+    border-bottom: 1px solid var(--dark-blue);
+    padding: 0.5rem;
+    min-height: 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
-.turnos-table tbody tr:hover {
-  background-color: #f9f9fc;
+/* Quitar el borde derecho a la última columna y el inferior a la última fila */
+.calendario-celda:nth-child(6n) {
+    border-right: none;
+}
+.calendario-fila:last-child .calendario-celda {
+    border-bottom: none;
 }
 
-.fw-bold {
-  font-weight: 600;
+.header-celda {
+    background-color: var(--white);
+    text-align: center;
+    font-weight: bold;
+    color: var(--dark-blue);
+    min-height: 80px;
 }
 
-.actions-cell {
-  display: flex;
-  gap: 0.5rem;
+.dia-nombre {
+    font-size: 1.1rem;
 }
 
-.btn-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: 1rem;
+.dia-fecha {
+    font-size: 0.9rem;
+    color: var(--gray);
+    margin-top: 0.2rem;
 }
 
-.btn-icon.edit {
-  background-color: transparent;
-  color: var(--blue);
-  border: 1px solid var(--blue);
+.hora-celda {
+    font-weight: bold;
+    color: var(--dark-blue);
+    text-align: right;
+    padding-right: 1rem;
 }
 
-.btn-icon.edit:hover {
-  background-color: var(--blue);
-  color: var(--white);
+/* Modificamos la celda para que apile los turnos verticalmente */
+.dia-celda {
+    position: relative;
+    padding: 4px;
+    display: flex;
+    flex-direction: column; /* Apila los turnos uno arriba del otro */
+    gap: 4px; /* Espacio entre turnos superpuestos */
+    overflow-y: auto; /* Agrega scroll interno si hay demasiados turnos en una misma hora */
 }
 
-.btn-icon.delete {
-  background-color: transparent;
-  color: #e74c3c;
-  border: 1px solid #e74c3c;
+/* Modificamos el badge para que se adapte al nuevo contenedor flex */
+.turno-badge {
+    color: white;
+    padding: 0.4rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    text-align: center;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease, filter 0.2s ease;
+    
+    /* Cambiamos height: 100% por min-height para que no se estiren raro */
+    min-height: 2.5rem; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    word-break: break-word;
+    flex-shrink: 0; /* Evita que el turno se aplaste si hay muchos */
 }
 
-.btn-icon.delete:hover {
-  background-color: #e74c3c;
-  color: var(--white);
+.turno-badge:hover {
+    transform: scale(0.98);
+    filter: brightness(1.1);
+}
+
+/* Navegación Inferior */
+.calendario-navegacion {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 2rem;
+}
+
+.btn-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: transparent;
+    color: var(--dark-blue);
+    border: none;
+    font-size: 2rem;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.btn-nav:hover:not(:disabled) {
+    color: var(--cyan);
+}
+
+.btn-nav:disabled {
+    color: var(--silver);
+    cursor: not-allowed;
 }
