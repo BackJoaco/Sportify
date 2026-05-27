@@ -57,16 +57,25 @@
   font-size: 0.9rem;
 }
 
-.form-group input {
+
+
+.form-group input,
+.form-group select {
   padding: 0.75rem;
   border: 1px solid var(--silver);
   border-radius: 6px;
   font-size: 1rem;
   outline: none;
   transition: border-color 0.3s ease;
+  background-color: var(--white); /* Importante para el select */
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.form-group input:focus {
+
+
+.form-group input:focus,
+.form-group select:focus {
   border-color: var(--cyan);
   box-shadow: 0 0 0 2px rgba(0, 210, 255, 0.2);
 }
@@ -119,4 +128,18 @@
 .btn-cancel:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* Opcional: para cambiar un poco el color si es la opción "placeholder" */
+.form-group select:invalid {
+  color: var(--gray);
+}
+
+.form-group select option {
+  color: var(--dark-blue); /* Podés usar 'black' si preferís, pero esta es tu variable oscura */
+}
+
+.form-group select:invalid,
+.form-group input[type="date"]:invalid {
+  color: var(--gray);
 }
