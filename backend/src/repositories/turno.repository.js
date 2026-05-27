@@ -7,3 +7,9 @@ export async function create(data) {
 export async function getTurnos() {
     return Turno.findAll();
 }
+
+export async function existsTurnByActivityId(actividadId) {
+    const turno = await Turno.findOne({ where: { actividad_id: actividadId } });
+
+    return !!turno;
+}

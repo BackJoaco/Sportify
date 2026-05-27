@@ -13,6 +13,7 @@ export async function getTurnos(req, res) {
 export async function create(req, res) {
     try {
         await turnosService.create(req.body);
+        console.log(req.body);
         return res.status(201).json({ message : 'Turno creado correctamente'});
     } catch (error) {
         return res.status(400).json({ message: error.message })
