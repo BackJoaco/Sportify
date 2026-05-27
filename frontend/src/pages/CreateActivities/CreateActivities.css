@@ -1,0 +1,106 @@
+.create-activity-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 2rem;
+    min-height: calc(100vh - 100px);
+    background-color: var(--off-white);
+}
+
+.create-activity-card {
+    background-color: var(--white);
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 500px;
+    border-top: 4px solid var(--blue);
+}
+
+.create-activity-card h1 {
+    color: var(--dark-blue);
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.activity-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    color: var(--dark-blue);
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.form-group input {
+    padding: 0.8rem;
+    border: 1px solid var(--silver);
+    border-radius: 4px;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--cyan);
+    box-shadow: 0 0 0 2px rgba(0, 210, 255, 0.2);
+}
+
+.activity-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.btn-save {
+    flex: 1;
+    background-color: var(--blue);
+    color: var(--white);
+    border: none;
+    padding: 0.8rem;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn-save:hover:not(:disabled) {
+    background-color: var(--cyan-hover);
+}
+
+.btn-save:disabled {
+    background-color: var(--gray);
+    cursor: not-allowed;
+}
+
+.btn-cancel {
+    flex: 1;
+    background-color: transparent;
+    color: var(--gray);
+    border: 1px solid var(--gray);
+    padding: 0.8rem;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-cancel:hover:not(:disabled) {
+    background-color: var(--gray);
+    color: var(--white);
+}
+
+.btn-cancel:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

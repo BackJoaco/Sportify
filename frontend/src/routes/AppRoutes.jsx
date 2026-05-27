@@ -2,6 +2,8 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "../pages/Login/Login";
 import Register from "../pages/Register/Register";
 import Profile from "../pages/Profile/Profile";
+import ListActivities from "../pages/ListActivities/ListActivities";
+import CreateActivities from "../pages/CreateActivities/CreateActivities"
 import NotFound from "../pages/NotFound/NotFound";
 import PublicRoute from "./PublicRoute";
 import PrivateRoute from "./PrivateRoute";
@@ -39,6 +41,22 @@ export default function AppRoutes() {
         element={
           <PrivateRoute>
             <Profile />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/actividades"
+        element={
+          <PrivateRoute>
+            <ListActivities/>
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/actividades/crear"
+        element={
+          <PrivateRoute>
+            <CreateActivities/>
           </PrivateRoute>
         }
       />
