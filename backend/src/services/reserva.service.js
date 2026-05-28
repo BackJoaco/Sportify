@@ -17,3 +17,7 @@ export async function findById(id) {
 export async function findByUsuarioId(usuarioId) {
     return reservaRepository.findByUsuarioId(usuarioId);
 }
+
+export async function countByTurno(turnoId) {
+  return reservaRepository.countByTurnoId(turnoId);
+}

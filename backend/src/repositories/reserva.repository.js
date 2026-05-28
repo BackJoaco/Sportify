@@ -29,3 +29,7 @@ export async function updateEstadoPago(id, estadoPago) {
 
     return reserva.update({ estado_pago: estadoPago });
 }
+
+export async function countByTurnoId(turnoId) {
+  return Reserva.count({ where: { turno_id: turnoId } });
+}

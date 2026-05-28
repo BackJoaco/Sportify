@@ -1,5 +1,5 @@
-import * as actividadService from '../services/actividad.service.js';
-import * as turnoService from '../services/turno.service.js';
+import * as actividadService from '../../services/actividad.service.js';
+import * as turnoService from '../../services/actividad.service.js';
 
 export async function deleteActivity(id) {
 
