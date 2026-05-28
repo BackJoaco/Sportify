@@ -1,84 +1,78 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { getTurnos } from "../../api/turno.api";
 import "./ListTurn.css";
 
 const COLORES_ACTIVIDADES = [
-    "#1E5BF0", // Blue
-    "#2ECC71", // Green
-    "#E74C3C", // Red
-    "#F39C12", // Orange
-    "#9B59B6", // Purple
-    "#00D2FF", // Cyan
-    "#E67E22", // Dark Orange
-    "#16A085", // Teal
+    "#1E5BF0", "#2ECC71", "#E74C3C", "#F39C12",
+    "#9B59B6", "#00D2FF", "#E67E22", "#16A085",
 ];
 
+// Se mueven fuera del componente por ser funciones puras
+function obtenerLunes(fecha) {
+    const d = new Date(fecha);
+    d.setHours(0, 0, 0, 0); // Crítico: Evita saltos de fecha por diferencias horarias
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    return new Date(d.setDate(diff));
+}
+
+function agregarDias(fecha, dias) {
+    const resultado = new Date(fecha);
+    resultado.setDate(resultado.getDate() + dias);
+    return resultado;
+}
+
 export default function CalendarioTurnos() {
-    const navigate = useNavigate();
     const [turnos, setTurnos] = useState([]);
     const [actividades, setActividades] = useState([]);
     const [filtroActividad, setFiltroActividad] = useState("");
     const [loading, setLoading] = useState(true);
-
-    const [fechaInicioSemana, setFechaInicioSemana] = useState(obtenerLunes(new Date()));
+    const [fechaInicioSemana, setFechaInicioSemana] = useState(() => obtenerLunes(new Date()));
 
     useEffect(() => {
+        async function cargarDatos() {
+            try {
+                // El estado inicial de loading ya es true, no es necesario hacer setLoading(true) de forma síncrona aquí.
+                const turnosData = await getTurnos();
+                const dataArray = Array.isArray(turnosData) ? turnosData : []; 
+                
+                setTurnos(dataArray);
+
+                const actividadesUnicas = [];
+                const idsVistos = new Set();
+
+                dataArray.forEach(turno => {
+                    const id = turno.actividad_id || turno.ActividadId;
+                    const nombre = turno.Actividad?.nombre || `Actividad ${id}`;
+
+                    if (id && !idsVistos.has(id)) {
+                        idsVistos.add(id);
+                        actividadesUnicas.push({ id, nombre });
+                    }
+                });
+                
+                setActividades(actividadesUnicas);
+            } catch (err) {
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'error',
+                    title: err.message || 'Error al cargar los datos',
+                    showConfirmButton: false,
+                    timer: 3000,
+                });
+            } finally {
+                setLoading(false); // Esto ocurre de forma asíncrona tras resolverse la petición, lo cual es correcto.
+            }
+        }
+
         cargarDatos();
     }, []);
 
-    async function cargarDatos() {
-        try {
-            setLoading(true);
-            const turnosData = await getTurnos();
-            console.log("🔴 RAW DATA DESDE LA API:", turnosData);
-            setTurnos(turnosData);
-
-            const actividadesUnicas = [];
-            const idsVistos = new Set();
-
-            turnosData.forEach(turno => {
-                const id = turno.actividad_id || turno.ActividadId;
-                // Si el backend trae el modelo relacionado, usamos su nombre. Si no, un genérico.
-                const nombre = turno.Actividad?.nombre || `Actividad ${id}`;
-
-                if (id && !idsVistos.has(id)) {
-                    idsVistos.add(id);
-                    actividadesUnicas.push({ id, nombre });
-                }
-            });
-            
-            setActividades(actividadesUnicas);
-        } catch (err) {
-            Swal.fire({
-                toast: true,
-                position: 'top-end',
-                icon: 'error',
-                title: err.message || 'Error al cargar los datos',
-                showConfirmButton: false,
-                timer: 3000,
-            });
-        } finally {
-            setLoading(false);
-        }
-    }
-
-    function obtenerLunes(fecha) {
-        const d = new Date(fecha);
-        const day = d.getDay();
-        const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-        return new Date(d.setDate(diff));
-    }
-
-    function agregarDias(fecha, dias) {
-        const resultado = new Date(fecha);
-        resultado.setDate(resultado.getDate() + dias);
-        return resultado;
-    }
-
     const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0); // Crítico para comparar correctamente
     const lunesActual = obtenerLunes(hoy);
     const puedeVolverAtras = fechaInicioSemana > lunesActual;
 
@@ -92,7 +86,7 @@ export default function CalendarioTurnos() {
         }
     }
 
-    const horas = Array.from({ length: 14 }, (_, i) => i + 8); // 8 a 21
+    const horas = Array.from({ length: 14 }, (_, i) => i + 8);
     const diasSemana = [
         { nombre: "Lunes", fecha: fechaInicioSemana },
         { nombre: "Martes", fecha: agregarDias(fechaInicioSemana, 1) },
@@ -106,40 +100,29 @@ export default function CalendarioTurnos() {
         if (isNaN(numeroId)) {
             return "var(--gray)";
         }
-        const index = numeroId % COLORES_ACTIVIDADES.length;
-        return COLORES_ACTIVIDADES[index];
+        return COLORES_ACTIVIDADES[numeroId % COLORES_ACTIVIDADES.length];
     }
 
     const turnosFiltrados = turnos.filter(turno => {
-        // Si hay un filtro seleccionado en el select, y el turno no coincide, lo ocultamos
-        if (filtroActividad && turno.actividad_id?.toString() !== filtroActividad) {
+        const idActividad = turno.actividad_id || turno.ActividadId; // Unificado
+        if (filtroActividad && idActividad?.toString() !== filtroActividad) {
             return false;
         }
-        // Si no hay filtro, mostramos todos (incluso los que tienen actividad_id en null)
         return true;
     });
 
     function obtenerTurnosParaCelda(fecha, hora) {
-        // 1. Armamos el formato "YYYY-MM-DD" exacto
         const year = fecha.getFullYear();
         const month = String(fecha.getMonth() + 1).padStart(2, '0');
         const day = String(fecha.getDate()).padStart(2, '0');
         const fechaStr = `${year}-${month}-${day}`;
 
-        // 2. Extraemos solo la HORA a buscar (ej: "08", "09", "10")
         const horaBuscada = String(hora).padStart(2, '0');
 
         return turnosFiltrados.filter(t => {
             if (!t.fecha || !t.hora_inicio) return false;
-
-            // Extraemos solo los primeros 2 caracteres de la hora del turno (ej: de "08:30:00" sacamos "08")
             const horaTurno = t.hora_inicio.substring(0, 2);
-
-            // Verificamos que coincida el día exacto y la misma franja horaria
-            const coincideFecha = t.fecha === fechaStr;
-            const coincideHora = horaTurno === horaBuscada;
-
-            return coincideFecha && coincideHora;
+            return (t.fecha === fechaStr && horaTurno === horaBuscada);
         });
     }
 
@@ -211,7 +194,6 @@ export default function CalendarioTurnos() {
                                             style={{ backgroundColor: getColorActividad(turno.actividad_id || turno.ActividadId) }}
                                             onClick={() => handleTurnoClick(turno.id)}
                                         >
-                                            {/* El operador ?. evita que la app explote si Actividad no viene del backend */}
                                             {turno.Actividad?.nombre || (turno.actividad_id ? `Actividad (#${turno.actividad_id})` : 'Sin Actividad')}
                                         </div>
                                     ))}
