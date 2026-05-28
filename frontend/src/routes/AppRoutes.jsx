@@ -10,6 +10,7 @@ import PublicRoute from "./PublicRoute";
 import PrivateRoute from "./PrivateRoute";
 import CreateTurn from "../pages/CreateTurn/CreateTurn";
 import ListTurn from "../pages/ListTurn/ListTurn";
+import Reservation from "../pages/Reservation/Reservation";
 
 export default function AppRoutes() {
   return (
@@ -85,6 +86,15 @@ export default function AppRoutes() {
         element={
           <PrivateRoute>
             <ListTurn />
+          </PrivateRoute>
+        }
+      />
+
+      <Route
+        path="/reserva/mis-reservas"
+        element={
+          <PrivateRoute>
+            <Reservation />
           </PrivateRoute>
         }
       />
