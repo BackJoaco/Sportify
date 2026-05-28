@@ -12,7 +12,8 @@ export async function getActivities(req, res) {
 
 export async function create(req, res) {
     try {
-        await actividadService.create(req.body);
+        const result = await actividadService.create(req.body);
+        console.log(result);
         return res.status(201).json({ message : 'Actividad creada correctamente'});
     } catch (error) {
         return res.status(400).json({ message: error.message })
