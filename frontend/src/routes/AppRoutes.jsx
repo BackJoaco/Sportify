@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "../pages/Login/Login";
 import Register from "../pages/Register/Register";
 import Profile from "../pages/Profile/Profile";
+import Home from "../pages/Home/Home";
 import ListActivities from "../pages/ListActivities/ListActivities";
 import CreateActivities from "../pages/CreateActivities/CreateActivities"
 import NotFound from "../pages/NotFound/NotFound";
@@ -36,6 +37,15 @@ export default function AppRoutes() {
       />
 
       {/* Privada */}
+      <Route
+        path="/home"
+        element={
+          <PrivateRoute>
+            <Home />
+          </PrivateRoute>
+        }
+      />
+
       <Route
         path="/perfil"
         element={

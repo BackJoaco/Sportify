@@ -18,7 +18,7 @@ export default function Login() {
     try {
       await login(form);
       await loadUsuario();
-      navigate("/perfil");
+      navigate("/home");
     } catch (err) {
       Swal.fire({
         icon: "error",
