@@ -26,3 +26,34 @@ export async function getTurnos(){
 export async function existsTurnByActivityId(actividadId) {
     return turnoRepository.existsTurnByActivityId(actividadId);
 }
+
+export async function deleteTurno(id) {
+  const turno = await turnoRepository.getById(id);
+
+  if (!turno) {
+    throw new Error("El turno no existe.");
+  }
+
+  // Verifica si el array de reservas existe y tiene elementos
+  const reservas = turno.Reservas || turno.reservas;
+  if (reservas && reservas.length > 0) {
+    throw new Error("No se puede eliminar un turno que ya tiene reservas.");
+  }
+
+  const fechaTurno = new Date(`${turno.fecha}T${turno.hora_inicio}`);
+  if (fechaTurno <= new Date()) {
+    throw new Error("No se puede eliminar un turno que ya ha comenzado o finalizado.");
+  }
+
+  return turnoRepository.remove(id);
+}
+
+export async function getTurnoById(id) {
+  const turno = await turnoRepository.getById(id);
+  
+  if (!turno) {
+    throw new Error("El turno solicitado no existe.");
+  }
+
+  return turno;
+}

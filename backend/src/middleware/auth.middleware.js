@@ -17,3 +17,10 @@ export async function authMiddleware(req, res, next) {
         return res.status(401).json({ message: 'Token inválido' });
     }
 }
+
+export function esAdministrador(req, res, next) {
+  if (req.usuario && req.usuario.rol === "ADMINISTRADOR") {
+    return next();
+  }
+  return res.status(403).json({ message: "Acceso denegado. Se requiere rol de Administrador." });
+}

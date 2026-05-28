@@ -1,5 +1,5 @@
 import * as actividadService from '../services/actividad.service.js';
-import * as actividadFlow from '../flows/actividad.flow.js';
+import * as actividadFlow from '../flows/actividad/actividad.flow.js';
 
 export async function getActivities(req, res) {
     try {
