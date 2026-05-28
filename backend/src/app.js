@@ -7,6 +7,7 @@ import authRoutes from './routes/auth.route.js';
 import usuarioRoutes from './routes/usuario.route.js';
 import actividadRoutes from './routes/actividad.route.js';
 import turnoRoutes from './routes/turno.route.js';
+import pagoRoutes from './routes/pago.route.js';
 
 const app = express();
 
@@ -31,6 +32,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/usuario', usuarioRoutes);
 app.use('/api/actividad', actividadRoutes);
 app.use('/api/turno', turnoRoutes);
+app.use('/api/pago', pagoRoutes);
 app.use((req, res) => {
     res.status(404).json({ ok: false, message: 'Ruta no encontrada' });
 });
