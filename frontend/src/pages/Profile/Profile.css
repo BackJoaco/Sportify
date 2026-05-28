@@ -105,6 +105,25 @@
   transform: scale(0.98);
 }
 
+.btn-back {
+  background: transparent;
+  color: var(--blue);
+  border: 2px solid var(--blue) !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-back:hover {
+  background: var(--blue);
+  color: var(--white);
+}
+
+.btn-back:active {
+  transform: scale(0.98);
+}
+
 .profile-form {
   display: flex;
   flex-direction: column;

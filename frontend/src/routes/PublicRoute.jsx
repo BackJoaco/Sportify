@@ -7,7 +7,7 @@ export default function PublicRoute({ children }) {
   if (loading) return <p>Cargando...</p>;
 
   if (usuario) {
-    return <Navigate to="/perfil" replace />;
+    return <Navigate to="/home" replace />;
   }
 
   return children;
