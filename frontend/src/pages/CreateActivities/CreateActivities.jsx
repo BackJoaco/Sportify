@@ -32,7 +32,7 @@ export default function CreateActivities() {
                 precio_clase: parseFloat(formData.precio_clase),
                 precio_mensual: parseFloat(formData.precio_mensual)
             };
-
+            console.log(datosAEnviar);
             await createActividad(datosAEnviar);
 
             Swal.fire({

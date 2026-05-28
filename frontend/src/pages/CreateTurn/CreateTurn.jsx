@@ -27,8 +27,23 @@ export default function CreateTurno() {
     }));
   }
 
+  const fechaHoy = new Date().toISOString().split("T")[0];
+
   async function handleSubmit(e) {
     e.preventDefault();
+
+    const fechaTurno = new Date(`${formData.fecha}T${formData.hora_inicio}`);
+    if (fechaTurno <= new Date()) {
+      return Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "warning",
+        title: "La fecha y hora deben ser posteriores al momento actual",
+        showConfirmButton: false,
+        timer: 3000,
+      });
+    }
+
     setLoading(true);
 
     try {
@@ -149,20 +164,30 @@ export default function CreateTurno() {
                 name="fecha"
                 value={formData.fecha}
                 onChange={handleInputChange}
+                min={fechaHoy}
                 required
               />
             </div>
 
             <div className="form-group">
               <label htmlFor="hora_inicio">Hora de inicio</label>
-              <input
-                type="time"
+              <select
                 id="hora_inicio"
                 name="hora_inicio"
                 value={formData.hora_inicio}
                 onChange={handleInputChange}
                 required
-              />
+              >
+                <option value="">Seleccioná una hora...</option>
+                {Array.from({ length: 13 }, (_, i) => {
+                  const hora = String(i + 8).padStart(2, "0");
+                  return (
+                    <option key={hora} value={`${hora}:00`}>
+                      {hora}:00
+                    </option>
+                  );
+                })}
+              </select>
             </div>
           </div>
 
