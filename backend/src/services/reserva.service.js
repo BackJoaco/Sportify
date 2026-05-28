@@ -13,3 +13,7 @@ export async function actualizarEstadoPago(id, estadoPago) {
 export async function findById(id) {
     return reservaRepository.findById(id);
 }
+
+export async function findByUsuarioId(usuarioId) {
+    return reservaRepository.findByUsuarioId(usuarioId);
+}
