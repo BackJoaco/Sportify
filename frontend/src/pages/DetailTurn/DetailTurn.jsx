@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { getTurnoById, deleteTurno, getReservasCount } from "../../api/turno.api"; 
 import { useAuth } from "../../context/AuthContext"; 
+import { crearReserva } from "../../api/reservas.api";
 
 export default function DetailTurn() {
   const { id } = useParams();
@@ -12,6 +13,7 @@ export default function DetailTurn() {
   const [turno, setTurno] = useState(null);
   const [cantidadInscriptos, setCantidadInscriptos] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [isReserving, setIsReserving] = useState(false);
 
   useEffect(() => {
     async function fetchTurnoData() {
@@ -78,6 +80,68 @@ export default function DetailTurn() {
     }
   }
 
+  async function handleInscripcionCliente() {
+    // Doble check visual
+    if (cantidadInscriptos >= turno.cupo_maximo) {
+        return Swal.fire({
+            toast: true,
+            position: "top-end",
+            icon: "warning",
+            title: "El turno ya no tiene cupos disponibles",
+            showConfirmButton: false,
+            timer: 3000
+        });
+    }
+
+    const confirmacion = await Swal.fire({
+      title: "¿Confirmar reserva?",
+      text: `Vas a reservar un lugar para ${turno.Actividad?.nombre} el ${turno.fecha} a las ${turno.hora_inicio}.`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "var(--blue)",
+      cancelButtonColor: "var(--gray)",
+      confirmButtonText: "Sí, reservar",
+      cancelButtonText: "Cancelar"
+    });
+
+    if (confirmacion.isConfirmed) {
+      setIsReserving(true);
+      try {
+        // Armamos el payload con los IDs necesarios para el backend
+        await crearReserva({
+            usuario_id: usuario.id,
+            turno_id: turno.id
+        });
+
+        // Actualizamos el contador visualmente sin recargar la página
+        setCantidadInscriptos(prev => prev + 1);
+
+        Swal.fire({
+          toast: true,
+          position: "top-end",
+          icon: "success",
+          title: "Reserva confirmada exitosamente",
+          showConfirmButton: false,
+          timer: 2500
+        });
+        
+        // Opcional: Redirigir al cliente a su historial
+        // navigate("/mis-reservas");
+      } catch (err) {
+        Swal.fire({
+          toast: true,
+          position: "top-end",
+          icon: "error",
+          title: err.message || err.mensaje || "Error al procesar la reserva",
+          showConfirmButton: false,
+          timer: 3500
+        });
+      } finally {
+        setIsReserving(false);
+      }
+    }
+  }
+
   if (loading) {
     return <div className="home-container">Cargando información del turno...</div>;
   }
@@ -85,6 +149,7 @@ export default function DetailTurn() {
   if (!turno) return null;
 
   const cupoOcupacion = `${cantidadInscriptos} / ${turno.cupo_maximo}`;
+  const estaLleno = cantidadInscriptos >= turno.cupo_maximo;
 
   return (
     <div className="home-container">
@@ -99,10 +164,15 @@ export default function DetailTurn() {
           <button className="btn-secondary" onClick={() => navigate(-1)}>
             Volver
           </button>
-          
+
           {usuario?.rol === "CLIENTE" && (
-            <button className="btn-primary" onClick={() => {/* Lógica de inscripción cliente */}}>
-              Inscribirse
+            <button 
+                className="btn-primary" 
+                onClick={handleInscripcionCliente}
+                disabled={isReserving || estaLleno}
+                style={estaLleno ? { backgroundColor: "var(--gray)", cursor: "not-allowed" } : {}}
+            >
+              {isReserving ? "Procesando..." : estaLleno ? "Sin Cupo" : "Inscribirse"}
             </button>
           )}
 
