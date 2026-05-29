@@ -12,6 +12,7 @@ import CreateTurn from "../pages/CreateTurn/CreateTurn";
 import ListTurn from "../pages/ListTurn/ListTurn";
 import DetailTurn from "../pages/DetailTurn/DetailTurn";
 import Reservation from "../pages/Reservation/Reservation";
+import ProtectedRoute from "./ProtectedRoute";
 
 export default function AppRoutes() {
   return (
@@ -43,7 +44,7 @@ export default function AppRoutes() {
         path="/home"
         element={
           <PrivateRoute>
-            <Home />
+            <Home /> 
           </PrivateRoute>
         }
       />
@@ -60,7 +61,9 @@ export default function AppRoutes() {
         path="/actividades"
         element={
           <PrivateRoute>
-            <ListActivities/>
+            <ProtectedRoute allowedRoles={["ADMINISTRADOR"]}>
+              <ListActivities/>
+            </ProtectedRoute>
           </PrivateRoute>
         }
       />
@@ -68,7 +71,9 @@ export default function AppRoutes() {
         path="/actividades/crear"
         element={
           <PrivateRoute>
-            <CreateActivities/>
+            <ProtectedRoute allowedRoles={["ADMINISTRADOR"]}>
+              <CreateActivities/>
+            </ProtectedRoute>
           </PrivateRoute>
         }
       />
@@ -77,7 +82,9 @@ export default function AppRoutes() {
         path="/turnos/crear"
         element={
           <PrivateRoute>
-            <CreateTurn />
+            <ProtectedRoute allowedRoles={["ADMINISTRADOR"]}>
+              <CreateTurn />
+            </ProtectedRoute>
           </PrivateRoute>
         }
       />
@@ -95,7 +102,7 @@ export default function AppRoutes() {
         path="/turnos/:id"
         element={
           <PrivateRoute>
-            <DetailTurn />
+            <DetailTurn /> 
           </PrivateRoute>
         }
       />
@@ -104,7 +111,9 @@ export default function AppRoutes() {
         path="/reserva/mis-reservas"
         element={
           <PrivateRoute>
-            <Reservation />
+          <ProtectedRoute allowedRoles={["CLIENTE" , "EMPLEADO"]}>
+            <Reservation /> 
+            </ProtectedRoute>
           </PrivateRoute>
         }
       />
