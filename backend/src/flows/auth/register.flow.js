@@ -43,11 +43,11 @@ export async function registerFlow(data) {
             contrasena: hashedPassword
         });
 
-    try {
-        await sendWelcomeEmail(usuario);
-    } catch (error) {
-        console.error('Error enviando mail de bienvenida:', error.message);
-    }
+    // try {
+    //     //await sendWelcomeEmail(usuario);
+    // } catch (error) {
+    //     console.error('Error enviando mail de bienvenida:', error.message);
+    //}
 
     return { usuario };
 }
