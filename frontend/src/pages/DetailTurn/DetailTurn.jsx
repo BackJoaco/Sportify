@@ -3,7 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { getTurnoById, deleteTurno, getReservasCount } from "../../api/turno.api"; 
 import { useAuth } from "../../context/AuthContext"; 
-import { crearReserva } from "../../api/reservas.api";
+import { crearReserva, crearReservaStaff } from "../../api/reservas.api";
+import { getClientes } from "../../api/usuario.api";
 
 export default function DetailTurn() {
   const { id } = useParams();
@@ -81,7 +82,6 @@ export default function DetailTurn() {
   }
 
   async function handleInscripcionCliente() {
-    // Doble check visual
     if (cantidadInscriptos >= turno.cupo_maximo) {
         return Swal.fire({
             toast: true,
@@ -107,13 +107,11 @@ export default function DetailTurn() {
     if (confirmacion.isConfirmed) {
       setIsReserving(true);
       try {
-        // Armamos el payload con los IDs necesarios para el backend
         await crearReserva({
             usuario_id: usuario.id,
             turno_id: turno.id
         });
 
-        // Actualizamos el contador visualmente sin recargar la página
         setCantidadInscriptos(prev => prev + 1);
 
         Swal.fire({
@@ -124,9 +122,6 @@ export default function DetailTurn() {
           showConfirmButton: false,
           timer: 2500
         });
-        
-        // Opcional: Redirigir al cliente a su historial
-        // navigate("/mis-reservas");
       } catch (err) {
         Swal.fire({
           toast: true,
@@ -139,6 +134,87 @@ export default function DetailTurn() {
       } finally {
         setIsReserving(false);
       }
+    }
+  }
+
+  // NUEVA LÓGICA: Inscripción de un tercero (Flujo del Empleado)
+  async function handleInscripcionTercero() {
+    if (cantidadInscriptos >= turno.cupo_maximo) {
+      return Swal.fire({
+          toast: true,
+          position: "top-end",
+          icon: "warning",
+          title: "No hay cupos disponibles en este turno",
+          showConfirmButton: false,
+          timer: 3000
+      });
+    }
+
+    try {
+      setIsReserving(true);
+      // 1. Buscamos la lista de clientes registrados en el sistema
+      const listaClientes = await getClientes();
+      
+      // 2. Transformamos el arreglo de clientes en el formato de opciones que exige SweetAlert2
+      const inputOptions = {};
+      listaClientes.forEach(cli => {
+        inputOptions[cli.id] = `${cli.apellido}, ${cli.nombre} (DNI: ${cli.dni})`;
+      });
+
+      setIsReserving(false);
+
+      // 3. Mostramos el modal interactivo con el desplegable de clientes
+      const { value: clienteSeleccionadoId } = await Swal.fire({
+        title: "Inscribir Cliente",
+        text: "Selecciona el cliente que asistirá a la clase:",
+        input: "select",
+        inputOptions: inputOptions,
+        inputPlaceholder: "Seleccioná un cliente...",
+        showCancelButton: true,
+        confirmButtonColor: "var(--blue)",
+        cancelButtonColor: "var(--gray)",
+        confirmButtonText: "Confirmar Inscripción",
+        cancelButtonText: "Cancelar",
+        inputValidator: (value) => {
+          if (!value) {
+            return "Es obligatorio seleccionar un cliente para proceder";
+          }
+        }
+      });
+
+      // 4. Si el empleado seleccionó un usuario válido y confirmó el modal
+      if (clienteSeleccionadoId) {
+        setIsReserving(true);
+        
+        // Enviamos la petición al endpoint de staff
+        await crearReservaStaff({
+          usuario_id: parseInt(clienteSeleccionadoId, 10),
+          turno_id: turno.id
+        });
+
+        setCantidadInscriptos(prev => prev + 1);
+
+        Swal.fire({
+          toast: true,
+          position: "top-end",
+          icon: "success",
+          title: "Cliente inscripto correctamente",
+          showConfirmButton: false,
+          timer: 2500
+        });
+      }
+
+    } catch (err) {
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "error",
+        title: err.message || err.mensaje || "Error al procesar la inscripción",
+        showConfirmButton: false,
+        timer: 3500
+      });
+    } finally {
+      setIsReserving(false);
     }
   }
 
@@ -167,18 +243,24 @@ export default function DetailTurn() {
 
           {usuario?.rol === "CLIENTE" && (
             <button 
-                className="btn-primary" 
-                onClick={handleInscripcionCliente}
-                disabled={isReserving || estaLleno}
-                style={estaLleno ? { backgroundColor: "var(--gray)", cursor: "not-allowed" } : {}}
+              className="btn-primary" 
+              onClick={handleInscripcionCliente}
+              disabled={isReserving || estaLleno}
+              style={estaLleno ? { backgroundColor: "var(--gray)", cursor: "not-allowed" } : {}}
             >
               {isReserving ? "Procesando..." : estaLleno ? "Sin Cupo" : "Inscribirse"}
             </button>
           )}
 
+          {/* BOTÓN CONECTADO PARA EL EMPLEADO */}
           {usuario?.rol === "EMPLEADO" && (
-            <button className="btn-primary" onClick={() => {/* Lógica de inscripción tercero */}}>
-              Inscribir
+            <button 
+              className="btn-primary" 
+              onClick={handleInscripcionTercero}
+              disabled={isReserving || estaLleno}
+              style={estaLleno ? { backgroundColor: "var(--gray)", cursor: "not-allowed" } : {}}
+            >
+              {isReserving ? "Cargando..." : estaLleno ? "Cupo Completo" : "Inscribir"}
             </button>
           )}
 

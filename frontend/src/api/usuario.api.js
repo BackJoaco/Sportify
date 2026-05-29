@@ -32,3 +32,18 @@ export async function updateProfile(datos) {
 
   return data;
 }
+
+
+export async function getClientes() {
+  const res = await fetch(`${API_URL}/usuario/clientes`, {
+    credentials: "include",
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw data;
+  }
+
+  return data;
+}

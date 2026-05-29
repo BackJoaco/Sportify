@@ -88,3 +88,7 @@ export async function updateProfile(id, data) {
     };
 }
 
+export async function getClientes() {
+  return await usuarioRepository.findAllClientes();
+}
+
