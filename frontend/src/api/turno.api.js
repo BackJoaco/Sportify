@@ -32,3 +32,49 @@ export async function getTurnos() {
 
   return data;
 }
+
+export async function deleteTurno(id) {
+  const res = await fetch(`${API_URL}/turno/${id}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw data;
+  }
+
+  return data;
+}
+
+export async function getTurnoById(id) {
+  const res = await fetch(`${API_URL}/turno/${id}`, {
+    credentials: "include",
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw data;
+  }
+
+  return data;
+}
+
+export async function getReservasCount(id) {
+  const res = await fetch(`${API_URL}/turno/${id}/reservas/count`, {
+    credentials: "include",
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw data;
+  }
+
+  return data;
+}

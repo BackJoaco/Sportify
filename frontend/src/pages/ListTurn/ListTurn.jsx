@@ -3,6 +3,7 @@ import Swal from "sweetalert2";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { getTurnos } from "../../api/turno.api";
 import "./ListTurn.css";
+import { useNavigate } from "react-router-dom";
 
 const COLORES_ACTIVIDADES = [
     "#1E5BF0", "#2ECC71", "#E74C3C", "#F39C12",
@@ -126,8 +127,10 @@ export default function CalendarioTurnos() {
         });
     }
 
+    const navigate = useNavigate();
+
     function handleTurnoClick(id) {
-        console.log(`Clic en el turno ID: ${id}`);
+        navigate(`/turnos/${id}`); 
     }
 
     if (loading) return <div className="loading-state">Cargando calendario...</div>;
