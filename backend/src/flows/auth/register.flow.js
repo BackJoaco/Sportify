@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';
 
 import * as usuarioService from '../../services/usuario.service.js';
+import { sendWelcomeEmail } from '../../services/mail.service.js';
 
 import { validateEmail, validatePassword, validateAdult } from '../../utils/validators.js';
 
@@ -41,6 +42,12 @@ export async function registerFlow(data) {
             fecha_nacimiento: data.fecha_nacimiento,
             contrasena: hashedPassword
         });
+
+    try {
+        await sendWelcomeEmail(usuario);
+    } catch (error) {
+        console.error('Error enviando mail de bienvenida:', error.message);
+    }
 
     return { usuario };
 }
