@@ -30,6 +30,29 @@ export async function updateEstadoPago(id, estadoPago) {
     return reserva.update({ estado_pago: estadoPago });
 }
 
-export async function countByTurnoId(turnoId) {
-  return Reserva.count({ where: { turno_id: turnoId } });
+export async function create(data){
+    return Reserva.create(data);
+}
+
+export async function countByTurno(turno_id) {
+  return await Reserva.count({
+    where: {
+      turno_id,
+      estado: 'CONFIRMADA' // Solo contamos las que ocupan lugar
+    }
+  });
+}
+
+export async function findActivasByUsuarioAndFecha(usuario_id, fecha) {
+  return await Reserva.findAll({
+    where: {
+      usuario_id,
+      estado: 'CONFIRMADA' // Excluimos canceladas
+    },
+    include: [{
+      model: Turno,
+      where: { fecha }, // Filtramos por la fecha del Turno asociado
+      attributes: ['id', 'hora_inicio', 'fecha'] 
+    }]
+  });
 }
