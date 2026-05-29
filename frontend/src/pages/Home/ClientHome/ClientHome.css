@@ -481,3 +481,21 @@
     grid-row: auto;
   }
 }
+
+/* Botón Ver Más para los paneles */
+.btn-ver-mas {
+  background-color: transparent;
+  color: var(--blue);
+  border: 1px solid var(--blue);
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-ver-mas:hover {
+  background-color: var(--blue);
+  color: var(--white);
+}
