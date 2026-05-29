@@ -11,7 +11,15 @@ export async function actualizarEstadoPago(id, estadoPago) {
 }
 
 export async function findById(id) {
-    return reservaRepository.findById(id);
+    const reserva = await reservaRepository.findById(id);
+    if (!reserva) {
+        throw new Error("La reserva no existe.");
+    }
+    return reserva;
+}
+
+export async function marcarComoCancelada(id) {
+  return reservaRepository.updateEstado(id, 'CANCELADA'); 
 }
 
 export async function findByUsuarioId(usuarioId) {

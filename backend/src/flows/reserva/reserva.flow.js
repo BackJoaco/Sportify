@@ -59,3 +59,36 @@ export async function create(usuario_id, turno_id) {
   const nuevaReserva = await reservaService.create(nuevaReservaPayload);
   return nuevaReserva;
 }
+
+export async function cancelarReserva(reservaId) {
+  const reserva = await reservaService.findById(reservaId);
+
+  if (reserva.estado === 'CANCELADA') {
+    throw new Error("La reserva ya se encuentra cancelada.");
+  }
+
+  // Usamos el servicio de turnos que ya tenías creado
+  const turno = await turnoService.getTurnoById(reserva.turno_id);
+
+  const fechaTurno = new Date(`${turno.fecha}T${turno.hora_inicio}`);
+  const ahora = new Date();
+
+  const diferenciaMs = fechaTurno - ahora;
+  const horasFaltantes = diferenciaMs / (1000 * 60 * 60);
+
+  if (horasFaltantes <= 0) {
+    throw new Error("No se puede cancelar un turno que ya ha comenzado o finalizado.");
+  }
+
+  await reservaService.marcarComoCancelada(reservaId);
+
+  const devuelveSena = horasFaltantes > 24;
+  const mensajeSena = devuelveSena 
+    ? "Se ha devuelto la seña ya que faltan más de 24 horas." 
+    : "No se devuelve la seña porque faltan menos de 24 horas para el turno.";
+
+  return {
+    message: `Reserva cancelada exitosamente. ${mensajeSena}`,
+    devuelveSena
+  };
+}
