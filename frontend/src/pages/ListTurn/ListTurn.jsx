@@ -1,19 +1,19 @@
 import { useState, useEffect } from "react";
-import Swal from "sweetalert2";
-import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
-import { getTurnos } from "../../api/turno.api";
-import "./ListTurn.css";
 import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
+import { FaChevronLeft, FaChevronRight, FaArrowLeft } from "react-icons/fa";
+import { getTurnos } from "../../api/turno.api";
+import { getActividades } from "../../api/actividad.api";
+import "./ListTurn.css";
 
 const COLORES_ACTIVIDADES = [
     "#1E5BF0", "#2ECC71", "#E74C3C", "#F39C12",
     "#9B59B6", "#00D2FF", "#E67E22", "#16A085",
 ];
 
-// Se mueven fuera del componente por ser funciones puras
 function obtenerLunes(fecha) {
     const d = new Date(fecha);
-    d.setHours(0, 0, 0, 0); // Crítico: Evita saltos de fecha por diferencias horarias
+    d.setHours(0, 0, 0, 0);
     const day = d.getDay();
     const diff = d.getDate() - day + (day === 0 ? -6 : 1);
     return new Date(d.setDate(diff));
@@ -26,6 +26,7 @@ function agregarDias(fecha, dias) {
 }
 
 export default function CalendarioTurnos() {
+    const navigate = useNavigate();
     const [turnos, setTurnos] = useState([]);
     const [actividades, setActividades] = useState([]);
     const [filtroActividad, setFiltroActividad] = useState("");
@@ -35,26 +36,14 @@ export default function CalendarioTurnos() {
     useEffect(() => {
         async function cargarDatos() {
             try {
-                // El estado inicial de loading ya es true, no es necesario hacer setLoading(true) de forma síncrona aquí.
-                const turnosData = await getTurnos();
-                const dataArray = Array.isArray(turnosData) ? turnosData : []; 
-                
-                setTurnos(dataArray);
+                // Traemos turnos y el catálogo completo de actividades en paralelo
+                const [turnosData, actividadesData] = await Promise.all([
+                    getTurnos(),
+                    getActividades()
+                ]);
 
-                const actividadesUnicas = [];
-                const idsVistos = new Set();
-
-                dataArray.forEach(turno => {
-                    const id = turno.actividad_id || turno.ActividadId;
-                    const nombre = turno.Actividad?.nombre || `Actividad ${id}`;
-
-                    if (id && !idsVistos.has(id)) {
-                        idsVistos.add(id);
-                        actividadesUnicas.push({ id, nombre });
-                    }
-                });
-                
-                setActividades(actividadesUnicas);
+                setTurnos(Array.isArray(turnosData) ? turnosData : []);
+                setActividades(Array.isArray(actividadesData) ? actividadesData : []);
             } catch (err) {
                 Swal.fire({
                     toast: true,
@@ -65,7 +54,7 @@ export default function CalendarioTurnos() {
                     timer: 3000,
                 });
             } finally {
-                setLoading(false); // Esto ocurre de forma asíncrona tras resolverse la petición, lo cual es correcto.
+                setLoading(false);
             }
         }
 
@@ -73,7 +62,7 @@ export default function CalendarioTurnos() {
     }, []);
 
     const hoy = new Date();
-    hoy.setHours(0, 0, 0, 0); // Crítico para comparar correctamente
+    hoy.setHours(0, 0, 0, 0);
     const lunesActual = obtenerLunes(hoy);
     const puedeVolverAtras = fechaInicioSemana > lunesActual;
 
@@ -87,7 +76,8 @@ export default function CalendarioTurnos() {
         }
     }
 
-    const horas = Array.from({ length: 14 }, (_, i) => i + 8);
+    // Cambiado length de 14 a 13 para terminar en las 20:00
+    const horas = Array.from({ length: 13 }, (_, i) => i + 8); 
     const diasSemana = [
         { nombre: "Lunes", fecha: fechaInicioSemana },
         { nombre: "Martes", fecha: agregarDias(fechaInicioSemana, 1) },
@@ -105,7 +95,7 @@ export default function CalendarioTurnos() {
     }
 
     const turnosFiltrados = turnos.filter(turno => {
-        const idActividad = turno.actividad_id || turno.ActividadId; // Unificado
+        const idActividad = turno.actividad_id || turno.ActividadId;
         if (filtroActividad && idActividad?.toString() !== filtroActividad) {
             return false;
         }
@@ -127,8 +117,6 @@ export default function CalendarioTurnos() {
         });
     }
 
-    const navigate = useNavigate();
-
     function handleTurnoClick(id) {
         navigate(`/turnos/${id}`); 
     }
@@ -137,6 +125,23 @@ export default function CalendarioTurnos() {
 
     return (
         <div className="calendario-container">
+            {/* Nuevo Header Superior */}
+            <div className="calendario-top-header">
+                <div className="header-title-group">
+                    <button 
+                        className="btn-back" 
+                        onClick={() => navigate("/home")} 
+                        title="Volver al inicio"
+                    >
+                        <FaArrowLeft />
+                    </button>
+                    <div>
+                        <h1>Calendario de Turnos</h1>
+                        <p className="calendario-subtitle">Visualiza y gestiona las clases de la semana.</p>
+                    </div>
+                </div>
+            </div>
+
             <div className="calendario-header">
                 <div className="filtro-container">
                     <select
