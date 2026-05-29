@@ -18,6 +18,15 @@ export async function findByUsuarioId(usuarioId) {
     return reservaRepository.findByUsuarioId(usuarioId);
 }
 
-export async function countByTurno(turnoId) {
-  return reservaRepository.countByTurnoId(turnoId);
+export async function create(data){
+    return reservaRepository.create(data);
 }
+
+export async function countByTurno(turno_id) {
+  return await reservaRepository.countByTurno(turno_id);
+}
+
+export async function findActivasByUsuarioAndFecha(usuario_id, fecha) {
+  return await reservaRepository.findActivasByUsuarioAndFecha(usuario_id, fecha);
+}
+
