@@ -91,6 +91,24 @@ export default function AppRoutes() {
         }
       />
 
+      <Route
+        path="/turnos/:id"
+        element={
+          <PrivateRoute>
+            <DetailTurn />
+          </PrivateRoute>
+        }
+      />
+
+      <Route
+        path="/reserva/mis-reservas"
+        element={
+          <PrivateRoute>
+            <Reservation />
+          </PrivateRoute>
+        }
+      />
+
       {/* 404 - Catch all */}
       <Route path="*" element={<NotFound />} />
     </Routes>
