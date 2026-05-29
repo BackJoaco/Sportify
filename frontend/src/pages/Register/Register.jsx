@@ -50,7 +50,7 @@ export default function Register() {
         timerProgressBar: true,
       });
 
-      setLoading(false);
+  
       setTimeout(() => {
         navigate("/login");
       }, 2500);
