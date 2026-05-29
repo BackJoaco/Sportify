@@ -56,3 +56,7 @@ export async function findActivasByUsuarioAndFecha(usuario_id, fecha) {
     }]
   });
 }
+
+export async function updateEstado(id, estado) {
+  return Reserva.update({ estado }, { where: { id } });
+}

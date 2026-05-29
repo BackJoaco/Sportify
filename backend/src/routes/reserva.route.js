@@ -6,5 +6,6 @@ const router = Router();
 
 router.get('/mis-reservas', authMiddleware, reservaController.getMisReservas);
 router.post('/crear', authMiddleware, esCliente, reservaController.create);
+router.patch("/:id/cancelar", authMiddleware, esCliente, reservaController.cancelarReserva);
 
 export default router;
