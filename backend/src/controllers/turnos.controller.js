@@ -24,7 +24,7 @@ export async function create(req, res) {
 export async function deleteTurno(req, res) {
   try {
     const { id } = req.params;
-    await turnoService.deleteTurno(id);
+    await turnosService.deleteTurno(id);
     
     return res.status(200).json({ message: "Turno eliminado exitosamente." });
   } catch (error) {
