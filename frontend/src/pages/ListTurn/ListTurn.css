@@ -7,6 +7,55 @@
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
 }
 
+/* Nuevo Header Superior */
+.calendario-top-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--silver);
+}
+
+.header-title-group {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.btn-back {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--off-white);
+    color: var(--blue);
+    border: 1px solid var(--silver);
+    border-radius: 8px;
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-back:hover {
+    background: var(--blue);
+    color: var(--white);
+    border-color: var(--blue);
+}
+
+.header-title-group h1 {
+    margin: 0;
+    color: var(--dark-blue);
+    font-size: 1.8rem;
+}
+
+.calendario-subtitle {
+    margin: 0;
+    color: var(--gray);
+    font-size: 0.9rem;
+}
+
 /* Header: Filtros y Leyenda */
 .calendario-header {
     display: flex;
@@ -65,16 +114,15 @@
 /* Grilla del Calendario */
 .calendario-grid {
     display: grid;
-    /* 1 columna para horas (auto) y 5 fracciones iguales para los días */
     grid-template-columns: 80px repeat(5, 1fr);
     border: 2px solid var(--dark-blue);
     border-radius: 12px;
-    overflow: hidden; /* Para mantener los bordes redondeados */
+    overflow: hidden;
     background-color: var(--white);
 }
 
 .calendario-fila {
-    display: contents; /* Permite que los hijos se alineen a la grilla principal */
+    display: contents;
 }
 
 .calendario-celda {
@@ -87,7 +135,6 @@
     justify-content: center;
 }
 
-/* Quitar el borde derecho a la última columna y el inferior a la última fila */
 .calendario-celda:nth-child(6n) {
     border-right: none;
 }
@@ -120,17 +167,15 @@
     padding-right: 1rem;
 }
 
-/* Modificamos la celda para que apile los turnos verticalmente */
 .dia-celda {
     position: relative;
     padding: 4px;
     display: flex;
-    flex-direction: column; /* Apila los turnos uno arriba del otro */
-    gap: 4px; /* Espacio entre turnos superpuestos */
-    overflow-y: auto; /* Agrega scroll interno si hay demasiados turnos en una misma hora */
+    flex-direction: column;
+    gap: 4px;
+    overflow-y: auto;
 }
 
-/* Modificamos el badge para que se adapte al nuevo contenedor flex */
 .turno-badge {
     color: white;
     padding: 0.4rem;
@@ -141,14 +186,12 @@
     cursor: pointer;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     transition: transform 0.2s ease, filter 0.2s ease;
-    
-    /* Cambiamos height: 100% por min-height para que no se estiren raro */
     min-height: 2.5rem; 
     display: flex;
     align-items: center;
     justify-content: center;
     word-break: break-word;
-    flex-shrink: 0; /* Evita que el turno se aplaste si hay muchos */
+    flex-shrink: 0;
 }
 
 .turno-badge:hover {
@@ -170,7 +213,8 @@
     background-color: transparent;
     color: var(--dark-blue);
     border: none;
-    font-size: 2rem;
+    font-size: 1.2rem; /* Achicado de 2rem para mejor proporción */
+    font-weight: 700;
     cursor: pointer;
     transition: color 0.3s ease;
 }
