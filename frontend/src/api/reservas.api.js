@@ -50,3 +50,23 @@ export async function cancelarReserva(id) {
 
   return data;
 }
+
+
+export async function crearReservaStaff(datos) {
+  const res = await fetch(`${API_URL}/reserva/staff`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify(datos),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw data;
+  }
+
+  return data;
+}

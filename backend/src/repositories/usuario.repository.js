@@ -20,3 +20,12 @@ export async function updateUsuario(id, data) {
     const usuario = await Usuario.findByPk(id);
     return usuario.update(data);
 }
+
+export async function findAllClientes() {
+  return await Usuario.findAll({
+    where: {
+      rol: 'CLIENTE' 
+    },
+    attributes: { exclude: ['contrasena', 'createdAt', 'updatedAt', 'deletedAt'] }
+  });
+}

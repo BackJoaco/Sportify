@@ -49,3 +49,26 @@ export async function cancelarReserva(req, res) {
     return res.status(400).json({ message: error.message });
   }
 }
+export async function crearReservaPorEmpleado(req, res) {
+  try {
+    const { usuario_id, turno_id } = req.body;
+
+    if (!usuario_id || !turno_id) {
+      return res.status(400).json({ 
+        mensaje: 'Debe seleccionar un cliente y un turno.' 
+      });
+    }
+
+    const reserva = await reservaFlow.create(usuario_id, turno_id);
+
+    return res.status(201).json({
+      mensaje: 'Reserva generada exitosamente por administración.',
+      data: reserva
+    });
+    
+  } catch (error) {
+    return res.status(400).json({ 
+      mensaje: error.message 
+    });
+  }
+}
