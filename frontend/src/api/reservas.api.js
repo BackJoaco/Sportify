@@ -33,6 +33,24 @@ export async function crearReserva(datos) {
   return data;
 }
 
+export async function cancelarReserva(id) {
+  const res = await fetch(`${API_URL}/reserva/${id}/cancelar`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw data;
+  }
+
+  return data;
+}
+
 
 export async function crearReservaStaff(datos) {
   const res = await fetch(`${API_URL}/reserva/staff`, {

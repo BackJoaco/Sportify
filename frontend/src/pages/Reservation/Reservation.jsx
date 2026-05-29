@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { FaArrowLeft, FaCalendarCheck, FaHistory } from "react-icons/fa";
-import { getMisReservas } from "../../api/reservas.api"; 
+// Importa la nueva función
+import { getMisReservas, cancelarReserva } from "../../api/reservas.api"; 
 import "./Reservation.css";
 
 export default function HistorialReservas() {
@@ -20,11 +21,10 @@ export default function HistorialReservas() {
             setLoading(true);
             const data = await getMisReservas();
             
-            // Ordenar por fecha (las más recientes primero)
             const reservasOrdenadas = (data || []).sort((a, b) => {
                 const fechaA = new Date(`${a.Turno?.fecha}T${a.Turno?.hora_inicio}`);
                 const fechaB = new Date(`${b.Turno?.fecha}T${b.Turno?.hora_inicio}`);
-                return fechaA - fechaB; // Orden cronológico
+                return fechaA - fechaB;
             });
             
             setReservas(reservasOrdenadas);
@@ -43,7 +43,46 @@ export default function HistorialReservas() {
         }
     }
 
-    // Funciones de formateo 
+    // --- NUEVA LÓGICA DE CANCELACIÓN ---
+    async function handleCancelar(id) {
+        const result = await Swal.fire({
+            title: "¿Estás seguro?",
+            text: "Se evaluará el tiempo restante para determinar la devolución de tu seña.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "var(--blue)",
+            cancelButtonColor: "var(--gray)",
+            confirmButtonText: "Sí, cancelar reserva",
+            cancelButtonText: "Volver"
+        });
+
+        if (result.isConfirmed) {
+            try {
+                const response = await cancelarReserva(id);
+                
+                // Muestra el mensaje del backend que explica si se devuelve o no la seña
+                Swal.fire({
+                    title: "Reserva cancelada",
+                    text: response.message,
+                    icon: response.devuelveSena ? "success" : "info",
+                    confirmButtonColor: "var(--blue)"
+                });
+                
+                // Recargamos el historial para que pase a la pestaña de "Anteriores"
+                cargarHistorial();
+            } catch (err) {
+                Swal.fire({
+                    toast: true,
+                    position: "top-end",
+                    icon: "error",
+                    title: err.message || "Error al cancelar",
+                    showConfirmButton: false,
+                    timer: 3500
+                });
+            }
+        }
+    }
+
     function formatearFecha(fecha) {
         if (!fecha) return "Sin fecha";
         const [year, month, day] = fecha.split("-");
@@ -64,10 +103,7 @@ export default function HistorialReservas() {
         return estados[estadoPago] || estadoPago;
     }
 
-    // Lógica para separar vigentes de anteriores
     const hoy = new Date();
-    // Reseteamos la hora de 'hoy' a las 00:00 para comparar solo días, 
-    // o podés dejarlo exacto si querés que los turnos de hace 2 horas pasen al historial.
     
     const reservasVigentes = reservas.filter(reserva => {
         if (reserva.estado !== "CONFIRMADA") return false;
@@ -77,11 +113,9 @@ export default function HistorialReservas() {
 
     const reservasAnteriores = reservas.filter(reserva => {
         const fechaTurno = new Date(`${reserva.Turno?.fecha}T${reserva.Turno?.hora_inicio}`);
-        // Consideramos anteriores a las que ya pasaron, o las que fueron canceladas
         return fechaTurno < hoy || reserva.estado === "CANCELADA"; 
     });
 
-    // Determinar qué lista mostrar según la pestaña activa
     const listaAMostrar = vistaActual === "vigentes" ? reservasVigentes : reservasAnteriores;
 
     return (
@@ -134,6 +168,8 @@ export default function HistorialReservas() {
                                     <th>Tipo de Reserva</th>
                                     <th>Estado de Pago</th>
                                     <th>Estado General</th>
+                                    {/* Nueva columna que solo se muestra en vigentes */}
+                                    {vistaActual === "vigentes" && <th>Acciones</th>}
                                 </tr>
                             </thead>
                             <tbody>
@@ -159,6 +195,18 @@ export default function HistorialReservas() {
                                                 {reserva.estado}
                                             </span>
                                         </td>
+                                        {/* Botón de cancelar solo en la pestaña de vigentes */}
+                                        {vistaActual === "vigentes" && (
+                                            <td>
+                                                <button 
+                                                    className="btn-secondary" 
+                                                    onClick={() => handleCancelar(reserva.id)}
+                                                    style={{ padding: "0.3rem 0.6rem", fontSize: "0.8rem", borderColor: "var(--gray)", color: "var(--gray)" }}
+                                                >
+                                                    Cancelar
+                                                </button>
+                                            </td>
+                                        )}
                                     </tr>
                                 ))}
                             </tbody>

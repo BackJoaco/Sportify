@@ -39,6 +39,16 @@ export async function create(req, res) {
   }
 }
 
+export async function cancelarReserva(req, res) {
+  try {
+    const { id } = req.params;
+    const resultado = await reservaFlow.cancelarReserva(id);
+    
+    return res.status(200).json(resultado);
+  } catch (error) {
+    return res.status(400).json({ message: error.message });
+  }
+}
 export async function crearReservaPorEmpleado(req, res) {
   try {
     const { usuario_id, turno_id } = req.body;
