@@ -28,7 +28,7 @@ export default function RegisterEmployee() {
 
     try {
       await createEmployee(form);
-      navigate("/home");
+      navigate("/usuarios");
     } catch (error) {
       setError(error.message || "Ocurrió un error, intentá de nuevo");
     } finally {
@@ -51,10 +51,10 @@ export default function RegisterEmployee() {
                 <input
                   type="text"
                   name="nombre"
-                  placeholder="Ej: Juan"
                   value={form.nombre}
                   onChange={handleChange}
                   disabled={loading}
+                  required
                 />
               </div>
               <div className="form-group">
@@ -62,10 +62,10 @@ export default function RegisterEmployee() {
                 <input
                   type="text"
                   name="apellido"
-                  placeholder="Ej: Pérez García"
                   value={form.apellido}
                   onChange={handleChange}
                   disabled={loading}
+                  required
                 />
               </div>
               <div className="form-group">
@@ -76,29 +76,32 @@ export default function RegisterEmployee() {
                   value={form.fecha_nacimiento}
                   onChange={handleChange}
                   disabled={loading}
+                  required
                 />
               </div>
-              <div className="form-group">
-                <label>CORREO ELECTRÓNICO</label>
-                <input
-                  type="email"
-                  name="email"
-                  placeholder="Ej: juan.perez@empresa.com"
-                  value={form.email}
-                  onChange={handleChange}
-                  disabled={loading}
-                />
-              </div>
-              <div className="form-group">
-                <label>DNI</label>
-                <input
-                  type="text"
-                  name="dni"
-                  placeholder="Ej: 12345678"
-                  value={form.dni}
-                  onChange={handleChange}
-                  disabled={loading}
-                />
+              <div className="form-row">
+                <div className="form-group">
+                  <label>CORREO ELECTRÓNICO</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={form.email}
+                    onChange={handleChange}
+                    disabled={loading}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>DNI</label>
+                  <input
+                    type="text"
+                    name="dni"
+                    value={form.dni}
+                    onChange={handleChange}
+                    disabled={loading}
+                    required
+                  />
+                </div>
               </div>
             </div>
 

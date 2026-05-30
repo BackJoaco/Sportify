@@ -5,7 +5,7 @@
 }
 
 .register-panel {
-  max-width: 900px; /* Aumentamos el ancho máximo del contenedor grande */
+  max-width: 900px;
   margin: 0 auto;
   background: #FFFFFF;
   padding: 3rem;
@@ -14,8 +14,8 @@
 }
 
 .register-form-wrapper {
-  max-width: 600px; /* Tamaño del formulario interior */
-  margin: 0 auto;   /* Centra el formulario dentro del panel grande */
+  max-width: 700px;
+  margin: 0 auto;
 }
 
 .panel-header {
@@ -24,7 +24,7 @@
 
 .panel-header h1 {
   margin: 0;
-  font-size: 1.5rem;       /* Título más proporcionado */
+  font-size: 1.5rem;
   color: #1A2F50;
 }
 
@@ -37,25 +37,31 @@
 .form-stack {
   display: flex;
   flex-direction: column;
-  gap: 1rem;               /* Menos espacio entre inputs */
+  gap: 1rem;
   margin-bottom: 1.5rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;             /* Menos espacio entre label e input */
+  gap: 0.3rem;
 }
 
 .form-group label {
-  font-size: 0.7rem;       /* Etiquetas más pequeñas y elegantes */
+  font-size: 0.7rem;
   font-weight: 800;
   color: #1A2F50;
   letter-spacing: 0.05em;
 }
 
 .form-group input {
-  padding: 10px 12px;      /* Inputs compactos */
+  padding: 10px 12px;
   border: 1px solid #C0C0C0;
   border-radius: 6px;
   font-size: 0.9rem;
@@ -63,10 +69,11 @@
 
 .form-actions {
   display: flex;
-  gap: 0.75rem;            /* Espacio pequeño entre botones */
+  gap: 0.75rem;
 }
 
-.btn-save, .btn-cancel {
+.btn-save,
+.btn-cancel {
   flex: 1;
   padding: 10px;
   border-radius: 6px;
@@ -76,11 +83,24 @@
   font-size: 0.9rem;
 }
 
-.btn-save { background: #1E5BF0; color: white; }
-.btn-cancel { background: #E2E8F0; color: #4A5568; }
+.btn-save {
+  background: #1E5BF0;
+  color: white;
+}
+
+.btn-cancel {
+  background: #E2E8F0;
+  color: #4A5568;
+}
 
 .error-message {
   color: #E53E3E;
   font-size: 0.8rem;
   margin-bottom: 1rem;
+}
+
+@media (max-width: 600px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
 }
