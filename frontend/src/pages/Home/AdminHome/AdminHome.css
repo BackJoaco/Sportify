@@ -1,40 +1,140 @@
 .admin-home-container {
-  min-height: calc(100vh - 72px);
-  background: var(--off-white);
-  color: var(--dark-blue);
   padding: 2rem;
+  background: #FDFDF2;
+  min-height: 100vh;
 }
 
 .admin-home-panel {
-  max-width: 900px;
+  max-width: 1000px;
   margin: 0 auto;
-  background: var(--white);
-  border: 1px solid var(--silver);
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  padding: 2rem;
+  background: #FFFFFF;
+  /* IMPORTANTE: Agregué padding aquí para separar el contenido de los bordes */
+  padding: 2rem; 
+  border-radius: 12px;
+  border: 1px solid #C0C0C0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
-.admin-home-panel span {
-  color: var(--blue);
-  font-size: 0.85rem;
-  font-weight: 700;
+.header-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  /* Añadimos un poco de margen inferior para separar del encabezado de la tabla */
+  margin-bottom: 2rem; 
+}
+
+.header-actions span {
+  color: #1E5BF0;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
+  display: block; /* Asegura que el span ocupe su propia línea */
+  margin-bottom: 4px;
 }
 
-.admin-home-panel h1 {
-  color: var(--dark-blue);
-  font-size: 2rem;
-  margin: 0.35rem 0;
-}
-
-.admin-home-panel p {
-  color: var(--gray);
+.header-actions h1 {
   margin: 0;
+  color: #1A2F50;
+  font-size: 1.875rem;
 }
 
-@media (max-width: 700px) {
-  .admin-home-container {
-    padding: 1rem;
-  }
+.header-controls {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.search-input {
+  padding: 10px 16px;
+  border: 1px solid #C0C0C0;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  width: 250px;
+  outline: none;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.search-input:focus {
+  border-color: #1E5BF0;
+  box-shadow: 0 0 0 2px rgba(30, 91, 240, 0.1);
+}
+
+.btn-add {
+  background: #1E5BF0;
+  color: #FFFFFF;
+  border: none;
+  padding: 12px 24px; /* Un poco más grande para que se vea mejor */
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.3s;
+}
+
+.btn-add:hover {
+  background: #00D2FF;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+th {
+  text-align: left;
+  padding: 12px;
+  border-bottom: 2px solid #C0C0C0;
+  color: #7F8C8D;
+  font-size: 0.875rem;
+}
+
+td {
+  padding: 16px 12px;
+  border-bottom: 1px solid #C0C0C0;
+  color: #1A2F50;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px !important;
+  color: #7F8C8D;
+}
+
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid #C0C0C0;
+}
+
+.btn-pagination {
+  background: #FFFFFF;
+  color: #1A2F50;
+  border: 1px solid #C0C0C0;
+  padding: 8px;
+  min-width: 38px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.btn-pagination.active {
+  background: #1E5BF0;
+  color: #FFFFFF;
+  border-color: #1E5BF0;
+}
+
+.btn-pagination:hover:not(:disabled) {
+  border-color: #1E5BF0;
+  color: #1E5BF0;
+}
+
+.btn-pagination:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
