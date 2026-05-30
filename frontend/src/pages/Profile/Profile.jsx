@@ -7,7 +7,7 @@ import { updateProfile } from "../../api/usuario.api";
 import "./Profile.css";
 
 export default function Profile() {
-    const { usuario, setUsuario, logout } = useAuth();
+    const { usuario, setUsuario } = useAuth();
     const navigate = useNavigate();
     const [isEditing, setIsEditing] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -132,11 +132,6 @@ export default function Profile() {
         setIsEditing(false);
     }
 
-    async function handleLogout() {
-        await logout();
-        navigate("/login");
-    }
-
     return (
         <div className="profile-container">
             <div className="profile-card">
@@ -183,17 +178,6 @@ export default function Profile() {
                             </button>
                             <button className="btn-edit" onClick={() => setIsEditing(true)}>
                                 Editar perfil
-                            </button>
-                            {usuario.rol === "ADMINISTRADOR" && (
-                                <button
-                                    className="btn-edit"
-                                    onClick={() => navigate("/usuarios")}
-                                >
-                                    Ir al Panel Admin
-                                </button>
-                            )}
-                            <button className="btn-logout" onClick={handleLogout}>
-                                Cerrar sesión
                             </button>
                         </div>
                     </>
