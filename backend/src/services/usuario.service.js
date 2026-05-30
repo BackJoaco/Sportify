@@ -1,9 +1,6 @@
 import * as usuarioRepository from '../repositories/usuario.repository.js';
 import { hashPassword, comparePassword } from '../utils/bcrypt.js';
-import { validatePassword, validateEmail } from '../utils/validators.js';
-import { registerFlow } from '../flows/auth/register.flow.js';
-import { registerEmployeeFlow } from '../flows/auth/registerEmployee.flow.js';
-
+import { validatePassword } from '../utils/validators.js';
 
 export function findByEmail(email) {
     return usuarioRepository.findByEmail(email);
@@ -16,18 +13,7 @@ export function findByDni(dni) {
 export function create(data) {
     return usuarioRepository.create(data);
 }
-
-export async function deleteEmployee(id) {
-    const usuario = await usuarioRepository.findById(id);
-
-    if (!usuario) {
-        throw new Error('Empleado no encontrado');
-    }
-
-    if (usuario.rol !== 'EMPLEADO') {
-        throw new Error('El usuario no es un empleado');
-    }
-
+export function deleteUsuario(id) {
     return usuarioRepository.deleteUsuario(id);
 }
 
@@ -102,50 +88,6 @@ export async function updateProfile(id, data) {
     };
 }
 
-export async function registerEmployee(datosEmpleado) {
-    return await registerEmployeeFlow(datosEmpleado);
-}
-
-export async function setContrasena(token, password) {
-    if (!token) {
-        throw new Error('Token no proporcionado');
-    }
-
-    const usuario = await usuarioRepository.findByToken(token);
-
-    if (!usuario) {
-        throw new Error('Token inválido o expirado');
-    }
-
-    validatePassword(password); 
-    const hashedContrasena = await hashPassword(password); 
-    await usuarioRepository.updateUsuario(usuario.id, {
-        contrasena: hashedContrasena,
-        token_activacion: null,
-        token_expiracion: null
-    });
-}
-
-export async function getUsersExceptAdmins() {
-    return usuarioRepository.findAllExceptAdmins();
-}
-
-export async function getEmployee(id) {
-    const empleado = await usuarioRepository.findById(id);
-
-    if (!empleado || empleado.rol !== 'EMPLEADO') {
-        throw new Error('Empleado no encontrado');
-    }
-
-    return {
-        id: empleado.id,
-        nombre: empleado.nombre,
-        apellido: empleado.apellido,
-        email: empleado.email,
-        dni: empleado.dni,
-        estado: empleado.estado
-    };
-}
 export async function getClientes() {
   return await usuarioRepository.findAllClientes();
 }
