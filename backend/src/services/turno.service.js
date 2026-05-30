@@ -57,3 +57,7 @@ export async function getTurnoById(id) {
 
   return turno;
 }
+
+export async function update(id, datosNuevos) {
+  return await turnoRepository.update(id, datosNuevos);
+}

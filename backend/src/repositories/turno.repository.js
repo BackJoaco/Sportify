@@ -36,3 +36,10 @@ export async function getById(id) {
 export async function remove(id) {
   return Turno.destroy({ where: { id } });
 }
+
+export async function update(id, datosNuevos) {
+  const [affectedRows] = await Turno.update(datosNuevos, {
+    where: { id }
+  });
+  return affectedRows;
+}

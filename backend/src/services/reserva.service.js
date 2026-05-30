@@ -38,3 +38,6 @@ export async function findActivasByUsuarioAndFecha(usuario_id, fecha) {
   return await reservaRepository.findActivasByUsuarioAndFecha(usuario_id, fecha);
 }
 
+export async function cancelarMasivamentePorTurno(turno_id) {
+  return await reservaRepository.cancelarMasivamentePorTurno(turno_id);
+}
