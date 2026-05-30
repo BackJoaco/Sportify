@@ -1,3 +1,4 @@
+import { Op } from 'sequelize';
 import { Usuario } from '../models/index.model.js';
 
 export async function create(data) {
@@ -19,4 +20,27 @@ export async function findById(id) {
 export async function updateUsuario(id, data) {
     const usuario = await Usuario.findByPk(id);
     return usuario.update(data);
+}
+
+export async function findAllExceptAdmins() {
+    return Usuario.findAll({
+        where: {
+            rol: { [Op.ne]: 'ADMINISTRADOR' }
+        }
+    });
+}
+
+export async function findByToken(token) {
+    if (!token) {
+        return null;
+    }
+
+    return await Usuario.findOne({
+        where: {
+            token_activacion: token,
+            token_expiracion: {
+                [Op.gt]: new Date()
+            }
+        }
+    });
 }
