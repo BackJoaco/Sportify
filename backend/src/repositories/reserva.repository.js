@@ -60,3 +60,15 @@ export async function findActivasByUsuarioAndFecha(usuario_id, fecha) {
 export async function updateEstado(id, estado) {
   return Reserva.update({ estado }, { where: { id } });
 }
+
+export async function cancelarMasivamentePorTurno(turno_id) {
+  return await Reserva.update(
+    { estado: 'CANCELADA' }, 
+    { 
+      where: { 
+        turno_id,
+        estado: 'CONFIRMADA' 
+      } 
+    }
+  );
+}

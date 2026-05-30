@@ -11,5 +11,6 @@ router.post('/crear', turnoController.create);
 router.delete("/:id", authMiddleware, esAdministrador, turnoController.deleteTurno);
 router.get("/:id", authMiddleware, turnoController.getTurnoById);
 router.get("/:id/reservas/count", authMiddleware, turnoController.getReservasCount);
+router.put('/modificar/:id', authMiddleware, esAdministrador, turnoController.modificarTurno);
 
 export default router;

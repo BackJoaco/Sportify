@@ -78,3 +78,22 @@ export async function getReservasCount(id) {
 
   return data;
 }
+
+export async function updateTurno(id, datosNuevos) {
+  const res = await fetch(`${API_URL}/turno/modificar/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify(datosNuevos),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw data;
+  }
+
+  return data;
+}
