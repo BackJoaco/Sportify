@@ -11,3 +11,7 @@ export async function getActivities() {
 export async function deleteActivity(id) {
     return Actividad.destroy({ where: { id } });
 }
+
+export async function getById(id){
+    return Actividad.findByPk(id);
+}
