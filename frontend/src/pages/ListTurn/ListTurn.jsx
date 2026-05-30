@@ -4,6 +4,7 @@ import Swal from "sweetalert2";
 import { FaChevronLeft, FaChevronRight, FaArrowLeft } from "react-icons/fa";
 import { getTurnos } from "../../api/turno.api";
 import { getActividades } from "../../api/actividad.api";
+import { useAuth } from "../../context/AuthContext";
 import "./ListTurn.css";
 
 const COLORES_ACTIVIDADES = [
@@ -27,6 +28,7 @@ function agregarDias(fecha, dias) {
 
 export default function CalendarioTurnos() {
     const navigate = useNavigate();
+    const { usuario } = useAuth();
     const [turnos, setTurnos] = useState([]);
     const [actividades, setActividades] = useState([]);
     const [filtroActividad, setFiltroActividad] = useState("");
@@ -36,7 +38,6 @@ export default function CalendarioTurnos() {
     useEffect(() => {
         async function cargarDatos() {
             try {
-                // Traemos turnos y el catálogo completo de actividades en paralelo
                 const [turnosData, actividadesData] = await Promise.all([
                     getTurnos(),
                     getActividades()
@@ -76,14 +77,15 @@ export default function CalendarioTurnos() {
         }
     }
 
-    // Cambiado length de 14 a 13 para terminar en las 20:00
     const horas = Array.from({ length: 13 }, (_, i) => i + 8); 
     const diasSemana = [
         { nombre: "Lunes", fecha: fechaInicioSemana },
         { nombre: "Martes", fecha: agregarDias(fechaInicioSemana, 1) },
         { nombre: "Miércoles", fecha: agregarDias(fechaInicioSemana, 2) },
         { nombre: "Jueves", fecha: agregarDias(fechaInicioSemana, 3) },
-        { nombre: "Viernes", fecha: agregarDias(fechaInicioSemana, 4) }
+        { nombre: "Viernes", fecha: agregarDias(fechaInicioSemana, 4) },
+        { nombre: "Sábado", fecha: agregarDias(fechaInicioSemana, 5) },
+        { nombre: "Domingo", fecha: agregarDias(fechaInicioSemana, 6) }
     ];
 
     function getColorActividad(id) {
@@ -125,7 +127,6 @@ export default function CalendarioTurnos() {
 
     return (
         <div className="calendario-container">
-            {/* Nuevo Header Superior */}
             <div className="calendario-top-header">
                 <div className="header-title-group">
                     <button 
@@ -140,6 +141,15 @@ export default function CalendarioTurnos() {
                         <p className="calendario-subtitle">Visualiza y gestiona las clases de la semana.</p>
                     </div>
                 </div>
+
+                {usuario?.rol === "ADMINISTRADOR" && (
+                    <button
+                        className="btn-primary"
+                        onClick={() => navigate("/turnos/crear")}
+                    >
+                        + Nuevo Turno
+                    </button>
+                )}
             </div>
 
             <div className="calendario-header">

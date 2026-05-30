@@ -11,13 +11,17 @@ export async function getTurnos(req, res) {
 }
 
 export async function create(req, res) {
-    try {
-        await turnosService.create(req.body);
-        console.log(req.body);
-        return res.status(201).json({ message : 'Turno creado correctamente'});
-    } catch (error) {
-        return res.status(400).json({ message: error.message })
-    }
+  try {
+    // Le pasamos el body completo al flow
+    const nuevoTurno = await turnoFlow.crearTurnoFlow(req.body);
+    
+    return res.status(201).json({ 
+      message: "Turno creado exitosamente.", 
+      turno: nuevoTurno 
+    });
+  } catch (error) {
+    return res.status(400).json({ message: error.message });
+  }
 }
 
 export async function deleteTurno(req, res) {

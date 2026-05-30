@@ -114,7 +114,8 @@
 /* Grilla del Calendario */
 .calendario-grid {
     display: grid;
-    grid-template-columns: 80px repeat(5, 1fr);
+    /* Cambiado a 7 fracciones (1 para cada día de lunes a domingo) */
+    grid-template-columns: 80px repeat(7, 1fr);
     border: 2px solid var(--dark-blue);
     border-radius: 12px;
     overflow: hidden;
@@ -135,7 +136,7 @@
     justify-content: center;
 }
 
-.calendario-celda:nth-child(6n) {
+.calendario-celda:nth-child(8n) {
     border-right: none;
 }
 .calendario-fila:last-child .calendario-celda {
