@@ -14,6 +14,7 @@ import CreateTurn from "../pages/CreateTurn/CreateTurn";
 import ListTurn from "../pages/ListTurn/ListTurn";
 import DetailTurn from "../pages/DetailTurn/DetailTurn";
 import SetPassword from "../pages/SetPassword/SetPassword";
+import UserManagement from "../pages/UserManagement/UserManagement";
 
 export default function AppRoutes() {
   return (
@@ -118,6 +119,15 @@ export default function AppRoutes() {
         element={
           <PrivateRoute>
             <DetailTurn />
+          </PrivateRoute>
+        }
+      />
+
+      <Route
+        path="/usuarios"
+        element={
+          <PrivateRoute>
+            <UserManagement />
           </PrivateRoute>
         }
       />
