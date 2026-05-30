@@ -2,7 +2,9 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "../pages/Login/Login";
 import Register from "../pages/Register/Register";
 import Profile from "../pages/Profile/Profile";
+import RegisterEmployee from "../pages/RegisterEmployee/RegisterEmployee";
 import Home from "../pages/Home/Home";
+import AdminHome from "../pages/Home/AdminHome/AdminHome";
 import ListActivities from "../pages/ListActivities/ListActivities";
 import CreateActivities from "../pages/CreateActivities/CreateActivities"
 import NotFound from "../pages/NotFound/NotFound";
@@ -11,6 +13,7 @@ import PrivateRoute from "./PrivateRoute";
 import CreateTurn from "../pages/CreateTurn/CreateTurn";
 import ListTurn from "../pages/ListTurn/ListTurn";
 import DetailTurn from "../pages/DetailTurn/DetailTurn";
+import SetPassword from "../pages/SetPassword/SetPassword";
 
 export default function AppRoutes() {
   return (
@@ -27,6 +30,8 @@ export default function AppRoutes() {
           </PublicRoute>
         }
       />
+
+      <Route path="/set-password" element={<SetPassword />} />
 
       <Route
         path="/register"
@@ -52,6 +57,24 @@ export default function AppRoutes() {
         element={
           <PrivateRoute>
             <Profile />
+          </PrivateRoute>
+        }
+      />
+
+      <Route
+        path="/admin/home"
+        element={
+          <PrivateRoute>
+            <AdminHome />
+          </PrivateRoute>
+        }
+      />
+
+      <Route
+        path="/empleados/registrar"
+        element={
+          <PrivateRoute>
+            <RegisterEmployee />
           </PrivateRoute>
         }
       />
