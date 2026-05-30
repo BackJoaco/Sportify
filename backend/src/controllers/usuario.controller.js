@@ -62,7 +62,7 @@ export async function registerEmployee(req, res) {
 export async function deleteEmployee(req, res) {
     try {
         const { id } = req.params;
-        await usuarioService.deleteUsuario(id);
+        await usuarioService.deleteEmployee(id);
         return res.status(200).json({ message: 'Usuario eliminado correctamente' });
     } catch (error) {
         return res.status(400).json({ message: error.message });

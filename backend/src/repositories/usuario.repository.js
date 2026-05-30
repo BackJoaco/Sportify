@@ -44,3 +44,11 @@ export async function findByToken(token) {
         }
     });
 }
+
+export async function deleteUsuario(id) {
+    const usuario = await Usuario.findByPk(id);
+    if (!usuario) {
+        return null;
+    }
+    return await usuario.destroy();
+}

@@ -17,7 +17,17 @@ export function create(data) {
     return usuarioRepository.create(data);
 }
 
-export function deleteUsuario(id) {
+export async function deleteEmployee(id) {
+    const usuario = await usuarioRepository.findById(id);
+
+    if (!usuario) {
+        throw new Error('Empleado no encontrado');
+    }
+
+    if (usuario.rol !== 'EMPLEADO') {
+        throw new Error('El usuario no es un empleado');
+    }
+
     return usuarioRepository.deleteUsuario(id);
 }
 
