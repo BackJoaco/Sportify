@@ -481,3 +481,17 @@
     grid-row: auto;
   }
 }
+
+.form-input-inline {
+  width: 100%;
+  padding: 0.4rem;
+  margin-top: 0.2rem;
+  border: 1px solid var(--silver);
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+.form-input-inline:focus {
+  outline: none;
+  border-color: var(--blue);
+}

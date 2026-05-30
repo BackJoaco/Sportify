@@ -30,3 +30,21 @@ export async function createActividad(datos) {
 
     return await res.json();
 }
+
+export async function deleteActividad(id) {
+  const res = await fetch(`${API_URL}/actividad/eliminar/${id}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw data;
+  }
+
+  return data;
+}

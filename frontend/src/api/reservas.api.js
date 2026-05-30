@@ -13,3 +13,60 @@ export async function getMisReservas() {
 
   return data;
 }
+
+export async function crearReserva(datos) {
+  const res = await fetch(`${API_URL}/reserva/crear`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify(datos),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw data;
+  }
+
+  return data;
+}
+
+export async function cancelarReserva(id) {
+  const res = await fetch(`${API_URL}/reserva/${id}/cancelar`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw data;
+  }
+
+  return data;
+}
+
+
+export async function crearReservaStaff(datos) {
+  const res = await fetch(`${API_URL}/reserva/staff`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify(datos),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw data;
+  }
+
+  return data;
+}

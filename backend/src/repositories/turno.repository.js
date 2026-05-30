@@ -36,3 +36,15 @@ export async function getById(id) {
 export async function remove(id) {
   return Turno.destroy({ where: { id } });
 }
+export async function getByActividadFechaHora(actividad_id, fecha, hora_inicio) {
+  return Turno.findOne({
+    where: { actividad_id, fecha, hora_inicio }
+  });
+}
+
+export async function update(id, datosNuevos) {
+  const [affectedRows] = await Turno.update(datosNuevos, {
+    where: { id }
+  });
+  return affectedRows;
+}

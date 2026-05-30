@@ -146,3 +146,7 @@ export async function getEmployee(id) {
         estado: empleado.estado
     };
 }
+export async function getClientes() {
+  return await usuarioRepository.findAllClientes();
+}
+

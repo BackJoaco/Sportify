@@ -57,3 +57,15 @@ export async function getTurnoById(id) {
 
   return turno;
 }
+
+export async function checkSuperposicion(actividad_id, fecha, hora_inicio) {
+  const turnoExistente = await turnoRepository.getByActividadFechaHora(actividad_id, fecha, hora_inicio);
+  
+  if (turnoExistente) {
+    throw new Error("Ya existe un turno para esta actividad en la fecha y horario seleccionados.");
+  }
+}
+
+export async function update(id, datosNuevos) {
+  return await turnoRepository.update(id, datosNuevos);
+}

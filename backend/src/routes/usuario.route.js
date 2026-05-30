@@ -2,7 +2,7 @@ import { Router } from 'express';
 
 import * as usuarioController from '../controllers/usuario.controller.js';
 
-import { authMiddleware, esAdministrador } from '../middleware/auth.middleware.js';
+import { authMiddleware, esAdministrador, esEmpleado } from '../middleware/auth.middleware.js';
 
 const router = Router();
 
@@ -14,5 +14,6 @@ router.delete('/empleados/:id', authMiddleware, esAdministrador, usuarioControll
 router.post('/empleados/set-password', usuarioController.setContrasena); // 
 router.get('/empleados/:id', authMiddleware, esAdministrador, usuarioController.getEmployee);
 
+router.get('/clientes',authMiddleware, esEmpleado, usuarioController.obtenerClientes);
 
 export default router;

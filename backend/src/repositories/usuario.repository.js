@@ -51,4 +51,11 @@ export async function deleteUsuario(id) {
         return null;
     }
     return await usuario.destroy();
+export async function findAllClientes() {
+  return await Usuario.findAll({
+    where: {
+      rol: 'CLIENTE' 
+    },
+    attributes: { exclude: ['contrasena', 'createdAt', 'updatedAt', 'deletedAt'] }
+  });
 }

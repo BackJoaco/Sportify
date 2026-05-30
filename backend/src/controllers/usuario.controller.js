@@ -87,4 +87,14 @@ export async function getEmployee(req, res) {
     } catch (error) {
         return res.status(404).json({ message: error.message });
     }
+export async function obtenerClientes(req, res) {
+  try {
+    const clientes = await usuarioService.getClientes();
+    
+    return res.status(200).json(clientes);
+  } catch (error) {
+    return res.status(500).json({ 
+      mensaje: error.message || 'Error interno al obtener los clientes' 
+    });
+  }
 }

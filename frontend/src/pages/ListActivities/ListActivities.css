@@ -1,114 +1,147 @@
 .list-activities-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem;
-    color: var(--dark-blue);
-    background-color: var(--off-white);
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  background: var(--off-white);
+  min-height: calc(100vh - 72px);
 }
 
-.list-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-    border-bottom: 2px solid var(--silver);
-    padding-bottom: 1rem;
+.list-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--silver);
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
-.list-header h1 {
-    margin: 0;
-    color: var(--dark-blue);
+.header-title-group {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
-.btn-create {
-    background-color: var(--blue);
-    color: var(--white);
-    border: none;
-    padding: 0.8rem 1.5rem;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: background-color 0.3s ease;
+.header-title-group h1 {
+  margin: 0;
+  color: var(--dark-blue);
+  font-size: 1.8rem;
 }
 
-.btn-create:hover {
-    background-color: var(--cyan);
+.list-subtitle {
+  margin: 0;
+  color: var(--gray);
+  font-size: 0.9rem;
 }
 
-/* Grilla adaptable: Mínimo 280px por tarjeta, expandible */
+.btn-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--white);
+  color: var(--blue);
+  border: 1px solid var(--silver);
+  border-radius: 8px;
+  width: 40px;
+  height: 40px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-back:hover {
+  background: var(--blue);
+  color: var(--white);
+  border-color: var(--blue);
+}
+
+.empty-panel {
+  min-height: 92px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--silver);
+  border-radius: 8px;
+  background: var(--white);
+  padding: 1rem;
+  text-align: center;
+}
+
+.empty-panel p {
+  margin: 0;
+  color: var(--gray);
+  font-weight: 600;
+}
+
 .activities-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
 }
 
 .activity-card {
-    background-color: var(--white);
-    border: 1px solid var(--silver);
-    border-radius: 8px;
-    padding: 1.5rem;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.activity-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    border-color: var(--cyan);
+  background: var(--white);
+  border: 1px solid var(--silver);
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .activity-card h3 {
-    margin: 0 0 1rem 0;
-    color: var(--blue);
-}
-
-.activity-desc {
-    color: var(--gray);
-    flex-grow: 1;
-    font-size: 0.95rem;
-    line-height: 1.5;
-    margin: 0 0 1.5rem 0;
+  margin: 0;
+  color: var(--dark-blue);
+  font-size: 1.25rem;
 }
 
 .activity-details {
-    display: flex;
-    gap: 0.5rem;
-    margin-bottom: 1.5rem;
-    flex-wrap: wrap;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .badge {
-    background-color: var(--off-white);
-    border: 1px solid var(--cyan);
-    color: var(--dark-blue);
-    padding: 0.25rem 0.75rem;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: 600;
+  background: var(--off-white);
+  border-left: 4px solid var(--blue);
+  color: var(--dark-blue);
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
 }
 
-.btn-view {
-    background-color: transparent;
-    color: var(--blue);
-    border: 2px solid var(--blue);
-    padding: 0.6rem;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: all 0.3s ease;
+.activity-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: auto;
+}
+
+.btn-action {
+  flex: 1;
+  padding: 0.6rem;
+  font-size: 0.85rem;
+}
+
+.danger-outline {
+  border-color: var(--gray);
+  color: var(--gray);
+}
+
+.danger-outline:hover {
+  background: var(--gray);
+  color: var(--white);
+  border-color: var(--gray);
+}
+
+@media (max-width: 600px) {
+  .list-header-top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .list-header-top button {
     width: 100%;
-}
-
-.btn-view:hover {
-    background-color: var(--blue);
-    color: var(--white);
-}
-
-.loading-container, .no-data {
-    text-align: center;
-    padding: 3rem;
-    color: var(--gray);
-    font-size: 1.2rem;
+  }
 }

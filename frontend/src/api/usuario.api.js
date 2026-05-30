@@ -69,6 +69,9 @@ export async function deleteEmployee(id) {
 
 export async function getUsuarios() {
   const res = await fetch(`${API_URL}/usuario`, {
+
+export async function getClientes() {
+  const res = await fetch(`${API_URL}/usuario/clientes`, {
     credentials: "include",
   });
 

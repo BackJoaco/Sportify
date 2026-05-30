@@ -245,9 +245,19 @@ export default function ClientHome() {
         </article>
 
         <article className="home-panel">
-          <div className="panel-title">
-            <FaCalendarCheck />
-            <h2>Reservas activas</h2>
+          <div className="panel-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <FaCalendarCheck />
+              <h2>Reservas activas</h2>
+            </div>
+            
+            {/* NUEVO BOTÓN VER MÁS */}
+            <button 
+              className="btn-ver-mas" 
+              onClick={() => navigate("/reserva/mis-reservas")}
+            >
+              Ver más
+            </button>
           </div>
 
           {loadingReservas ? (
