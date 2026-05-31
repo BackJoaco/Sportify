@@ -4,7 +4,6 @@ import Register from "../pages/Register/Register";
 import Profile from "../pages/Profile/Profile";
 import RegisterEmployee from "../pages/RegisterEmployee/RegisterEmployee";
 import Home from "../pages/Home/Home";
-import AdminHome from "../pages/Home/AdminHome/AdminHome";
 import ListActivities from "../pages/ListActivities/ListActivities";
 import CreateActivities from "../pages/CreateActivities/CreateActivities"
 import NotFound from "../pages/NotFound/NotFound";
@@ -60,15 +59,6 @@ export default function AppRoutes() {
         element={
           <PrivateRoute>
             <Profile />
-          </PrivateRoute>
-        }
-      />
-
-      <Route
-        path="/admin/home"
-        element={
-          <PrivateRoute>
-            <AdminHome />
           </PrivateRoute>
         }
       />
