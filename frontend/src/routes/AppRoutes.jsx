@@ -2,7 +2,9 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "../pages/Login/Login";
 import Register from "../pages/Register/Register";
 import Profile from "../pages/Profile/Profile";
+import RegisterEmployee from "../pages/RegisterEmployee/RegisterEmployee";
 import Home from "../pages/Home/Home";
+import AdminHome from "../pages/Home/AdminHome/AdminHome";
 import ListActivities from "../pages/ListActivities/ListActivities";
 import CreateActivities from "../pages/CreateActivities/CreateActivities"
 import NotFound from "../pages/NotFound/NotFound";
@@ -13,6 +15,8 @@ import ListTurn from "../pages/ListTurn/ListTurn";
 import DetailTurn from "../pages/DetailTurn/DetailTurn";
 import Reservation from "../pages/Reservation/Reservation";
 import ProtectedRoute from "./ProtectedRoute";
+import SetPassword from "../pages/SetPassword/SetPassword";
+import UserManagement from "../pages/UserManagement/UserManagement";
 
 export default function AppRoutes() {
   return (
@@ -30,6 +34,8 @@ export default function AppRoutes() {
         }
       />
 
+      <Route path="/set-password" element={<SetPassword />} />
+
       <Route
         path="/register"
         element={
@@ -44,7 +50,7 @@ export default function AppRoutes() {
         path="/home"
         element={
           <PrivateRoute>
-            <Home /> 
+            <Home />
           </PrivateRoute>
         }
       />
@@ -57,12 +63,30 @@ export default function AppRoutes() {
           </PrivateRoute>
         }
       />
+
+      <Route
+        path="/admin/home"
+        element={
+          <PrivateRoute>
+            <AdminHome />
+          </PrivateRoute>
+        }
+      />
+
+      <Route
+        path="/empleados/registrar"
+        element={
+          <PrivateRoute>
+            <RegisterEmployee />
+          </PrivateRoute>
+        }
+      />
       <Route
         path="/actividades"
         element={
           <PrivateRoute>
             <ProtectedRoute allowedRoles={["ADMINISTRADOR"]}>
-              <ListActivities/>
+              <ListActivities />
             </ProtectedRoute>
           </PrivateRoute>
         }
@@ -72,7 +96,7 @@ export default function AppRoutes() {
         element={
           <PrivateRoute>
             <ProtectedRoute allowedRoles={["ADMINISTRADOR"]}>
-              <CreateActivities/>
+              <CreateActivities />
             </ProtectedRoute>
           </PrivateRoute>
         }
@@ -102,7 +126,7 @@ export default function AppRoutes() {
         path="/turnos/:id"
         element={
           <PrivateRoute>
-            <DetailTurn /> 
+            <DetailTurn />
           </PrivateRoute>
         }
       />
@@ -111,9 +135,18 @@ export default function AppRoutes() {
         path="/reserva/mis-reservas"
         element={
           <PrivateRoute>
-          <ProtectedRoute allowedRoles={["CLIENTE" , "EMPLEADO"]}>
-            <Reservation /> 
+            <ProtectedRoute allowedRoles={["CLIENTE", "EMPLEADO"]}>
+              <Reservation />
             </ProtectedRoute>
+          </PrivateRoute>
+        }
+      />
+
+      <Route
+        path="/usuarios"
+        element={
+          <PrivateRoute>
+            <UserManagement />
           </PrivateRoute>
         }
       />
