@@ -4,27 +4,33 @@
   padding: 0 1.5rem 3rem;
 }
 
-/* ── Botón Volver ────────────────────────────────────────── */
-.um-btn-back {
-  background: transparent;
-  border: none;
-  color: var(--gray);
-  cursor: pointer;
-  display: inline-flex;
+.um-header-left {
+  display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.9rem;
-  font-weight: 600;
-  margin-bottom: 1.5rem;
-  padding: 0;
-  transition: color 0.2s;
+  gap: 1.2rem;
 }
 
-.um-btn-back:hover {
-  color: var(--blue);
+.um-btn-back-circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--gray);
+  border: 2px solid var(--blue);
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
-/* ── Encabezado ─────────────────────────────────────────── */
+.um-btn-back-circle:hover {
+  background: var(--blue);
+  color: #fff;
+}
+
 .um-header {
   display: flex;
   align-items: center;
@@ -62,7 +68,7 @@
   flex-wrap: wrap;
 }
 
-/* ── Buscador ────────────────────────────────────────────── */
+
 .um-search-wrapper {
   position: relative;
   display: flex;
@@ -92,7 +98,6 @@
   border-color: var(--blue);
 }
 
-/* ── Botón primario ─────────────────────────────────────── */
 .um-btn-primary {
   align-items: center;
   background: var(--blue);
@@ -114,7 +119,6 @@
   transform: translateY(-1px);
 }
 
-/* ── Tabla ──────────────────────────────────────────────── */
 .um-table-section {
   background: #fff;
   border-radius: 12px;
@@ -165,7 +169,6 @@
   font-weight: 500;
 }
 
-/* Colores según rol */
 .um-cell-rol {
   font-weight: 700;
   font-size: 0.85rem;
@@ -196,7 +199,6 @@
   color: #c0392b;
 }
 
-/* ── Acciones ────────────────────────────────────────────── */
 .um-cell-actions {
   text-align: center;
   width: 80px;
@@ -222,7 +224,6 @@
   color: #e74c3c;
 }
 
-/* ── Paginación ─────────────────────────────────────────── */
 .um-pagination {
   display: flex;
   justify-content: center;
@@ -260,7 +261,6 @@
   color: #fff !important;
 }
 
-/* ── Modal ───────────────────────────────────────────────── */
 .um-modal-overlay {
   align-items: center;
   background: rgba(0, 0, 0, 0.4);
@@ -287,8 +287,15 @@
 }
 
 @keyframes um-modal-in {
-  from { opacity: 0; transform: scale(0.93); }
-  to   { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.93);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .um-modal h2 {
@@ -340,7 +347,6 @@
   transform: translateY(-1px);
 }
 
-/* ── Responsive ─────────────────────────────────────────── */
 @media (max-width: 640px) {
   .um-header {
     flex-direction: column;
