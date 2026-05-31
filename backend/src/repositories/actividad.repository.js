@@ -15,3 +15,13 @@ export async function deleteActivity(id) {
 export async function getById(id){
     return Actividad.findByPk(id);
 }
+
+export async function getByNombre(nombre) {
+    return Actividad.findOne({ where: { nombre } });
+}
+
+export async function updateActivity(id, data) {
+    const actividad = await Actividad.findByPk(id);
+    if (!actividad) return null;
+    return await actividad.update(data);
+}

@@ -16,6 +16,7 @@ import Reservation from "../pages/Reservation/Reservation";
 import ProtectedRoute from "./ProtectedRoute";
 import SetPassword from "../pages/SetPassword/SetPassword";
 import UserManagement from "../pages/UserManagement/UserManagement";
+import ModifyActivity from "../pages/ModifyActivity/ModifyActivity";
 
 export default function AppRoutes() {
   return (
@@ -87,6 +88,16 @@ export default function AppRoutes() {
           <PrivateRoute>
             <ProtectedRoute allowedRoles={["ADMINISTRADOR"]}>
               <CreateActivities />
+            </ProtectedRoute>
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/actividades/modificar/:id"
+        element={
+          <PrivateRoute>
+            <ProtectedRoute allowedRoles={["ADMINISTRADOR"]}>
+              <ModifyActivity />
             </ProtectedRoute>
           </PrivateRoute>
         }
