@@ -40,3 +40,23 @@ export async function deleteActivity(req, res) {
         });
     }
 }
+
+export async function getActivityById(req, res) {
+    try {
+        const { id } = req.params;
+        const actividad = await actividadService.getActividadById(id);
+        return res.status(200).json(actividad);
+    } catch (error) {
+        return res.status(404).json({ message: error.message });
+    }
+}
+
+export async function update(req, res) {
+    try {
+        const { id } = req.params;
+        const updated = await actividadService.updateActivity(id, req.body);
+        return res.status(200).json({ message: 'Actividad modificada correctamente', actividad: updated });
+    } catch (error) {
+        return res.status(400).json({ message: error.message });
+    }
+}

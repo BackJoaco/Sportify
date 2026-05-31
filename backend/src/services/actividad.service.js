@@ -23,3 +23,33 @@ export async function getActividadById(id) {
   }
   return actividad;
 }
+
+export async function updateActivity(id, data) {
+    const actividad = await actividadRepository.getById(id);
+    if (!actividad) {
+        throw new Error('La actividad no existe');
+    }
+
+    if (!data.nombre || data.nombre.trim() === '') {
+        throw new Error('El nombre de la actividad es requerido');
+    }
+
+    if (isNaN(data.precio_clase) || parseFloat(data.precio_clase) <= 0) {
+        throw new Error('El precio por clase debe ser un número positivo');
+    }
+
+    if (isNaN(data.precio_mensual) || parseFloat(data.precio_mensual) <= 0) {
+        throw new Error('El precio mensual debe ser un número positivo');
+    }
+
+    const existing = await actividadRepository.getByNombre(data.nombre.trim());
+    if (existing && existing.id !== Number(id)) {
+        throw new Error('Ya existe una actividad con ese nombre');
+    }
+
+    return await actividadRepository.updateActivity(id, {
+        nombre: data.nombre.trim(),
+        precio_clase: parseFloat(data.precio_clase),
+        precio_mensual: parseFloat(data.precio_mensual)
+    });
+}

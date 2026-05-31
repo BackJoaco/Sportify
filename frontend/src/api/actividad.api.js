@@ -48,3 +48,36 @@ export async function deleteActividad(id) {
 
   return data;
 }
+
+export async function getActividadById(id) {
+  const res = await fetch(`${API_URL}/actividad/${id}`, {
+    credentials: "include",
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw data;
+  }
+
+  return data;
+}
+
+export async function updateActividad(id, datos) {
+  const res = await fetch(`${API_URL}/actividad/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify(datos),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw data;
+  }
+
+  return data;
+}
