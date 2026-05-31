@@ -81,16 +81,16 @@ export default function UserManagement() {
 
   return (
     <main className="um-container">
-      {/* Botón Volver */}
-      <button className="um-btn-back" onClick={() => navigate("/home")}>
-        <FaArrowLeft /> Volver al Panel Admin
-      </button>
-
       {/* Encabezado */}
       <section className="um-header">
-        <div className="um-title-block">
-          <span className="um-kicker">GESTIÓN DE USUARIOS</span>
-          <h1>Usuarios</h1>
+        <div className="um-header-left">
+          <button className="um-btn-back-circle" onClick={() => navigate("/home")} title="Volver al Panel Admin">
+            <FaArrowLeft />
+          </button>
+          <div className="um-title-block">
+            <span className="um-kicker">GESTIÓN DE USUARIOS</span>
+            <h1>Usuarios</h1>
+          </div>
         </div>
 
 
