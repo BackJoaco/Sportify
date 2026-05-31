@@ -82,7 +82,7 @@ export default function UserManagement() {
   return (
     <main className="um-container">
       {/* Botón Volver */}
-      <button className="um-btn-back" onClick={() => navigate("/admin/home")}>
+      <button className="um-btn-back" onClick={() => navigate("/home")}>
         <FaArrowLeft /> Volver al Panel Admin
       </button>
 
