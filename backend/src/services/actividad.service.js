@@ -1,6 +1,11 @@
 import * as actividadRepository from '../repositories/actividad.repository.js';
 
 export async function create(data) {
+    const existing = await actividadRepository.getByNombre(data.nombre.trim());
+    if (existing) {
+        throw new Error('Ya existe una actividad con ese nombre');
+    }
+    
     return actividadRepository.create(data);
 }
 
