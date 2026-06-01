@@ -2,6 +2,7 @@ import "./SetPassword.css";
 import { useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { setPassword } from "../../api/usuario.api.js";
+import Swal from "sweetalert2";
 
 export default function SetPassword() {
   const [searchParams] = useSearchParams();
@@ -48,10 +49,23 @@ export default function SetPassword() {
     try {
       setLoading(true);
       await setPassword(token, password);
-      navigate("/login");
+
+      Swal.fire({
+        toast: true,
+        position: "bottom-end",
+        icon: "success",
+        title: "Contraseña establecida exitosamente",
+        showConfirmButton: false,
+        timer: 2000,
+        timerProgressBar: true,
+      });
+
+      setTimeout(() => {
+        navigate("/login");
+      }, 2000);
+
     } catch (error) {
       setError(error.message || "Ocurrió un error, intentá de nuevo");
-    } finally {
       setLoading(false);
     }
   }

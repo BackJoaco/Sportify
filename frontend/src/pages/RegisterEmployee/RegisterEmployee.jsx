@@ -2,6 +2,7 @@ import "./RegisterEmployee.css";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createEmployee } from "../../api/usuario.api.js";
+import Swal from "sweetalert2";
 
 export default function RegisterEmployee() {
   const navigate = useNavigate();
@@ -28,10 +29,22 @@ export default function RegisterEmployee() {
 
     try {
       await createEmployee(form);
-      navigate("/usuarios");
+      Swal.fire({
+        toast: true,
+        position: "bottom-end",
+        icon: "success",
+        title: "Empleado registrado exitosamente",
+        showConfirmButton: false,
+        timer: 2000,
+        timerProgressBar: true,
+      });
+
+      setTimeout(() => {
+        navigate("/usuarios");
+      }, 2000);
+
     } catch (error) {
       setError(error.message || "Ocurrió un error, intentá de nuevo");
-    } finally {
       setLoading(false);
     }
   }
