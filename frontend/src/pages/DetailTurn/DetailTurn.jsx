@@ -300,6 +300,10 @@ export default function DetailTurn() {
   const estaLleno = cantidadInscriptos >= turno.cupo_maximo;
   const esStaff = usuario?.rol === "EMPLEADO" || usuario?.rol === "ADMINISTRADOR";
 
+  const fechaHoraTurno = new Date(`${turno.fecha}T${turno.hora_inicio}`);
+  const ahora = new Date();
+  const esTurnoPasado = fechaHoraTurno < ahora;
+  
   return (
     <div className="home-container">
       <div className="home-header">
@@ -338,7 +342,7 @@ export default function DetailTurn() {
                 </button>
               )}
 
-              {esStaff && (
+              {esStaff && !esTurnoPasado &&(
                 <button 
                   className="btn-primary" 
                   onClick={handleInscripcionTercero}
@@ -349,7 +353,7 @@ export default function DetailTurn() {
                 </button>
               )}
 
-              {esStaff && (
+              {esStaff && !esTurnoPasado &&(
                 <button className="btn-secondary" onClick={handleEditToggle} style={{ borderColor: "var(--blue)", color: "var(--blue)" }}>
                   Editar
                 </button>

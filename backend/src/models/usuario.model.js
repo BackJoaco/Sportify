@@ -8,7 +8,7 @@ export default (sequelize) => {
     apellido: { type: DataTypes.STRING(100), allowNull: false },
     dni: { type: DataTypes.STRING(20), unique: true, allowNull: false },
     email: { type: DataTypes.STRING(100), unique: true, allowNull: false },
-    contrasena: { type: DataTypes.STRING(255), allowNull: false },
+    contrasena: { type: DataTypes.STRING(255), allowNull: true },
     rol: { 
       type: DataTypes.ENUM('CLIENTE', 'EMPLEADO', 'ADMINISTRADOR'), 
       defaultValue: 'CLIENTE' 
@@ -16,7 +16,9 @@ export default (sequelize) => {
     estado: { 
       type: DataTypes.ENUM('HABILITADO', 'SUSPENDIDO'), 
       defaultValue: 'HABILITADO' 
-    }
+    },
+    token_activacion: { type: DataTypes.STRING(255), allowNull: true },
+    token_expiracion: { type: DataTypes.DATE, allowNull: true }
   }, { 
     tableName: 'usuarios', 
     timestamps: true, 

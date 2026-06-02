@@ -1,0 +1,375 @@
+.um-container {
+  max-width: 900px;
+  margin: 2.5rem auto;
+  padding: 0 1.5rem 3rem;
+}
+
+.um-header-left {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+}
+
+.um-btn-back-circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--gray);
+  border: 2px solid var(--blue);
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.um-btn-back-circle:hover {
+  background: var(--blue);
+  color: #fff;
+}
+
+.um-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+}
+
+.um-title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.um-kicker {
+  color: var(--blue);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.um-title-block h1 {
+  color: var(--dark-blue);
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+}
+
+.um-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+
+.um-search-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.um-search-icon {
+  position: absolute;
+  left: 0.85rem;
+  color: var(--gray);
+  font-size: 0.85rem;
+  pointer-events: none;
+}
+
+.um-search {
+  border: 1.5px solid var(--silver);
+  border-radius: 8px;
+  color: var(--dark-blue);
+  font-size: 0.9rem;
+  outline: none;
+  padding: 0.6rem 1rem 0.6rem 2.25rem;
+  transition: border-color 0.2s;
+  width: 240px;
+}
+
+.um-search:focus {
+  border-color: var(--blue);
+}
+
+.um-btn-primary {
+  align-items: center;
+  background: var(--blue);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 0.9rem;
+  font-weight: 700;
+  gap: 0.5rem;
+  padding: 0.65rem 1.25rem;
+  transition: background 0.2s, transform 0.15s;
+  white-space: nowrap;
+}
+
+.um-btn-primary:hover {
+  background: var(--dark-blue);
+  transform: translateY(-1px);
+}
+
+.um-table-section {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.07);
+  overflow: hidden;
+}
+
+.um-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.um-table thead tr {
+  border-bottom: 1.5px solid var(--silver);
+}
+
+.um-table th {
+  color: var(--blue);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 1rem 1.25rem;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.um-row {
+  border-bottom: 1px solid var(--silver);
+  transition: background 0.15s;
+}
+
+.um-row:last-child {
+  border-bottom: none;
+}
+
+.um-row:hover {
+  background: #f7f9ff;
+}
+
+.um-table td {
+  color: #333;
+  font-size: 0.95rem;
+  padding: 1.1rem 1.25rem;
+  vertical-align: middle;
+}
+
+.um-cell-name {
+  font-weight: 500;
+}
+
+.um-cell-rol {
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.um-rol-empleado {
+  color: var(--blue);
+}
+
+.um-rol-cliente {
+  color: #1a7a4a;
+}
+
+.um-empty {
+  color: var(--gray);
+  font-size: 0.95rem;
+  padding: 2rem 1.25rem !important;
+  text-align: center;
+}
+
+.um-status {
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--gray);
+}
+
+.um-error {
+  color: #c0392b;
+}
+
+.um-cell-actions {
+  text-align: center;
+  width: 80px;
+}
+
+.um-btn-delete {
+  align-items: center;
+  background: transparent;
+  border: 1.5px solid var(--silver);
+  border-radius: 6px;
+  color: var(--gray);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 0.9rem;
+  justify-content: center;
+  padding: 0.45rem 0.6rem;
+  transition: background 0.18s, color 0.18s, border-color 0.18s;
+}
+
+.um-btn-delete:hover {
+  background: #fdecea;
+  border-color: #e74c3c;
+  color: #e74c3c;
+}
+
+.um-pagination {
+  display: flex;
+  justify-content: center;
+  gap: 0.4rem;
+  margin-top: 1.75rem;
+}
+
+.um-page-btn {
+  background: #fff;
+  border: 1.5px solid var(--silver);
+  border-radius: 7px;
+  color: var(--dark-blue);
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  min-width: 38px;
+  padding: 0.45rem 0.7rem;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.um-page-btn:hover:not(:disabled) {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #fff;
+}
+
+.um-page-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.um-page-active {
+  background: var(--blue) !important;
+  border-color: var(--blue) !important;
+  color: #fff !important;
+}
+
+.um-modal-overlay {
+  align-items: center;
+  background: rgba(0, 0, 0, 0.4);
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  left: 0;
+  padding: 1rem;
+  position: fixed;
+  right: 0;
+  top: 0;
+  z-index: 100;
+}
+
+.um-modal {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+  max-width: 400px;
+  padding: 2rem;
+  text-align: center;
+  width: 100%;
+  animation: um-modal-in 0.2s ease;
+}
+
+@keyframes um-modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.93);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.um-modal h2 {
+  color: var(--dark-blue);
+  font-size: 1.25rem;
+  margin: 0 0 0.75rem;
+}
+
+.um-modal p {
+  color: var(--gray);
+  font-size: 0.95rem;
+  margin: 0 0 1.5rem;
+}
+
+.um-modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.um-btn-cancel {
+  background: transparent;
+  border: 1.5px solid var(--silver);
+  border-radius: 8px;
+  color: var(--gray);
+  cursor: pointer;
+  font-weight: 700;
+  padding: 0.65rem 1.25rem;
+  transition: background 0.18s;
+}
+
+.um-btn-cancel:hover {
+  background: var(--silver);
+}
+
+.um-btn-confirm {
+  background: #e74c3c;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 700;
+  padding: 0.65rem 1.25rem;
+  transition: background 0.18s, transform 0.15s;
+}
+
+.um-btn-confirm:hover {
+  background: #c0392b;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 640px) {
+  .um-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .um-search {
+    width: 100%;
+  }
+
+  .um-header-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .um-btn-primary {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .um-table th,
+  .um-table td {
+    padding: 0.8rem 0.75rem;
+    font-size: 0.85rem;
+  }
+}
