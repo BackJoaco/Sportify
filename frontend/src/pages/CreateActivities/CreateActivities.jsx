@@ -93,7 +93,7 @@ export default function CreateActivities() {
                             value={formData.precio_clase}
                             onChange={handleInputChange}
                             required
-                            min="0"
+                            min="1"
                             step="0.01"
                         />
                     </div>
@@ -107,7 +107,7 @@ export default function CreateActivities() {
                             value={formData.precio_mensual}
                             onChange={handleInputChange}
                             required
-                            min="0"
+                            min="1"
                             step="0.01"
                         />
                     </div>

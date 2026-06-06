@@ -1,15 +1,12 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { FaChevronUp, FaChevronDown } from "react-icons/fa";
 import Swal from "sweetalert2";
-import { useAuth } from "../../context/AuthContext";
 import { getActividadById, updateActividad } from "../../api/actividad.api";
 // Importa el mismo CSS que usas para el registro, o renómbralo
 
 export default function ModifyActivity() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { usuario } = useAuth();
 
   const [nombre, setNombre] = useState("");
   const [precioClase, setPrecioClase] = useState("");
@@ -137,7 +134,7 @@ export default function ModifyActivity() {
                       value={precioClase}
                       onChange={(e) => setPrecioClase(e.target.value)}
                       step="0.01"
-                      min="0"
+                      min="1"
                       disabled={saving}
                       required
                     />
@@ -154,7 +151,7 @@ export default function ModifyActivity() {
                       value={precioMensual}
                       onChange={(e) => setPrecioMensual(e.target.value)}
                       step="0.01"
-                      min="0"
+                      min="1"
                       disabled={saving}
                       required
                     />

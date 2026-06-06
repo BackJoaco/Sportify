@@ -1,3 +1,4 @@
+import { Op } from 'sequelize';
 import {Turno, Actividad, Reserva} from '../models/index.model.js';
 
 export async function create(data) {
@@ -40,6 +41,16 @@ export async function getByActividadFechaHora(actividad_id, fecha, hora_inicio) 
   return Turno.findOne({
     where: { actividad_id, fecha, hora_inicio }
   });
+}
+
+export async function getByActividadFecha(actividad_id, fecha, excludeId = null) {
+  const where = { actividad_id, fecha };
+
+  if (excludeId) {
+    where.id = { [Op.ne]: excludeId };
+  }
+
+  return Turno.findAll({ where });
 }
 
 export async function update(id, datosNuevos) {

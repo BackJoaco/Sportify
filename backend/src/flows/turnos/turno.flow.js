@@ -28,10 +28,10 @@ export async function modificarTurnoFlow(id, datosNuevos) {
   if (!turnoExistente) {
     throw new Error('El turno que intenta modificar no existe.');
   }
-
   const fechaHoraTurno = new Date(`${turnoExistente.fecha}T${turnoExistente.hora_inicio}`);
   const ahora = new Date();
   if (fechaHoraTurno < ahora) {
+
     throw new Error('No se puede modificar un turno que ya pasó o está en curso.');
   }
 
