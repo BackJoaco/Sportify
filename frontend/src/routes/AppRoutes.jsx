@@ -17,6 +17,7 @@ import ProtectedRoute from "./ProtectedRoute";
 import SetPassword from "../pages/SetPassword/SetPassword";
 import UserManagement from "../pages/UserManagement/UserManagement";
 import ModifyActivity from "../pages/ModifyActivity/ModifyActivity";
+import Payments from "../pages/Payments/Payments";
 
 export default function AppRoutes() {
   return (
@@ -138,6 +139,17 @@ export default function AppRoutes() {
           <PrivateRoute>
             <ProtectedRoute allowedRoles={["CLIENTE", "EMPLEADO"]}>
               <Reservation />
+            </ProtectedRoute>
+          </PrivateRoute>
+        }
+      />
+
+      <Route
+        path="/pago/mis-pagos"
+        element={
+          <PrivateRoute>
+            <ProtectedRoute allowedRoles={["CLIENTE"]}>
+              <Payments />
             </ProtectedRoute>
           </PrivateRoute>
         }

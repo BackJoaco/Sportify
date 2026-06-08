@@ -5,6 +5,7 @@ import { authMiddleware, esCliente, esEmpleado } from '../middleware/auth.middle
 
 const router = Router();
 
+router.get('/mis-pagos', authMiddleware, esCliente, pagoController.getMisPagos);
 router.post('/sena-reserva', authMiddleware, esCliente, pagoController.pagarSena);
 router.post('/sena-presencial', authMiddleware, esEmpleado, pagoController.registrarSenaPresencial);
 

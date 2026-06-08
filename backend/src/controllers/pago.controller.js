@@ -1,4 +1,15 @@
 import { pagarSenaPresencial, pagarSenaReservaCliente } from '../flows/payment/pago.flow.js';
+import * as pagoService from '../services/pago.service.js';
+
+export async function getMisPagos(req, res) {
+    try {
+        const pagos = await pagoService.findByUsuarioId(req.usuario.id);
+
+        return res.status(200).json(pagos);
+    } catch (error) {
+        return res.status(400).json({ message: error.message });
+    }
+}
 
 export async function pagarSena(req, res) {
     try {

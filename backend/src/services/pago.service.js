@@ -51,3 +51,7 @@ export async function registrarSena({
         registrado_por_empleado_id: empleadoId
     });
 }
+
+export async function findByUsuarioId(usuarioId) {
+    return pagoRepository.findByUsuarioId(usuarioId);
+}

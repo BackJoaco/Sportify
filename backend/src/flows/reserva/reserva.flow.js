@@ -82,6 +82,14 @@ export async function cancelarReserva(reservaId) {
 
   await reservaService.marcarComoCancelada(reservaId);
 
+  if (reserva.estado_pago === 'PENDIENTE') {
+    return {
+      message: "Reserva cancelada exitosamente.",
+      devuelveSena: false,
+      teniaSenaAbonada: false
+    };
+  }
+
   const devuelveSena = horasFaltantes > 24;
   const mensajeSena = devuelveSena 
     ? "Se ha devuelto la seña ya que faltan más de 24 horas." 
@@ -89,6 +97,7 @@ export async function cancelarReserva(reservaId) {
 
   return {
     message: `Reserva cancelada exitosamente. ${mensajeSena}`,
-    devuelveSena
+    devuelveSena,
+    teniaSenaAbonada: true
   };
 }
