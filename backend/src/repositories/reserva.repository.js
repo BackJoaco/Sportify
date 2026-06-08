@@ -1,7 +1,14 @@
 import { Actividad, Reserva, Turno } from '../models/index.model.js';
 
 export async function findById(id) {
-    return Reserva.findByPk(id);
+    return Reserva.findByPk(id, {
+        include: [
+            {
+                model: Turno,
+                include: [Actividad]
+            }
+        ]
+    });
 }
 
 export async function findByUsuarioId(usuarioId) {

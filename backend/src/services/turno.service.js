@@ -7,6 +7,12 @@ function obtenerFechaHora(fecha, horaInicio) {
 }
 
 async function validarDatosTurno(data, excludeId = null) {
+    const entrenador = String(data.entrenador ?? "").trim();
+
+    if (!entrenador) {
+        throw new Error("El nombre del entrenador es obligatorio.");
+    }
+
     if (!data.fecha) {
         throw new Error("La fecha del turno es obligatoria.");
     }

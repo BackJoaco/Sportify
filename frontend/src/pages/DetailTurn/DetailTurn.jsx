@@ -83,6 +83,17 @@ export default function DetailTurn() {
   }
 
   async function handleSaveChanges() {
+    if (!formData.entrenador.trim()) {
+      return Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "warning",
+        title: "El nombre del entrenador es obligatorio",
+        showConfirmButton: false,
+        timer: 3000
+      });
+    }
+
     // Advertencia de regla de negocio
     const result = await Swal.fire({
       title: "¿Guardar cambios?",
@@ -119,8 +130,7 @@ export default function DetailTurn() {
           toast: true,
           position: "top-end",
           icon: "error",
-          title: "Error al modificar",
-          text: err.message || err.mensaje || "Ocurrió un problema", 
+          title: err.message || err.mensaje || "Ocurrió un problema",
           showConfirmButton: false,
           timer: 3500
         });
@@ -304,6 +314,7 @@ export default function DetailTurn() {
   const cupoOcupacion = `${cantidadInscriptos} / ${turno.cupo_maximo}`;
   const estaLleno = cantidadInscriptos >= turno.cupo_maximo;
   const esStaff = usuario?.rol === "EMPLEADO" || usuario?.rol === "ADMINISTRADOR";
+  const esAdmin = usuario?.rol === "ADMINISTRADOR";
 
   return (
     <div className="home-container">
@@ -354,13 +365,13 @@ export default function DetailTurn() {
                 </button>
               )}
 
-              {esStaff && (
+              {esAdmin && (
                 <button className="btn-secondary" onClick={handleEditToggle} style={{ borderColor: "var(--blue)", color: "var(--blue)" }}>
                   Editar
                 </button>
               )}
 
-              {usuario?.rol === "ADMINISTRADOR" && (
+              {esAdmin && (
                 <button className="btn-secondary" onClick={handleDelete} style={{ borderColor: "var(--gray)", color: "var(--gray)" }}>
                   Eliminar
                 </button>
@@ -385,6 +396,7 @@ export default function DetailTurn() {
                   name="entrenador" 
                   value={formData.entrenador} 
                   onChange={handleFormChange}
+                  required
                   className="form-input-inline"
                 />
               ) : (

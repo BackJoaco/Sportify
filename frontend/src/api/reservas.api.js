@@ -14,6 +14,34 @@ export async function getMisReservas() {
   return data;
 }
 
+export async function getReservasCliente(usuarioId) {
+  const res = await fetch(`${API_URL}/reserva/cliente/${usuarioId}`, {
+    credentials: "include",
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw data;
+  }
+
+  return data;
+}
+
+export async function getReservasClientePorDni(dni) {
+  const res = await fetch(`${API_URL}/reserva/cliente-dni/${dni}`, {
+    credentials: "include",
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw data;
+  }
+
+  return data;
+}
+
 export async function crearReserva(datos) {
   const res = await fetch(`${API_URL}/reserva/crear`, {
     method: "POST",

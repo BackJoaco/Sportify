@@ -4,6 +4,7 @@ import { useAuth } from "../../../context/AuthContext";
 import { getMisReservas } from "../../../api/reservas.api";
 import { pagarSenaReserva } from "../../../api/pago.api";
 import {
+  FaCalendarAlt,
   FaCalendarCheck,
   FaCreditCard,
   FaIdCard,
@@ -54,7 +55,8 @@ export default function ClientHome() {
   );
 
   const pagosPendientes = reservas.filter(
-    (reserva) => reserva.estado_pago === "PENDIENTE"
+    (reserva) =>
+      reserva.estado === "CONFIRMADA" && reserva.estado_pago === "PENDIENTE"
   );
 
   function formatearFecha(fecha) {
@@ -140,7 +142,6 @@ export default function ClientHome() {
 
       await pagarSenaReserva({
         reservaId: reservaAPagar.id,
-        monto,
         tarjetaDebito: tarjeta,
       });
 
@@ -199,6 +200,9 @@ export default function ClientHome() {
         </div>
 
         <div className="home-header-actions">
+          <button className="btn-primary" onClick={() => navigate("/turnos")}>
+            <FaCalendarAlt /> Calendario de Turnos
+          </button>
           <button className="btn-secondary" onClick={() => navigate("/perfil")}>
             <FaUserEdit /> Editar perfil
           </button>
