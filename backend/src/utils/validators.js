@@ -1,7 +1,5 @@
 export function validatePassword(password) {
-
     const minLength = password.length >= 6;
-
     const specialCharacter = /[!@#$%^&*(),.?":{}|<>]/.test(password);
 
     if (!minLength) {
@@ -14,7 +12,6 @@ export function validatePassword(password) {
 }
 
 export function validateEmail(email) {
-
     const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
     if (!validEmail) {
@@ -22,14 +19,14 @@ export function validateEmail(email) {
     }
 }
 
-export function validateAdult(birthDate) {
+export function validateAdult(
+    birthDate,
+    message = 'Debe ser mayor de 18 años para registrarte'
+) {
     const today = new Date();
-
-    const birth =
-        new Date(birthDate);
+    const birth = new Date(birthDate);
 
     let age = today.getFullYear() - birth.getFullYear();
-
     const monthDifference = today.getMonth() - birth.getMonth();
 
     if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birth.getDate())) {
@@ -37,6 +34,6 @@ export function validateAdult(birthDate) {
     }
 
     if (age < 18) {
-        throw new Error('Debe ser mayor de 18 años para registrarte');
+        throw new Error(message);
     }
 }

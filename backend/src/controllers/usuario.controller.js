@@ -54,7 +54,7 @@ export async function registerEmployee(req, res) {
         const datos = req.body;
         const nuevo = await usuarioService.registerEmployee(datos);
         return res.status(201).json({
-            message: 'Empleado registrado. Se envió un email para establecer la contraseña.',
+            message: 'Empleado registrado correctamente.',
             empleado: {
                 id: nuevo.id,
                 nombre: nuevo.nombre,
