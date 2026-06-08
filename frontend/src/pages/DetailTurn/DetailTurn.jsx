@@ -56,7 +56,9 @@ export default function DetailTurn() {
 }, [id, navigate]); 
   
   useEffect(() => {
-  fetchTurnoData();
+  Promise.resolve().then(() => {
+    fetchTurnoData();
+  });
 }, [fetchTurnoData]);
 
   
@@ -313,7 +315,7 @@ export default function DetailTurn() {
 
   const cupoOcupacion = `${cantidadInscriptos} / ${turno.cupo_maximo}`;
   const estaLleno = cantidadInscriptos >= turno.cupo_maximo;
-  const esStaff = usuario?.rol === "EMPLEADO" || usuario?.rol === "ADMINISTRADOR";
+  const esEmpleado = usuario?.rol === "EMPLEADO";
   const esAdmin = usuario?.rol === "ADMINISTRADOR";
 
   return (
@@ -354,7 +356,7 @@ export default function DetailTurn() {
                 </button>
               )}
 
-              {esStaff && (
+              {esEmpleado && (
                 <button 
                   className="btn-primary" 
                   onClick={handleInscripcionTercero}

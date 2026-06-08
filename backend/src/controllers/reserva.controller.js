@@ -58,11 +58,12 @@ export async function getReservasClientePorDni(req, res) {
 
 export async function create(req, res) {
   try {
-    const { usuario_id, turno_id } = req.body;
+    const { turno_id } = req.body;
+    const usuario_id = req.usuario.id;
 
-    if (!usuario_id || !turno_id) {
+    if (!turno_id) {
       return res.status(400).json({ 
-        mensaje: 'Los campos usuario_id y turno_id son obligatorios.' 
+        mensaje: 'El campo turno_id es obligatorio.' 
       });
     }
 
@@ -85,7 +86,7 @@ export async function create(req, res) {
 export async function cancelarReserva(req, res) {
   try {
     const { id } = req.params;
-    const resultado = await reservaFlow.cancelarReserva(id);
+    const resultado = await reservaFlow.cancelarReserva(id, req.usuario.id);
     
     return res.status(200).json(resultado);
   } catch (error) {
@@ -99,6 +100,14 @@ export async function crearReservaPorEmpleado(req, res) {
     if (!usuario_id || !turno_id) {
       return res.status(400).json({ 
         mensaje: 'Debe seleccionar un cliente y un turno.' 
+      });
+    }
+
+    const cliente = await usuarioService.getProfile(usuario_id);
+
+    if (cliente.rol !== 'CLIENTE') {
+      return res.status(400).json({
+        mensaje: 'Solo se puede inscribir a usuarios con rol Cliente.'
       });
     }
 
