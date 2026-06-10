@@ -12,10 +12,6 @@ export default function HistorialReservas() {
     const [loading, setLoading] = useState(true);
     const [vistaActual, setVistaActual] = useState("vigentes"); 
 
-    useEffect(() => {
-        cargarHistorial();
-    }, []);
-
     async function cargarHistorial() {
         try {
             setLoading(true);
@@ -43,11 +39,21 @@ export default function HistorialReservas() {
         }
     }
 
+    useEffect(() => {
+        Promise.resolve().then(() => {
+            cargarHistorial();
+        });
+    }, []);
+
     // --- NUEVA LÓGICA DE CANCELACIÓN ---
-    async function handleCancelar(id) {
+    async function handleCancelar(reserva) {
+        const tieneSenaAbonada = reserva.estado_pago !== "PENDIENTE";
+
         const result = await Swal.fire({
             title: "¿Estás seguro?",
-            text: "Se evaluará el tiempo restante para determinar la devolución de tu seña.",
+            text: tieneSenaAbonada
+                ? "Se evaluará el tiempo restante para determinar la devolución de tu seña."
+                : "La reserva se cancelará y no hay pagos para devolver.",
             icon: "warning",
             showCancelButton: true,
             confirmButtonColor: "var(--blue)",
@@ -58,7 +64,7 @@ export default function HistorialReservas() {
 
         if (result.isConfirmed) {
             try {
-                const response = await cancelarReserva(id);
+                const response = await cancelarReserva(reserva.id);
                 
                 // Muestra el mensaje del backend que explica si se devuelve o no la seña
                 Swal.fire({
@@ -200,7 +206,7 @@ export default function HistorialReservas() {
                                             <td>
                                                 <button 
                                                     className="btn-secondary" 
-                                                    onClick={() => handleCancelar(reserva.id)}
+                                                    onClick={() => handleCancelar(reserva)}
                                                     style={{ padding: "0.3rem 0.6rem", fontSize: "0.8rem", borderColor: "var(--gray)", color: "var(--gray)" }}
                                                 >
                                                     Cancelar

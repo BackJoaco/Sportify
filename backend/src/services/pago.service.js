@@ -28,7 +28,13 @@ export async function pago(tarjetaDebito) {
     };
 }
 
-export async function registrarSena({ monto, reservaId, usuarioId }) {
+export async function registrarSena({
+    monto,
+    reservaId,
+    usuarioId,
+    metodoPago = 'MERCADO_PAGO',
+    empleadoId = null
+}) {
     const montoNumerico = Number(monto);
 
     if (!monto || Number.isNaN(montoNumerico) || montoNumerico <= 0) {
@@ -38,9 +44,14 @@ export async function registrarSena({ monto, reservaId, usuarioId }) {
     return pagoRepository.create({
         monto,
         tipo_pago: 'SENA',
-        metodo_pago: 'MERCADO_PAGO',
+        metodo_pago: metodoPago,
         estado: 'COMPLETADO',
         reserva_id: reservaId,
-        usuario_id: usuarioId
+        usuario_id: usuarioId,
+        registrado_por_empleado_id: empleadoId
     });
+}
+
+export async function findByUsuarioId(usuarioId) {
+    return pagoRepository.findByUsuarioId(usuarioId);
 }

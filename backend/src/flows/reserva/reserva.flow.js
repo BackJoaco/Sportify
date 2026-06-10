@@ -16,6 +16,10 @@ export async function create(usuario_id, turno_id) {
     throw new Error('El usuario especificado no existe.');
   }
 
+  if (usuario.rol !== 'CLIENTE') {
+    throw new Error('Solo se puede reservar un turno para un cliente.');
+  }
+
   // 3. Verificar que el horario del turno sea en el futuro
   const fechaHoraTurno = new Date(`${turno.fecha}T${turno.hora_inicio}`);
   const ahora = new Date();
@@ -60,8 +64,12 @@ export async function create(usuario_id, turno_id) {
   return nuevaReserva;
 }
 
-export async function cancelarReserva(reservaId) {
+export async function cancelarReserva(reservaId, usuarioId) {
   const reserva = await reservaService.findById(reservaId);
+
+  if (String(reserva.usuario_id) !== String(usuarioId)) {
+    throw new Error("No puedes cancelar una reserva de otro cliente.");
+  }
 
   if (reserva.estado === 'CANCELADA') {
     throw new Error("La reserva ya se encuentra cancelada.");
@@ -82,6 +90,14 @@ export async function cancelarReserva(reservaId) {
 
   await reservaService.marcarComoCancelada(reservaId);
 
+  if (reserva.estado_pago === 'PENDIENTE') {
+    return {
+      message: "Reserva cancelada exitosamente.",
+      devuelveSena: false,
+      teniaSenaAbonada: false
+    };
+  }
+
   const devuelveSena = horasFaltantes > 24;
   const mensajeSena = devuelveSena 
     ? "Se ha devuelto la seña ya que faltan más de 24 horas." 
@@ -89,6 +105,7 @@ export async function cancelarReserva(reservaId) {
 
   return {
     message: `Reserva cancelada exitosamente. ${mensajeSena}`,
-    devuelveSena
+    devuelveSena,
+    teniaSenaAbonada: true
   };
 }

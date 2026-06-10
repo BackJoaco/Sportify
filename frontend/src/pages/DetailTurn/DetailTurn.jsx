@@ -6,6 +6,11 @@ import { useAuth } from "../../context/AuthContext";
 import { crearReserva, crearReservaStaff } from "../../api/reservas.api";
 import { getClientes } from "../../api/usuario.api";
 
+const HORAS_TURNO = Array.from({ length: 13 }, (_, i) => {
+  const hora = String(i + 8).padStart(2, "0");
+  return `${hora}:00`;
+});
+
 export default function DetailTurn() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -51,7 +56,9 @@ export default function DetailTurn() {
 }, [id, navigate]); 
   
   useEffect(() => {
-  fetchTurnoData();
+  Promise.resolve().then(() => {
+    fetchTurnoData();
+  });
 }, [fetchTurnoData]);
 
   
@@ -62,7 +69,7 @@ export default function DetailTurn() {
     setFormData({
       entrenador: turno.entrenador,
       fecha: turno.fecha,
-      hora_inicio: turno.hora_inicio,
+      hora_inicio: turno.hora_inicio?.substring(0, 5),
       cupo_maximo: turno.cupo_maximo
     });
     setIsEditing(true);
@@ -78,6 +85,17 @@ export default function DetailTurn() {
   }
 
   async function handleSaveChanges() {
+    if (!formData.entrenador.trim()) {
+      return Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "warning",
+        title: "El nombre del entrenador es obligatorio",
+        showConfirmButton: false,
+        timer: 3000
+      });
+    }
+
     // Advertencia de regla de negocio
     const result = await Swal.fire({
       title: "¿Guardar cambios?",
@@ -114,8 +132,7 @@ export default function DetailTurn() {
           toast: true,
           position: "top-end",
           icon: "error",
-          title: "Error al modificar",
-          text: err.message || "Ocurrió un problema",
+          title: err.message || err.mensaje || "Ocurrió un problema",
           showConfirmButton: false,
           timer: 3500
         });
@@ -298,7 +315,8 @@ export default function DetailTurn() {
 
   const cupoOcupacion = `${cantidadInscriptos} / ${turno.cupo_maximo}`;
   const estaLleno = cantidadInscriptos >= turno.cupo_maximo;
-  const esStaff = usuario?.rol === "EMPLEADO" || usuario?.rol === "ADMINISTRADOR";
+  const esEmpleado = usuario?.rol === "EMPLEADO";
+  const esAdmin = usuario?.rol === "ADMINISTRADOR";
 
   return (
     <div className="home-container">
@@ -338,7 +356,7 @@ export default function DetailTurn() {
                 </button>
               )}
 
-              {esStaff && (
+              {esEmpleado && (
                 <button 
                   className="btn-primary" 
                   onClick={handleInscripcionTercero}
@@ -349,13 +367,13 @@ export default function DetailTurn() {
                 </button>
               )}
 
-              {esStaff && (
+              {esAdmin && (
                 <button className="btn-secondary" onClick={handleEditToggle} style={{ borderColor: "var(--blue)", color: "var(--blue)" }}>
                   Editar
                 </button>
               )}
 
-              {usuario?.rol === "ADMINISTRADOR" && (
+              {esAdmin && (
                 <button className="btn-secondary" onClick={handleDelete} style={{ borderColor: "var(--gray)", color: "var(--gray)" }}>
                   Eliminar
                 </button>
@@ -380,6 +398,7 @@ export default function DetailTurn() {
                   name="entrenador" 
                   value={formData.entrenador} 
                   onChange={handleFormChange}
+                  required
                   className="form-input-inline"
                 />
               ) : (
@@ -394,6 +413,7 @@ export default function DetailTurn() {
                   name="fecha" 
                   value={formData.fecha} 
                   onChange={handleFormChange}
+                  min={new Date().toISOString().split("T")[0]}
                   className="form-input-inline"
                 />
               ) : (
@@ -403,13 +423,19 @@ export default function DetailTurn() {
             <div>
               <span>Hora de Inicio</span>
               {isEditing ? (
-                <input 
-                  type="time" 
-                  name="hora_inicio" 
-                  value={formData.hora_inicio} 
+                <select
+                  name="hora_inicio"
+                  value={formData.hora_inicio}
                   onChange={handleFormChange}
                   className="form-input-inline"
-                />
+                >
+                  <option value="">Seleccioná una hora...</option>
+                  {HORAS_TURNO.map((hora) => (
+                    <option key={hora} value={hora}>
+                      {hora}
+                    </option>
+                  ))}
+                </select>
               ) : (
                 <p>{turno.hora_inicio}</p>
               )}

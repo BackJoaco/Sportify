@@ -1,14 +1,18 @@
+import bcrypt from 'bcrypt';
+
 import * as usuarioService from '../../services/usuario.service.js';
-import { validateEmail } from '../../utils/validators.js';
-import { generarToken, generarExpiracion } from '../../utils/generarToken.js';
-import { enviarEmailActivacion } from '../../services/email.service.js';
+import { validateAdult, validateEmail, validatePassword } from '../../utils/validators.js';
 
 export async function registerEmployeeFlow(data) {
-
-    // 1. validaciones
     validateEmail(data.email);
 
-    // 2. verificar existencia
+    if (!data.confirmPassword || data.password !== data.confirmPassword) {
+        throw new Error('Las contrasenas no coinciden.');
+    }
+
+    validatePassword(data.password);
+    validateAdult(data.fecha_nacimiento, 'El empleado debe ser mayor de 18 años');
+
     const usuarioExists = await usuarioService.findByEmail(data.email);
     if (usuarioExists) {
         throw new Error('El email ya se encuentra registrado');
@@ -19,24 +23,15 @@ export async function registerEmployeeFlow(data) {
         throw new Error('El DNI ya se encuentra registrado');
     }
 
-    // 3. generar token
-    const token = generarToken();
-    const expiracion = generarExpiracion();
+    const hashedPassword = await bcrypt.hash(data.password, 10);
 
-    // 4. crear usuario sin contraseña
-    const usuario = await usuarioService.create({
+    return usuarioService.create({
         nombre: data.nombre,
         apellido: data.apellido,
         dni: data.dni,
         email: data.email,
-        contrasena: null,
-        rol: 'EMPLEADO',
-        token_activacion: token,
-        token_expiracion: expiracion
+        fecha_nacimiento: data.fecha_nacimiento,
+        contrasena: hashedPassword,
+        rol: 'EMPLEADO'
     });
-
-    // 5. mandar email
-    await enviarEmailActivacion(data.email, token);
-
-    return usuario;
 }

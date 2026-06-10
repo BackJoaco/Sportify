@@ -9,7 +9,6 @@ export default function CreateTurno() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [actividades, setActividades] = useState([]);
-  const [loadingg, setLoadingg] = useState(true);
 
   const [formData, setFormData] = useState({
     entrenador: "",
@@ -106,8 +105,6 @@ export default function CreateTurno() {
           timerProgressBar: true,
         });
         setActividades([]); // Asegurar array vacío en caso de error
-      } finally {
-        setLoadingg(false);
       }
     }
 

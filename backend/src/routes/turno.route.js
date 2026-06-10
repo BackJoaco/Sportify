@@ -7,7 +7,7 @@ import { authMiddleware, esAdministrador } from '../middleware/auth.middleware.j
 const router = Router();
 
 router.get('/listar', turnoController.getTurnos);
-router.post('/crear', turnoController.create);
+router.post('/crear', authMiddleware, esAdministrador, turnoController.create);
 router.delete("/:id", authMiddleware, esAdministrador, turnoController.deleteTurno);
 router.get("/:id", authMiddleware, turnoController.getTurnoById);
 router.get("/:id/reservas/count", authMiddleware, turnoController.getReservasCount);

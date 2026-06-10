@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import { getMisReservas } from "../../../api/reservas.api";
-import { pagarSenaReserva } from "../../../api/pago.api";
+import { getMisPagos, pagarSenaReserva } from "../../../api/pago.api";
 import {
   FaCalendarCheck,
   FaCreditCard,
@@ -17,8 +17,11 @@ export default function ClientHome() {
   const { usuario } = useAuth();
   const navigate = useNavigate();
   const [reservas, setReservas] = useState([]);
+  const [pagos, setPagos] = useState([]);
   const [loadingReservas, setLoadingReservas] = useState(true);
+  const [loadingPagos, setLoadingPagos] = useState(true);
   const [reservasError, setReservasError] = useState("");
+  const [pagosError, setPagosError] = useState("");
   const [reservaAPagar, setReservaAPagar] = useState(null);
   const [pagando, setPagando] = useState(false);
   const [tarjeta, setTarjeta] = useState({
@@ -43,8 +46,25 @@ export default function ClientHome() {
     }
   }
 
+  async function cargarPagos() {
+    try {
+      setLoadingPagos(true);
+      const data = await getMisPagos();
+      setPagos(data || []);
+      setPagosError("");
+    } catch (err) {
+      setPagos([]);
+      setPagosError(err.message || "No se pudieron cargar los pagos");
+    } finally {
+      setLoadingPagos(false);
+    }
+  }
+
   useEffect(() => {
-    cargarReservas();
+    Promise.resolve().then(() => {
+      cargarReservas();
+      cargarPagos();
+    });
   }, []);
 
   if (!usuario) return null;
@@ -54,8 +74,11 @@ export default function ClientHome() {
   );
 
   const pagosPendientes = reservas.filter(
-    (reserva) => reserva.estado_pago === "PENDIENTE"
+    (reserva) =>
+      reserva.estado === "CONFIRMADA" && reserva.estado_pago === "PENDIENTE"
   );
+
+  const pagosRecientes = pagos.slice(0, 3);
 
   function formatearFecha(fecha) {
     if (!fecha) return "Sin fecha";
@@ -76,6 +99,49 @@ export default function ClientHome() {
     };
 
     return estados[estadoPago] || estadoPago;
+  }
+
+  function mapTipoPago(tipoPago) {
+    const tipos = {
+      SENA: "Sena",
+      RESTO_TURNO: "Resto del turno",
+      CLASE_COMPLETA: "Clase completa",
+      SUSCRIPCION_MENSUAL: "Suscripcion mensual",
+    };
+
+    return tipos[tipoPago] || tipoPago;
+  }
+
+  function mapMetodoPago(metodoPago) {
+    const metodos = {
+      MERCADO_PAGO: "Mercado Pago",
+      EFECTIVO: "Efectivo",
+    };
+
+    return metodos[metodoPago] || metodoPago;
+  }
+
+  function formatearMonto(monto) {
+    const montoNumerico = Number(monto);
+
+    if (Number.isNaN(montoNumerico)) {
+      return "$0";
+    }
+
+    return montoNumerico.toLocaleString("es-AR", {
+      style: "currency",
+      currency: "ARS",
+    });
+  }
+
+  function formatearFechaCompleta(fecha) {
+    if (!fecha) return "Sin fecha";
+
+    return new Date(fecha).toLocaleDateString("es-AR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
   }
 
   function calcularSena(reserva) {
@@ -140,7 +206,6 @@ export default function ClientHome() {
 
       await pagarSenaReserva({
         reservaId: reservaAPagar.id,
-        monto,
         tarjetaDebito: tarjeta,
       });
 
@@ -156,6 +221,7 @@ export default function ClientHome() {
 
       setReservaAPagar(null);
       await cargarReservas();
+      await cargarPagos();
     } catch (err) {
       Swal.fire({
         toast: true,
@@ -304,14 +370,57 @@ export default function ClientHome() {
         </article>
 
         <article className="home-panel">
-          <div className="panel-title">
-            <FaCreditCard />
-            <h2>Pagos</h2>
+          <div className="panel-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <FaCreditCard />
+              <h2>Pagos</h2>
+            </div>
+
+            <button
+              className="btn-ver-mas"
+              onClick={() => navigate("/pago/mis-pagos")}
+            >
+              Ver mas
+            </button>
           </div>
 
-          <div className="empty-panel">
-            <p>No hay pagos pendientes para mostrar.</p>
-          </div>
+          {loadingPagos ? (
+            <div className="empty-panel">
+              <p>Cargando pagos...</p>
+            </div>
+          ) : pagosError ? (
+            <div className="empty-panel">
+              <p>{pagosError}</p>
+            </div>
+          ) : pagos.length === 0 ? (
+            <div className="empty-panel">
+              <p>No tenes pagos registrados por el momento.</p>
+            </div>
+          ) : (
+            <div className="payment-history-list">
+              {pagosRecientes.map((pago) => (
+                <div className="payment-history-item" key={pago.id}>
+                  <div>
+                    <strong>{mapTipoPago(pago.tipo_pago)}</strong>
+                    <span>
+                      {pago.Reserva?.Turno?.Actividad?.nombre || "Pago registrado"}
+                    </span>
+                    {pago.Reserva?.Turno && (
+                      <small>
+                        {formatearFecha(pago.Reserva.Turno.fecha)} -{" "}
+                        {formatearHora(pago.Reserva.Turno.hora_inicio)}
+                      </small>
+                    )}
+                  </div>
+                  <div className="payment-history-meta">
+                    <strong>{formatearMonto(pago.monto)}</strong>
+                    <span>{mapMetodoPago(pago.metodo_pago)}</span>
+                    <small>{formatearFechaCompleta(pago.createdAt)}</small>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </article>
 
         <article className="home-panel">
