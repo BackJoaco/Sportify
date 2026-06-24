@@ -2,6 +2,7 @@ import { useState } from "react";
 import { register } from "../../api/auth.api";
 import { useNavigate } from "react-router-dom";
 import "./register.css";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 import Swal from "sweetalert2";
 
 export default function Register() {
@@ -12,12 +13,27 @@ export default function Register() {
     dni: "",
     fecha_nacimiento: "",
     password: "",
+    confirmPassword: "",
   });
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   async function handleSubmit(e) {
     e.preventDefault();
+
+    if (form.password !== form.confirmPassword) {
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "error",
+        title: "Las contraseñas no coinciden",
+        showConfirmButton: false,
+        timer: 2500,
+        timerProgressBar: true,
+      });
+      return;
+    }
 
     setLoading(true);
 
@@ -34,6 +50,7 @@ export default function Register() {
         timerProgressBar: true,
       });
 
+  
       setTimeout(() => {
         navigate("/login");
       }, 2500);
@@ -63,6 +80,7 @@ export default function Register() {
           <label>Nombre</label>
 
           <input
+            value={form.nombre}
             placeholder="Ingresá tu nombre"
             required
             onChange={(e) => setForm({ ...form, nombre: e.target.value })}
@@ -72,6 +90,7 @@ export default function Register() {
         <div className="input-group">
           <label>Apellido</label>
           <input
+            value={form.apellido}
             placeholder="Ingresá tu apellido"
             required
             onChange={(e) => setForm({ ...form, apellido: e.target.value })}
@@ -81,6 +100,7 @@ export default function Register() {
         <div className="input-group">
           <label>Email</label>
           <input
+            value={form.email}
             placeholder="Ingresá tu email"
             required
             onChange={(e) => setForm({ ...form, email: e.target.value })}
@@ -91,6 +111,7 @@ export default function Register() {
           <label>DNI</label>
           <input
             type="number"
+            value={form.dni}
             placeholder="Ingresá tu DNI"
             required
             onChange={(e) => setForm({ ...form, dni: e.target.value })}
@@ -101,6 +122,7 @@ export default function Register() {
           <label>Fecha de nacimiento</label>
           <input
             type="date"
+            value={form.fecha_nacimiento}
             required
             onChange={(e) =>
               setForm({ ...form, fecha_nacimiento: e.target.value })
@@ -110,19 +132,50 @@ export default function Register() {
 
         <div className="input-group">
           <label>Contraseña</label>
-          <input
-            type="password"
-            placeholder="Ingresá tu contraseña"
-            required
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
-          />
+          <div className="password-wrapper">
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="Ingresá tu contraseña"
+              required
+              value={form.password}
+              onChange={(e) =>
+                setForm({ ...form, password: e.target.value })
+              }
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
+            </button>
+          </div>
+        </div>
+
+        <div className="input-group">
+          <label>Confirmar contraseña</label>
+          <div className="password-wrapper">
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="Reingresá tu contraseña"
+              required
+              value={form.confirmPassword}
+              onChange={(e) =>
+                setForm({ ...form, confirmPassword: e.target.value })
+              }
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
+            </button>
+          </div>
         </div>
 
         <button type="submit" disabled={loading}>
           {loading ? "Registrando..." : "Registrarse"}
         </button>
 
-        {/* 👇 link a login */}
         <p className="register-footer">
           ¿Ya tenés cuenta?{" "}
           <span onClick={() => navigate("/login")}>

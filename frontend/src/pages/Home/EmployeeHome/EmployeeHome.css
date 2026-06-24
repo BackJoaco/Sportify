@@ -1,0 +1,220 @@
+.employee-home-container {
+  min-height: calc(100vh - 72px);
+  background: var(--off-white);
+  color: var(--dark-blue);
+  padding: 2rem;
+}
+
+.employee-home-header,
+.employee-action-panel {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.employee-home-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 2px solid var(--silver);
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+}
+
+.employee-home-header span {
+  color: var(--blue);
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.employee-home-header h1 {
+  color: var(--dark-blue);
+  font-size: 2rem;
+  margin: 0.35rem 0;
+}
+
+.employee-home-header p {
+  color: var(--gray);
+  margin: 0;
+}
+
+.employee-action-panel {
+  background: var(--white);
+  border: 1px solid var(--silver);
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.5rem;
+}
+
+.employee-action-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  background: var(--off-white);
+  color: var(--blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+}
+
+.employee-action-panel h2 {
+  color: var(--dark-blue);
+  margin: 0 0 0.35rem;
+}
+
+.employee-action-panel p {
+  color: var(--gray);
+  margin: 0;
+}
+
+.employee-action-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.employee-payment-form {
+  display: grid;
+  gap: 0.45rem;
+  margin-top: 1rem;
+}
+
+.employee-payment-form label {
+  color: var(--dark-blue);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.employee-search-row {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.employee-payment-form input {
+  border: 1px solid var(--silver);
+  border-radius: 6px;
+  color: var(--dark-blue);
+  font: inherit;
+  padding: 0.75rem;
+}
+
+.employee-payment-form input:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(30, 91, 240, 0.12);
+  outline: none;
+}
+
+.employee-client-result {
+  background: var(--off-white);
+  border-left: 4px solid var(--blue);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 1rem;
+  padding: 0.9rem;
+}
+
+.employee-client-result strong {
+  color: var(--dark-blue);
+}
+
+.employee-client-result span {
+  color: var(--gray);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.employee-empty-state {
+  background: var(--off-white);
+  border: 1px dashed var(--silver);
+  border-radius: 8px;
+  color: var(--gray);
+  font-weight: 600;
+  margin-top: 1rem;
+  padding: 1rem;
+  text-align: center;
+}
+
+.employee-reservation-list {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.employee-reservation-item {
+  align-items: center;
+  background: var(--off-white);
+  border-left: 4px solid var(--blue);
+  border-radius: 8px;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  padding: 0.9rem;
+}
+
+.employee-reservation-item strong {
+  color: var(--dark-blue);
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.employee-reservation-item span {
+  color: var(--gray);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.employee-reservation-action {
+  align-items: flex-end;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+.employee-reservation-action span {
+  color: var(--blue);
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.employee-reservation-action button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+@media (max-width: 700px) {
+  .employee-home-container {
+    padding: 1rem;
+  }
+
+  .employee-home-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .employee-action-panel {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .employee-reservation-item {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .employee-search-row {
+    grid-template-columns: 1fr;
+  }
+
+  .employee-reservation-action {
+    align-items: stretch;
+    width: 100%;
+  }
+}

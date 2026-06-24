@@ -1,0 +1,61 @@
+import { Op } from 'sequelize';
+import {Turno, Actividad, Reserva} from '../models/index.model.js';
+
+export async function create(data) {
+    return Turno.create(data);
+}
+
+export async function getTurnos() {
+    return Turno.findAll({
+        include: [{
+            model: Actividad,
+            attributes: ['id', 'nombre']
+        }]
+    })
+}
+
+export async function existsTurnByActivityId(actividadId) {
+    const turno = await Turno.findOne({ where: { actividad_id: actividadId } });
+
+    return !!turno;
+}
+
+export async function getById(id) {
+  return Turno.findByPk(id, {
+    include: [
+      {
+        model: Reserva
+      },
+      {
+        model: Actividad,
+        attributes: ['id', 'nombre']
+      }
+    ]
+  });
+}
+
+export async function remove(id) {
+  return Turno.destroy({ where: { id } });
+}
+export async function getByActividadFechaHora(actividad_id, fecha, hora_inicio) {
+  return Turno.findOne({
+    where: { actividad_id, fecha, hora_inicio }
+  });
+}
+
+export async function getByActividadFecha(actividad_id, fecha, excludeId = null) {
+  const where = { actividad_id, fecha };
+
+  if (excludeId) {
+    where.id = { [Op.ne]: excludeId };
+  }
+
+  return Turno.findAll({ where });
+}
+
+export async function update(id, datosNuevos) {
+  const [affectedRows] = await Turno.update(datosNuevos, {
+    where: { id }
+  });
+  return affectedRows;
+}

@@ -1,0 +1,230 @@
+.calendario-container {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    background-color: var(--white);
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+/* Nuevo Header Superior */
+.calendario-top-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--silver);
+}
+
+.header-title-group {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.btn-back {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--off-white);
+    color: var(--blue);
+    border: 1px solid var(--silver);
+    border-radius: 8px;
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-back:hover {
+    background: var(--blue);
+    color: var(--white);
+    border-color: var(--blue);
+}
+
+.header-title-group h1 {
+    margin: 0;
+    color: var(--dark-blue);
+    font-size: 1.8rem;
+}
+
+.calendario-subtitle {
+    margin: 0;
+    color: var(--gray);
+    font-size: 0.9rem;
+}
+
+/* Header: Filtros y Leyenda */
+.calendario-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.filtro-select {
+    padding: 0.6rem 1rem;
+    border: 2px solid var(--dark-blue);
+    border-radius: 8px;
+    font-size: 1rem;
+    color: var(--dark-blue);
+    background-color: var(--white);
+    cursor: pointer;
+    outline: none;
+    font-weight: 600;
+}
+
+.leyenda-actividades {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.leyenda-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.leyenda-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.leyenda-texto {
+    color: var(--dark-blue);
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+.mes-indicador {
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--dark-blue);
+    margin-bottom: 1rem;
+}
+
+/* Grilla del Calendario */
+.calendario-grid {
+    display: grid;
+    /* Cambiado a 7 fracciones (1 para cada día de lunes a domingo) */
+    grid-template-columns: 80px repeat(7, 1fr);
+    border: 2px solid var(--dark-blue);
+    border-radius: 12px;
+    overflow: hidden;
+    background-color: var(--white);
+}
+
+.calendario-fila {
+    display: contents;
+}
+
+.calendario-celda {
+    border-right: 1px solid var(--dark-blue);
+    border-bottom: 1px solid var(--dark-blue);
+    padding: 0.5rem;
+    min-height: 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.calendario-celda:nth-child(8n) {
+    border-right: none;
+}
+.calendario-fila:last-child .calendario-celda {
+    border-bottom: none;
+}
+
+.header-celda {
+    background-color: var(--white);
+    text-align: center;
+    font-weight: bold;
+    color: var(--dark-blue);
+    min-height: 80px;
+}
+
+.dia-nombre {
+    font-size: 1.1rem;
+}
+
+.dia-fecha {
+    font-size: 0.9rem;
+    color: var(--gray);
+    margin-top: 0.2rem;
+}
+
+.hora-celda {
+    font-weight: bold;
+    color: var(--dark-blue);
+    text-align: right;
+    padding-right: 1rem;
+}
+
+.dia-celda {
+    position: relative;
+    padding: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    overflow-y: auto;
+}
+
+.turno-badge {
+    color: white;
+    padding: 0.4rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    text-align: center;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease, filter 0.2s ease;
+    min-height: 2.5rem; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    word-break: break-word;
+    flex-shrink: 0;
+}
+
+.turno-badge:hover {
+    transform: scale(0.98);
+    filter: brightness(1.1);
+}
+
+/* Navegación Inferior */
+.calendario-navegacion {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 2rem;
+}
+
+.btn-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: transparent;
+    color: var(--dark-blue);
+    border: none;
+    font-size: 1.2rem; /* Achicado de 2rem para mejor proporción */
+    font-weight: 700;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.btn-nav:hover:not(:disabled) {
+    color: var(--cyan);
+}
+
+.btn-nav:disabled {
+    color: var(--silver);
+    cursor: not-allowed;
+}

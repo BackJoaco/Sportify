@@ -1,0 +1,186 @@
+.historial-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    background-color: var(--off-white);
+    padding: 2rem;
+}
+
+.historial-card {
+    background-color: var(--white);
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    width: 100%;
+    max-width: 1100px;
+}
+
+/* Header y Botón Volver */
+.historial-header {
+    border-bottom: 2px solid var(--off-white);
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.header-title-group {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.btn-back {
+    background-color: transparent;
+    color: var(--gray);
+    border: 1px solid var(--silver);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-back:hover {
+    color: var(--dark-blue);
+    border-color: var(--dark-blue);
+    background-color: var(--off-white);
+}
+
+.historial-header h1 {
+    color: var(--dark-blue);
+    font-size: 1.8rem;
+    margin: 0 0 0.2rem 0;
+}
+
+.historial-subtitle {
+    color: var(--gray);
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+/* Pestañas (Tabs) */
+.historial-tabs {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.tab-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.8rem 1.5rem;
+    background-color: transparent;
+    color: var(--gray);
+    border: none;
+    border-bottom: 3px solid transparent;
+    font-size: 1.05rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.tab-btn:hover {
+    color: var(--blue);
+}
+
+.tab-btn.active {
+    color: var(--blue);
+    border-bottom-color: var(--blue);
+}
+
+/* Tabla */
+.table-responsive {
+    overflow-x: auto;
+}
+
+.historial-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.historial-table th {
+    background-color: var(--off-white);
+    color: var(--dark-blue);
+    padding: 1rem;
+    font-weight: 600;
+    border-bottom: 2px solid var(--silver);
+}
+
+.historial-table td {
+    padding: 1.2rem 1rem;
+    border-bottom: 1px solid var(--off-white);
+    color: var(--dark-blue);
+    vertical-align: middle;
+}
+
+.historial-table tbody tr:hover {
+    background-color: #f9f9fc;
+}
+
+.row-cancelled td {
+    opacity: 0.6; /* Hace que las canceladas se vean más tenues */
+}
+
+.text-blue {
+    color: var(--blue);
+}
+
+.fecha-hora-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.hora-text {
+    font-size: 0.85rem;
+    color: var(--gray);
+}
+
+/* Badges de estado */
+.badge-pago, .badge-estado {
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+/* Colores para Estado de Pago */
+.badge-pago.pendiente {
+    background-color: #FFF3CD;
+    color: #856404;
+}
+
+.badge-pago.sena_abonada {
+    background-color: #CCE5FF;
+    color: #004085;
+}
+
+.badge-pago.pagado_completo {
+    background-color: #D4EDDA;
+    color: #155724;
+}
+
+/* Colores para Estado General */
+.badge-estado.confirmada {
+    background-color: #D4EDDA;
+    color: #155724;
+}
+
+.badge-estado.cancelada {
+    background-color: #F8D7DA;
+    color: #721C24;
+}
+
+.loading-state, .empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: var(--gray);
+    font-size: 1.1rem;
+}

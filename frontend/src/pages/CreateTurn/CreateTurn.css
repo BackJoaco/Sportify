@@ -1,0 +1,145 @@
+.turno-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: var(--off-white);
+  padding: 2rem;
+}
+
+.turno-card {
+  background-color: var(--white);
+  padding: 2.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 500px;
+}
+
+.turno-card h1 {
+  color: var(--dark-blue);
+  margin-bottom: 0.5rem;
+  font-size: 1.8rem;
+  text-align: center;
+}
+
+.turno-subtitle {
+  color: var(--gray);
+  text-align: center;
+  margin-bottom: 2rem;
+  font-size: 0.95rem;
+}
+
+.turno-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+}
+
+.form-row .form-group {
+  flex: 1;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  color: var(--dark-blue);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+
+
+.form-group input,
+.form-group select {
+  padding: 0.75rem;
+  border: 1px solid var(--silver);
+  border-radius: 6px;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.3s ease;
+  background-color: var(--white); /* Importante para el select */
+  width: 100%;
+  box-sizing: border-box;
+}
+
+
+
+.form-group input:focus,
+.form-group select:focus {
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 2px rgba(0, 210, 255, 0.2);
+}
+
+.turno-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.btn-save {
+  flex: 1;
+  background-color: var(--blue);
+  color: var(--white);
+  border: none;
+  padding: 0.8rem;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.btn-save:hover:not(:disabled) {
+  background-color: var(--cyan);
+}
+
+.btn-save:disabled {
+  background-color: var(--silver);
+  cursor: not-allowed;
+}
+
+.btn-cancel {
+  flex: 1;
+  background-color: transparent;
+  color: var(--gray);
+  border: 1px solid var(--silver);
+  padding: 0.8rem;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-cancel:hover:not(:disabled) {
+  background-color: var(--off-white);
+  color: var(--dark-blue);
+  border-color: var(--gray);
+}
+
+.btn-cancel:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Opcional: para cambiar un poco el color si es la opción "placeholder" */
+.form-group select:invalid {
+  color: var(--gray);
+}
+
+.form-group select option {
+  color: var(--dark-blue); /* Podés usar 'black' si preferís, pero esta es tu variable oscura */
+}
+
+.form-group select:invalid,
+.form-group input[type="date"]:invalid {
+  color: var(--gray);
+}
