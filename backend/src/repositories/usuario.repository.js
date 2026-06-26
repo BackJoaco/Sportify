@@ -60,3 +60,21 @@ export async function deleteUsuario(id) {
     }
     return await usuario.destroy();
 }
+
+export async function findParanoidByEmailOrDni(email, dni) {
+    return Usuario.findOne({
+        where: {
+            [Op.or]: [{ email }, { dni }]
+        },
+        paranoid: false 
+    });
+}
+
+export async function restore(id) {
+    return Usuario.restore({ where: { id } });
+}
+
+export async function update(id, data) {
+    await Usuario.update(data, { where: { id } });
+    return Usuario.findByPk(id);
+}

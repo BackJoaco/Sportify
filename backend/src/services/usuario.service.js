@@ -150,3 +150,12 @@ export async function getEmployee(id) {
         estado: empleado.estado
     };
 }
+
+export async function findParanoidByEmailOrDni(email, dni) {
+    return usuarioRepository.findParanoidByEmailOrDni(email, dni);
+}
+
+export async function reactivateAndUpdate(id, data) {
+    await usuarioRepository.restore(id);
+    return usuarioRepository.update(id, data);
+}

@@ -6,8 +6,6 @@ import { sendWelcomeEmail } from '../../services/mail.service.js';
 import { validateEmail, validatePassword, validateAdult } from '../../utils/validators.js';
 
 export async function registerFlow(data) {
-
-    // 1. validaciones
     validateEmail(data.email);
     if (!data.confirmPassword || data.password !== data.confirmPassword) {
         throw new Error('Las contraseñas no coinciden');
@@ -15,39 +13,29 @@ export async function registerFlow(data) {
     validatePassword(data.password);
     validateAdult(data.fecha_nacimiento);
     
-    // 2. verificar existencia
-    const usuarioExists = await usuarioService.findByEmail(data.email);
+    const hashedPassword = await bcrypt.hash(data.password, 10);
+    const userData = {
+        nombre: data.nombre,
+        apellido: data.apellido,
+        dni: data.dni,
+        email: data.email,
+        fecha_nacimiento: data.fecha_nacimiento,
+        contrasena: hashedPassword,
+        rol: 'CLIENTE'
+    };
 
-    if (usuarioExists) {
-        throw new Error('El email ya se encuentra registrado');
+    const existingUser = await usuarioService.findParanoidByEmailOrDni(data.email, data.dni);
+
+    if (existingUser) {
+        if (!existingUser.deletedAt) {
+            if (existingUser.email === data.email) throw new Error('El email ya se encuentra registrado');
+            if (existingUser.dni === data.dni) throw new Error('El DNI ya se encuentra registrado');
+        }
+        
+        const usuario = await usuarioService.reactivateAndUpdate(existingUser.id, userData);
+        return { usuario };
     }
 
-    const dniExists = await usuarioService.findByDni(data.dni);
-
-    if (dniExists) {
-        throw new Error('El DNI ya se encuentra registrado');
-    }
-
-    // 3. hash password
-    const hashedPassword =
-        await bcrypt.hash(data.password, 10);
-
-    // 4. crear usuario
-    const usuario =
-        await usuarioService.create({
-            nombre: data.nombre,
-            apellido: data.apellido,
-            dni: data.dni,
-            email: data.email,
-            fecha_nacimiento: data.fecha_nacimiento,
-            contrasena: hashedPassword
-        });
-
-    // try {
-    //     //await sendWelcomeEmail(usuario);
-    // } catch (error) {
-    //     console.error('Error enviando mail de bienvenida:', error.message);
-    //}
-
+    const usuario = await usuarioService.create(userData);
     return { usuario };
 }
