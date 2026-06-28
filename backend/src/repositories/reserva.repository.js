@@ -41,6 +41,13 @@ export async function create(data){
     return Reserva.create(data);
 }
 
+export async function deleteByUsuarioId(usuarioId, transaction) {
+  return Reserva.destroy({
+    where: { usuario_id: usuarioId },
+    transaction
+  });
+}
+
 export async function countByTurno(turno_id) {
   return await Reserva.count({
     where: {

@@ -17,6 +17,13 @@ export async function findById(id) {
     return Usuario.findByPk(id);
 }
 
+export async function findByIdIncludingDeleted(id, options = {}) {
+    return Usuario.findByPk(id, {
+        paranoid: false,
+        ...options
+    });
+}
+
 export async function updateUsuario(id, data) {
     const usuario = await Usuario.findByPk(id);
     return usuario.update(data);
@@ -59,4 +66,9 @@ export async function deleteUsuario(id) {
         return null;
     }
     return await usuario.destroy();
+}
+
+export async function deleteUsuarioInstance(usuario, transaction) {
+    await usuario.destroy({ transaction });
+    return 1;
 }

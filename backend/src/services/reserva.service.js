@@ -30,6 +30,10 @@ export async function create(data){
     return reservaRepository.create(data);
 }
 
+export async function deleteByUsuarioId(usuarioId, transaction) {
+    return reservaRepository.deleteByUsuarioId(usuarioId, transaction);
+}
+
 export async function countByTurno(turno_id) {
   return await reservaRepository.countByTurno(turno_id);
 }
