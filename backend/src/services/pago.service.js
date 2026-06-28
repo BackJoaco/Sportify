@@ -55,3 +55,7 @@ export async function registrarSena({
 export async function findByUsuarioId(usuarioId) {
     return pagoRepository.findByUsuarioId(usuarioId);
 }
+
+export async function deleteByUsuarioId(usuarioId, transaction) {
+    return pagoRepository.deleteByUsuarioId(usuarioId, transaction);
+}

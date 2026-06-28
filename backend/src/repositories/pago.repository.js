@@ -21,3 +21,10 @@ export async function findByUsuarioId(usuarioId) {
         order: [['createdAt', 'DESC']]
     });
 }
+
+export async function deleteByUsuarioId(usuarioId, transaction) {
+    return Pago.destroy({
+        where: { usuario_id: usuarioId },
+        transaction
+    });
+}
