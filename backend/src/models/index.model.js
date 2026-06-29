@@ -8,6 +8,9 @@ import ReservaModel from './reserva.model.js';
 import ListaEsperaModel from './listaEspera.model.js';
 import PagoModel from './pago.model.js';
 import CreditoModel from './credito.model.js';
+import AbonadoTurnoModel from './abonadoTurno.model.js';
+import ListaEsperaAbonadoModel from './listaEsperaAbonado.model.js';
+import ListaEsperaNoAbonadoModel from './listaEsperaNoAbonado.model.js';
 
 const Usuario = UsuarioModel(sequelize);
 const Actividad = ActividadModel(sequelize);
@@ -17,6 +20,9 @@ const Reserva = ReservaModel(sequelize);
 const ListaEspera = ListaEsperaModel(sequelize);
 const Pago = PagoModel(sequelize);
 const Credito = CreditoModel(sequelize);
+const AbonadoTurno = AbonadoTurnoModel(sequelize);
+const ListaEsperaAbonado = ListaEsperaAbonadoModel(sequelize);
+const ListaEsperaNoAbonado = ListaEsperaNoAbonadoModel(sequelize);
 
 // --- Suscripciones ---
 Usuario.hasMany(SuscripcionAbonado, {
@@ -58,6 +64,35 @@ Actividad.hasMany(Turno, {
 Turno.belongsTo(Actividad, {
   foreignKey: {
     name: 'actividad_id',
+    allowNull: false
+  }
+});
+
+// --- Abonados a turnos fijos ---
+Usuario.hasMany(AbonadoTurno, {
+  foreignKey: {
+    name: 'usuario_id',
+    allowNull: false
+  }
+});
+
+AbonadoTurno.belongsTo(Usuario, {
+  foreignKey: {
+    name: 'usuario_id',
+    allowNull: false
+  }
+});
+
+Turno.hasMany(AbonadoTurno, {
+  foreignKey: {
+    name: 'turno_id',
+    allowNull: false
+  }
+});
+
+AbonadoTurno.belongsTo(Turno, {
+  foreignKey: {
+    name: 'turno_id',
     allowNull: false
   }
 });
@@ -114,6 +149,63 @@ Turno.hasMany(ListaEspera, {
 });
 
 ListaEspera.belongsTo(Turno, {
+  foreignKey: {
+    name: 'turno_id',
+    allowNull: false
+  }
+});
+
+// --- Listas de Espera nuevas ---
+Usuario.hasMany(ListaEsperaAbonado, {
+  foreignKey: {
+    name: 'usuario_id',
+    allowNull: false
+  }
+});
+
+ListaEsperaAbonado.belongsTo(Usuario, {
+  foreignKey: {
+    name: 'usuario_id',
+    allowNull: false
+  }
+});
+
+Turno.hasMany(ListaEsperaAbonado, {
+  foreignKey: {
+    name: 'turno_id',
+    allowNull: false
+  }
+});
+
+ListaEsperaAbonado.belongsTo(Turno, {
+  foreignKey: {
+    name: 'turno_id',
+    allowNull: false
+  }
+});
+
+Usuario.hasMany(ListaEsperaNoAbonado, {
+  foreignKey: {
+    name: 'usuario_id',
+    allowNull: false
+  }
+});
+
+ListaEsperaNoAbonado.belongsTo(Usuario, {
+  foreignKey: {
+    name: 'usuario_id',
+    allowNull: false
+  }
+});
+
+Turno.hasMany(ListaEsperaNoAbonado, {
+  foreignKey: {
+    name: 'turno_id',
+    allowNull: false
+  }
+});
+
+ListaEsperaNoAbonado.belongsTo(Turno, {
   foreignKey: {
     name: 'turno_id',
     allowNull: false
@@ -217,5 +309,8 @@ export {
   Reserva,
   ListaEspera,
   Pago,
-  Credito
+  Credito,
+  AbonadoTurno,
+  ListaEsperaAbonado,
+  ListaEsperaNoAbonado
 };

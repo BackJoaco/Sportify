@@ -1,9 +1,11 @@
 import * as turnoRepository from '../repositories/turno.repository.js';
 
 const regexHoraEnPunto = /^(0[8-9]|1[0-9]|20):00(?::00)?$/;
+const DIAS_SEMANA = ['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO'];
 
-function obtenerFechaHora(fecha, horaInicio) {
-  return new Date(`${fecha}T${horaInicio}`);
+function obtenerMinutosHora(horaInicio) {
+  const [horas, minutos] = String(horaInicio).split(':').map(Number);
+  return horas * 60 + minutos;
 }
 
 async function validarDatosTurno(data, excludeId = null) {
@@ -13,8 +15,9 @@ async function validarDatosTurno(data, excludeId = null) {
         throw new Error("El nombre del entrenador es obligatorio.");
     }
 
-    if (!data.fecha) {
-        throw new Error("La fecha del turno es obligatoria.");
+    const diaSemana = String(data.dia_semana ?? '').trim().toUpperCase();
+    if (!DIAS_SEMANA.includes(diaSemana)) {
+        throw new Error("El dia de la semana del turno es obligatorio.");
     }
 
     if (!data.hora_inicio || !regexHoraEnPunto.test(data.hora_inicio)) {
@@ -25,20 +28,16 @@ async function validarDatosTurno(data, excludeId = null) {
         throw new Error("El cupo máximo debe ser mayor a 0.");
     }
 
-    const fechaTurno = obtenerFechaHora(data.fecha, data.hora_inicio);
-    if (fechaTurno <= new Date()) {
-        throw new Error("La fecha y hora del turno deben ser posteriores al momento actual.");
-    }
-
-    const turnosMismaActividad = await turnoRepository.getByActividadFecha(
+    const turnosMismaActividad = await turnoRepository.getByActividadDia(
         data.actividad_id,
-        data.fecha,
+        diaSemana,
         excludeId
     );
 
+    const minutosTurno = obtenerMinutosHora(data.hora_inicio);
     const turnoCercano = turnosMismaActividad.find((turno) => {
-        const fechaOtroTurno = obtenerFechaHora(turno.fecha, turno.hora_inicio);
-        const diferenciaMinutos = Math.abs(fechaTurno - fechaOtroTurno) / 60000;
+        const minutosOtroTurno = obtenerMinutosHora(turno.hora_inicio);
+        const diferenciaMinutos = Math.abs(minutosTurno - minutosOtroTurno);
         return diferenciaMinutos < 60;
     });
 
@@ -74,9 +73,9 @@ export async function deleteTurno(id) {
     throw new Error("No se puede eliminar un turno que ya tiene reservas.");
   }
 
-  const fechaTurno = new Date(`${turno.fecha}T${turno.hora_inicio}`);
-  if (fechaTurno <= new Date()) {
-    throw new Error("No se puede eliminar un turno que ya ha comenzado o finalizado.");
+  const abonados = turno.AbonadoTurnos || turno.abonados_turnos;
+  if (abonados && abonados.some((abonado) => abonado.estado === 'ACTIVO')) {
+    throw new Error("No se puede eliminar un turno que tiene abonados activos.");
   }
 
   return turnoRepository.remove(id);
@@ -92,8 +91,12 @@ export async function getTurnoById(id) {
   return turno;
 }
 
-export async function checkSuperposicion(actividad_id, fecha, hora_inicio) {
-  const turnoExistente = await turnoRepository.getByActividadFechaHora(actividad_id, fecha, hora_inicio);
+export async function checkSuperposicion(actividad_id, dia_semana, hora_inicio) {
+  const turnoExistente = await turnoRepository.getByActividadDiaHora(
+    actividad_id,
+    String(dia_semana ?? '').trim().toUpperCase(),
+    hora_inicio
+  );
   
   if (turnoExistente) {
     throw new Error("Ya existe un turno para esta actividad en la fecha y horario seleccionados.");
@@ -102,7 +105,6 @@ export async function checkSuperposicion(actividad_id, fecha, hora_inicio) {
 
 export async function update(id, datosNuevos) {
   const turno = await turnoRepository.getById(id);
-  console.log('estoy aca')
   if (!turno) {
     throw new Error("El turno no existe.");
   }
@@ -110,12 +112,16 @@ export async function update(id, datosNuevos) {
   const datosCompletos = {
     actividad_id: datosNuevos.actividad_id ?? turno.actividad_id,
     entrenador: datosNuevos.entrenador ?? turno.entrenador,
-    fecha: datosNuevos.fecha ?? turno.fecha,
+    dia_semana: datosNuevos.dia_semana ?? turno.dia_semana,
     hora_inicio: datosNuevos.hora_inicio ?? turno.hora_inicio,
     cupo_maximo: datosNuevos.cupo_maximo ?? turno.cupo_maximo
   };
 
   await validarDatosTurno(datosCompletos, id);
 
-  return await turnoRepository.update(id, datosNuevos);
+  const updates = Object.fromEntries(
+    Object.entries(datosNuevos).filter(([, value]) => value !== undefined)
+  );
+
+  return await turnoRepository.update(id, updates);
 }
