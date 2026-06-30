@@ -107,6 +107,23 @@ export async function cancelarClaseAbonado(req, res) {
   }
 }
 
+export async function salirDeColaNoAbonado(req, res) {
+  try {
+    const { turno_id, fecha } = req.body;
+
+    if (!turno_id || !fecha) {
+      return res.status(400).json({
+        mensaje: 'Debe indicar turno_id y fecha.'
+      });
+    }
+
+    const resultado = await reservaFlow.salirDeColaNoAbonado(req.usuario.id, turno_id, fecha);
+    return res.status(200).json(resultado);
+  } catch (error) {
+    return res.status(400).json({ message: error.message });
+  }
+}
+
 export async function crearReservaPorEmpleado(req, res) {
   try {
     const { usuario_id, turno_id, fecha } = req.body;

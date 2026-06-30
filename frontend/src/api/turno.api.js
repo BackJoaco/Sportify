@@ -131,9 +131,9 @@ export async function altaAbonadoTurno(id, usuarioId = null) {
   return data;
 }
 
-export async function bajaAbonadoTurno(id, usuarioId = null) {
-  const res = await fetch(`${API_URL}/turno/${id}/abonados/baja`, {
-    method: "PATCH",
+export async function salirDeColaAbonadoTurno(id, usuarioId = null) {
+  const res = await fetch(`${API_URL}/turno/${id}/abonados/salir-cola`, {
+    method: "POST",
     headers: {
       "Content-Type": "application/json",
     },

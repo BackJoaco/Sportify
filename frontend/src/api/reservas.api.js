@@ -79,8 +79,8 @@ export async function cancelarReserva(id) {
   return data;
 }
 
-export async function cancelarClaseAbonado(datos) {
-  const res = await fetch(`${API_URL}/reserva/cancelar-clase-abonado`, {
+export async function salirDeColaNoAbonado(datos) {
+  const res = await fetch(`${API_URL}/reserva/cola-no-abonados/salir`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

@@ -48,6 +48,12 @@ export async function updateEstado(id, data) {
   return ListaEsperaAbonado.update(data, { where: { id } });
 }
 
+export async function deleteById(id) {
+  return ListaEsperaAbonado.destroy({
+    where: { id }
+  });
+}
+
 export async function deleteByUsuarioId(usuarioId, transaction) {
   return ListaEsperaAbonado.destroy({
     where: { usuario_id: usuarioId },

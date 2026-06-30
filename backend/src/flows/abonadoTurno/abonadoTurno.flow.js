@@ -74,6 +74,35 @@ export async function bajaAbonado(usuarioId, turnoId) {
   };
 }
 
+export async function salirDeColaAbonado(usuarioId, turnoId) {
+  const turno = await turnoService.getTurnoById(turnoId);
+
+  const espera = await listaEsperaAbonadoService.findActiva(usuarioId, turnoId);
+  if (!espera) {
+    throw new Error('No estás en la cola de abonados para este turno.');
+  }
+
+  const estadoAnterior = espera.estado;
+  const siguiente = estadoAnterior === 'CUPO_RESERVADO'
+    ? await listaEsperaAbonadoService.findSiguienteEnEspera(turnoId)
+    : null;
+
+  if (siguiente) {
+    await listaEsperaAbonadoService.reservarCupo(siguiente.id);
+  }
+
+  await listaEsperaAbonadoService.deleteById(espera.id);
+
+  return {
+    message: siguiente
+      ? 'Saliste de la cola de abonados y el cupo fue reasignado al siguiente en espera.'
+      : 'Saliste de la cola de abonados.',
+    siguienteNotificado: siguiente,
+    cupoLiberado: estadoAnterior === 'CUPO_RESERVADO',
+    turnoId: turno.id
+  };
+}
+
 export async function aceptarCupoAbonado(usuarioId, turnoId) {
   const turno = await turnoService.getTurnoById(turnoId);
   const abonadosActivos = await abonadoTurnoService.countActivosByTurno(turnoId);
