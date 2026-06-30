@@ -12,7 +12,7 @@ export default function CreateTurno() {
 
   const [formData, setFormData] = useState({
     entrenador: "",
-    fecha: "",
+    dia_semana: "",
     hora_inicio: "",
     cupo_maximo: "",
     actividad_id: "",
@@ -26,18 +26,15 @@ export default function CreateTurno() {
     }));
   }
 
-  const fechaHoy = new Date().toISOString().split("T")[0];
-
   async function handleSubmit(e) {
     e.preventDefault();
 
-    const fechaTurno = new Date(`${formData.fecha}T${formData.hora_inicio}`);
-    if (fechaTurno <= new Date()) {
+    if (!formData.dia_semana) {
       return Swal.fire({
         toast: true,
         position: "top-end",
         icon: "warning",
-        title: "La fecha y hora deben ser posteriores al momento actual",
+        title: "Selecciona el dia de la semana",
         showConfirmButton: false,
         timer: 3000,
       });
@@ -52,8 +49,6 @@ export default function CreateTurno() {
         cupo_maximo: parseInt(formData.cupo_maximo, 10),
         actividad_id: parseInt(formData.actividad_id, 10),
       };
-      console.log(payload);
-
       await createTurno(payload);
 
       Swal.fire({
@@ -69,7 +64,6 @@ export default function CreateTurno() {
       // Redirigir a la lista de turnos (ajusta la ruta según tu proyecto)
       navigate("/turnos");
     } catch (err) {
-      console.log("aca");
       Swal.fire({
         toast: true,
         position: "top-end",
@@ -154,16 +148,23 @@ export default function CreateTurno() {
 
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="fecha">Fecha</label>
-              <input
-                type="date"
-                id="fecha"
-                name="fecha"
-                value={formData.fecha}
+              <label htmlFor="dia_semana">Dia de semana</label>
+              <select
+                id="dia_semana"
+                name="dia_semana"
+                value={formData.dia_semana}
                 onChange={handleInputChange}
-                min={fechaHoy}
                 required
-              />
+              >
+                <option value="">Selecciona un dia...</option>
+                <option value="LUNES">Lunes</option>
+                <option value="MARTES">Martes</option>
+                <option value="MIERCOLES">Miercoles</option>
+                <option value="JUEVES">Jueves</option>
+                <option value="VIERNES">Viernes</option>
+                <option value="SABADO">Sabado</option>
+                <option value="DOMINGO">Domingo</option>
+              </select>
             </div>
 
             <div className="form-group">

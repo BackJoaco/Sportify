@@ -1,5 +1,5 @@
 import { Op } from 'sequelize';
-import {Turno, Actividad, Reserva} from '../models/index.model.js';
+import {Turno, Actividad, Reserva, AbonadoTurno, ListaEsperaAbonado, ListaEsperaNoAbonado} from '../models/index.model.js';
 
 export async function create(data) {
     return Turno.create(data);
@@ -27,8 +27,17 @@ export async function getById(id) {
         model: Reserva
       },
       {
+        model: AbonadoTurno
+      },
+      {
+        model: ListaEsperaAbonado
+      },
+      {
+        model: ListaEsperaNoAbonado
+      },
+      {
         model: Actividad,
-        attributes: ['id', 'nombre']
+        attributes: ['id', 'nombre', 'precio_clase']
       }
     ]
   });
@@ -37,14 +46,14 @@ export async function getById(id) {
 export async function remove(id) {
   return Turno.destroy({ where: { id } });
 }
-export async function getByActividadFechaHora(actividad_id, fecha, hora_inicio) {
+export async function getByActividadDiaHora(actividad_id, dia_semana, hora_inicio) {
   return Turno.findOne({
-    where: { actividad_id, fecha, hora_inicio }
+    where: { actividad_id, dia_semana, hora_inicio }
   });
 }
 
-export async function getByActividadFecha(actividad_id, fecha, excludeId = null) {
-  const where = { actividad_id, fecha };
+export async function getByActividadDia(actividad_id, dia_semana, excludeId = null) {
+  const where = { actividad_id, dia_semana };
 
   if (excludeId) {
     where.id = { [Op.ne]: excludeId };

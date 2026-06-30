@@ -13,6 +13,7 @@ export default (sequelize) => {
       type: DataTypes.ENUM('PENDIENTE', 'SENA_ABONADA', 'PAGADO_COMPLETO'),
       defaultValue: 'PENDIENTE'
     },
+    fecha: { type: DataTypes.DATEONLY, allowNull: false },
     codigo_qr: { type: DataTypes.STRING(255), unique: true }
   }, {
     tableName: 'reservas',

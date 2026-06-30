@@ -202,7 +202,7 @@ export default function EmployeeHome() {
                     <div>
                       <strong>{reserva.Turno?.Actividad?.nombre || "Actividad"}</strong>
                       <span>
-                        {formatearFecha(reserva.Turno?.fecha)} -{" "}
+                        {formatearFecha(reserva.fecha)} -{" "}
                         {formatearHora(reserva.Turno?.hora_inicio)}
                       </span>
                     </div>

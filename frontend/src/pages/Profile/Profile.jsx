@@ -1,6 +1,6 @@
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Swal from "sweetalert2";
 import { FaArrowLeft, FaEye, FaEyeSlash } from "react-icons/fa";
 import { updateProfile } from "../../api/usuario.api";
@@ -19,17 +19,6 @@ export default function Profile() {
         contrasena: "",
         confirmContrasena: "",
     });
-
-    useEffect(() => {
-        if (usuario) {
-            setFormData({
-                nombre: usuario.nombre,
-                apellido: usuario.apellido,
-                contrasena: "",
-                confirmContrasena: "",
-            });
-        }
-    }, [usuario]);
 
     if (!usuario) return null;
 

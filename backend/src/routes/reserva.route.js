@@ -9,6 +9,7 @@ router.get('/cliente-dni/:dni', authMiddleware, esEmpleado, reservaController.ge
 router.get('/cliente/:usuarioId', authMiddleware, esEmpleado, reservaController.getReservasCliente);
 router.post('/crear', authMiddleware, esCliente, reservaController.create);
 router.patch("/:id/cancelar", authMiddleware, esCliente, reservaController.cancelarReserva);
+router.post('/cancelar-clase-abonado', authMiddleware, esCliente, reservaController.cancelarClaseAbonado);
 router.post('/staff',authMiddleware, esEmpleado, reservaController.crearReservaPorEmpleado);
 
 export default router;

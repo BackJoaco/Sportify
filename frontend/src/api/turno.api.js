@@ -9,7 +9,6 @@ export async function createTurno(datos) {
     credentials: "include",
     body: JSON.stringify(datos),
   });
-  console.log(datos);
   const data = await res.json();
 
   if (!res.ok) {
@@ -87,6 +86,59 @@ export async function updateTurno(id, datosNuevos) {
     },
     credentials: "include",
     body: JSON.stringify(datosNuevos),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw data;
+  }
+
+  return data;
+}
+
+export async function getOcupacionTurno(id, fecha) {
+  const params = fecha ? `?fecha=${encodeURIComponent(fecha)}` : "";
+  const res = await fetch(`${API_URL}/turno/${id}/ocupacion${params}`, {
+    credentials: "include",
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw data;
+  }
+
+  return data;
+}
+
+export async function altaAbonadoTurno(id, usuarioId = null) {
+  const res = await fetch(`${API_URL}/turno/${id}/abonados`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify(usuarioId ? { usuario_id: usuarioId } : {}),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw data;
+  }
+
+  return data;
+}
+
+export async function bajaAbonadoTurno(id, usuarioId = null) {
+  const res = await fetch(`${API_URL}/turno/${id}/abonados/baja`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify(usuarioId ? { usuario_id: usuarioId } : {}),
   });
 
   const data = await res.json();

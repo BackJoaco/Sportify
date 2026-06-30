@@ -4,6 +4,7 @@ import { useAuth } from "../../../context/AuthContext";
 import { getMisReservas } from "../../../api/reservas.api";
 import { getMisPagos, pagarSenaReserva } from "../../../api/pago.api";
 import {
+  FaCalendarAlt,
   FaCalendarCheck,
   FaCreditCard,
   FaIdCard,
@@ -265,6 +266,9 @@ export default function ClientHome() {
         </div>
 
         <div className="home-header-actions">
+          <button className="btn-primary" onClick={() => navigate("/turnos")}>
+            <FaCalendarAlt /> Ver turnos
+          </button>
           <button className="btn-secondary" onClick={() => navigate("/perfil")}>
             <FaUserEdit /> Editar perfil
           </button>
@@ -347,7 +351,7 @@ export default function ClientHome() {
                       {reserva.Turno?.Actividad?.nombre || "Actividad"}
                     </strong>
                     <span>
-                      {formatearFecha(reserva.Turno?.fecha)} -{" "}
+                      {formatearFecha(reserva.fecha)} -{" "}
                       {formatearHora(reserva.Turno?.hora_inicio)}
                     </span>
                   </div>
@@ -407,7 +411,7 @@ export default function ClientHome() {
                     </span>
                     {pago.Reserva?.Turno && (
                       <small>
-                        {formatearFecha(pago.Reserva.Turno.fecha)} -{" "}
+                        {formatearFecha(pago.Reserva.fecha)} -{" "}
                         {formatearHora(pago.Reserva.Turno.hora_inicio)}
                       </small>
                     )}

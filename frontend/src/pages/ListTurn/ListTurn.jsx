@@ -12,6 +12,25 @@ const COLORES_ACTIVIDADES = [
     "#9B59B6", "#00D2FF", "#E67E22", "#16A085",
 ];
 
+const DIA_ENUM_POR_NOMBRE = {
+    Lunes: "LUNES",
+    Martes: "MARTES",
+    "Miércoles": "MIERCOLES",
+    "MiÃ©rcoles": "MIERCOLES",
+    Jueves: "JUEVES",
+    Viernes: "VIERNES",
+    "Sábado": "SABADO",
+    "SÃ¡bado": "SABADO",
+    Domingo: "DOMINGO"
+};
+
+function formatearFechaInput(fecha) {
+    const year = fecha.getFullYear();
+    const month = String(fecha.getMonth() + 1).padStart(2, '0');
+    const day = String(fecha.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
 function obtenerLunes(fecha) {
     const d = new Date(fecha);
     d.setHours(0, 0, 0, 0);
@@ -104,23 +123,19 @@ export default function CalendarioTurnos() {
         return true;
     });
 
-    function obtenerTurnosParaCelda(fecha, hora) {
-        const year = fecha.getFullYear();
-        const month = String(fecha.getMonth() + 1).padStart(2, '0');
-        const day = String(fecha.getDate()).padStart(2, '0');
-        const fechaStr = `${year}-${month}-${day}`;
-
+    function obtenerTurnosParaCelda(dia, hora) {
         const horaBuscada = String(hora).padStart(2, '0');
+        const diaSemana = DIA_ENUM_POR_NOMBRE[dia.nombre];
 
         return turnosFiltrados.filter(t => {
-            if (!t.fecha || !t.hora_inicio) return false;
+            if (!t.dia_semana || !t.hora_inicio) return false;
             const horaTurno = t.hora_inicio.substring(0, 2);
-            return (t.fecha === fechaStr && horaTurno === horaBuscada);
+            return (t.dia_semana === diaSemana && horaTurno === horaBuscada);
         });
     }
 
-    function handleTurnoClick(id) {
-        navigate(`/turnos/${id}`); 
+    function handleTurnoClick(id, fecha) {
+        navigate(`/turnos/${id}?fecha=${formatearFechaInput(fecha)}`);
     }
 
     if (loading) return <div className="loading-state">Cargando calendario...</div>;
@@ -201,7 +216,7 @@ export default function CalendarioTurnos() {
                             {hora}:00
                         </div>
                         {diasSemana.map((dia) => {
-                            const turnosEnCelda = obtenerTurnosParaCelda(dia.fecha, hora);
+                            const turnosEnCelda = obtenerTurnosParaCelda(dia, hora);
 
                             return (
                                 <div key={`${hora}-${dia.nombre}`} className="calendario-celda dia-celda">
@@ -210,7 +225,7 @@ export default function CalendarioTurnos() {
                                             key={turno.id}
                                             className="turno-badge"
                                             style={{ backgroundColor: getColorActividad(turno.actividad_id || turno.ActividadId) }}
-                                            onClick={() => handleTurnoClick(turno.id)}
+                                            onClick={() => handleTurnoClick(turno.id, dia.fecha)}
                                         >
                                             {turno.Actividad?.nombre || (turno.actividad_id ? `Actividad (#${turno.actividad_id})` : 'Sin Actividad')}
                                         </div>

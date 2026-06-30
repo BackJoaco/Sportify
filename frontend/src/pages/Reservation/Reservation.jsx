@@ -18,8 +18,8 @@ export default function HistorialReservas() {
             const data = await getMisReservas();
             
             const reservasOrdenadas = (data || []).sort((a, b) => {
-                const fechaA = new Date(`${a.Turno?.fecha}T${a.Turno?.hora_inicio}`);
-                const fechaB = new Date(`${b.Turno?.fecha}T${b.Turno?.hora_inicio}`);
+                const fechaA = new Date(`${a.fecha}T${a.Turno?.hora_inicio}`);
+                const fechaB = new Date(`${b.fecha}T${b.Turno?.hora_inicio}`);
                 return fechaA - fechaB;
             });
             
@@ -113,12 +113,12 @@ export default function HistorialReservas() {
     
     const reservasVigentes = reservas.filter(reserva => {
         if (reserva.estado !== "CONFIRMADA") return false;
-        const fechaTurno = new Date(`${reserva.Turno?.fecha}T${reserva.Turno?.hora_inicio}`);
+        const fechaTurno = new Date(`${reserva.fecha}T${reserva.Turno?.hora_inicio}`);
         return fechaTurno >= hoy;
     });
 
     const reservasAnteriores = reservas.filter(reserva => {
-        const fechaTurno = new Date(`${reserva.Turno?.fecha}T${reserva.Turno?.hora_inicio}`);
+        const fechaTurno = new Date(`${reserva.fecha}T${reserva.Turno?.hora_inicio}`);
         return fechaTurno < hoy || reserva.estado === "CANCELADA"; 
     });
 
@@ -186,7 +186,7 @@ export default function HistorialReservas() {
                                         </td>
                                         <td>
                                             <div className="fecha-hora-cell">
-                                                <span>{formatearFecha(reserva.Turno?.fecha)}</span>
+                                                <span>{formatearFecha(reserva.fecha)}</span>
                                                 <span className="hora-text">{formatearHora(reserva.Turno?.hora_inicio)}</span>
                                             </div>
                                         </td>
