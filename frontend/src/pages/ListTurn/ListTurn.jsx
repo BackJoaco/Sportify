@@ -31,6 +31,12 @@ function formatearFechaInput(fecha) {
     return `${year}-${month}-${day}`;
 }
 
+function normalizarFecha(fecha) {
+    const resultado = new Date(fecha);
+    resultado.setHours(0, 0, 0, 0);
+    return resultado;
+}
+
 function obtenerLunes(fecha) {
     const d = new Date(fecha);
     d.setHours(0, 0, 0, 0);
@@ -45,6 +51,31 @@ function agregarDias(fecha, dias) {
     return resultado;
 }
 
+function obtenerInicioPeriodoVisible(fechaBase) {
+    const fecha = normalizarFecha(fechaBase);
+    const inicio = new Date(fecha);
+    inicio.setDate(11);
+
+    if (fecha.getDate() < 11) {
+        inicio.setMonth(inicio.getMonth() - 1);
+    }
+
+    return inicio;
+}
+
+function obtenerFinPeriodoVisible(fechaBase) {
+    const inicio = obtenerInicioPeriodoVisible(fechaBase);
+    const fin = new Date(inicio);
+    fin.setMonth(fin.getMonth() + 1);
+    fin.setDate(10);
+    return fin;
+}
+
+function esFechaEnRango(fecha, inicio, fin) {
+    const actual = normalizarFecha(fecha);
+    return actual >= normalizarFecha(inicio) && actual <= normalizarFecha(fin);
+}
+
 export default function CalendarioTurnos() {
     const navigate = useNavigate();
     const { usuario } = useAuth();
@@ -53,6 +84,10 @@ export default function CalendarioTurnos() {
     const [filtroActividad, setFiltroActividad] = useState("");
     const [loading, setLoading] = useState(true);
     const [fechaInicioSemana, setFechaInicioSemana] = useState(() => obtenerLunes(new Date()));
+    const esAdministrador = usuario?.rol === "ADMINISTRADOR";
+    const hoy = normalizarFecha(new Date());
+    const inicioPeriodoVisible = esAdministrador ? null : obtenerInicioPeriodoVisible(hoy);
+    const finPeriodoVisible = esAdministrador ? null : obtenerFinPeriodoVisible(hoy);
 
     useEffect(() => {
         async function cargarDatos() {
@@ -81,13 +116,20 @@ export default function CalendarioTurnos() {
         cargarDatos();
     }, []);
 
-    const hoy = new Date();
-    hoy.setHours(0, 0, 0, 0);
     const lunesActual = obtenerLunes(hoy);
-    const puedeVolverAtras = fechaInicioSemana > lunesActual;
+    const lunesInicioPeriodo = inicioPeriodoVisible ? obtenerLunes(inicioPeriodoVisible) : null;
+    const lunesFinPeriodo = finPeriodoVisible ? obtenerLunes(finPeriodoVisible) : null;
+    const puedeVolverAtras = esAdministrador
+        ? fechaInicioSemana > lunesActual
+        : fechaInicioSemana > lunesInicioPeriodo;
+    const puedeAvanzar = esAdministrador
+        ? true
+        : fechaInicioSemana < lunesFinPeriodo;
 
     function weekNext() {
-        setFechaInicioSemana(prev => agregarDias(prev, 7));
+        if (puedeAvanzar) {
+            setFechaInicioSemana(prev => agregarDias(prev, 7));
+        }
     }
 
     function weekPrev() {
@@ -197,7 +239,9 @@ export default function CalendarioTurnos() {
             </div>
 
             <div className="mes-indicador">
-                Semana del {fechaInicioSemana.toLocaleDateString()}
+                {esAdministrador
+                    ? `Semana del ${fechaInicioSemana.toLocaleDateString()}`
+                    : `Período visible del ${inicioPeriodoVisible.toLocaleDateString()} al ${finPeriodoVisible.toLocaleDateString()}`}
             </div>
 
             <div className="calendario-grid">
@@ -216,11 +260,16 @@ export default function CalendarioTurnos() {
                             {hora}:00
                         </div>
                         {diasSemana.map((dia) => {
-                            const turnosEnCelda = obtenerTurnosParaCelda(dia, hora);
+                            const fechaDentroDelRango = esAdministrador || esFechaEnRango(dia.fecha, inicioPeriodoVisible, finPeriodoVisible);
+                            const turnosEnCelda = fechaDentroDelRango ? obtenerTurnosParaCelda(dia, hora) : [];
 
                             return (
-                                <div key={`${hora}-${dia.nombre}`} className="calendario-celda dia-celda">
-                                    {turnosEnCelda.map(turno => (
+                                <div
+                                    key={`${hora}-${dia.nombre}`}
+                                    className={`calendario-celda dia-celda ${fechaDentroDelRango ? "" : "dia-celda-fuera-rango"}`}
+                                    aria-disabled={!fechaDentroDelRango}
+                                >
+                                    {fechaDentroDelRango && turnosEnCelda.map(turno => (
                                         <div
                                             key={turno.id}
                                             className="turno-badge"
