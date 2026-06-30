@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import * as abonadoTurnoService from '../../services/abonadoTurno.service.js';
 import * as listaEsperaNoAbonadoService from '../../services/listaEsperaNoAbonado.service.js';
+import { pagarSenaReserva } from '../payment/pago.flow.js';
 import * as reservaService from '../../services/reserva.service.js';
 import * as turnoService from '../../services/turno.service.js';
 import * as usuarioService from '../../services/usuario.service.js';
@@ -102,6 +103,42 @@ export async function create(usuario_id, turno_id, fecha) {
     enEspera: false,
     message: 'Reserva creada con exito.',
     data: nuevaReserva
+  };
+}
+
+export async function createConSena(usuario_id, turno_id, fecha, tarjetaDebito) {
+  const resultadoReserva = await create(usuario_id, turno_id, fecha);
+
+  if (resultadoReserva.enEspera) {
+    return resultadoReserva;
+  }
+
+  const reserva = resultadoReserva.data;
+  let resultadoPago;
+
+  try {
+    resultadoPago = await pagarSenaReserva({
+      reservaId: reserva.id,
+      tarjetaDebito
+    });
+  } catch (error) {
+    await reservaService.marcarComoCancelada(reserva.id);
+    throw error;
+  }
+
+  if (!resultadoPago.exitoso) {
+    await reservaService.marcarComoCancelada(reserva.id);
+
+    throw new Error(
+      resultadoPago.mensaje || 'No se pudo procesar el pago de la sena. El cupo no fue reservado.'
+    );
+  }
+
+  return {
+    ...resultadoReserva,
+    message: 'Reserva creada con exito. Sena abonada correctamente.',
+    pago: resultadoPago.pago,
+    data: resultadoPago.reserva
   };
 }
 

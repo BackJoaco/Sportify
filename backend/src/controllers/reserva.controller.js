@@ -57,7 +57,7 @@ export async function getReservasClientePorDni(req, res) {
 
 export async function create(req, res) {
   try {
-    const { turno_id, fecha } = req.body;
+    const { turno_id, fecha, tarjetaDebito } = req.body;
     const usuario_id = req.usuario.id;
 
     if (!turno_id || !fecha) {
@@ -66,7 +66,7 @@ export async function create(req, res) {
       });
     }
 
-    const resultado = await reservaFlow.create(usuario_id, turno_id, fecha);
+    const resultado = await reservaFlow.createConSena(usuario_id, turno_id, fecha, tarjetaDebito);
 
     return res.status(201).json({
       mensaje: resultado.message,

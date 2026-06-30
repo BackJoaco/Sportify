@@ -62,6 +62,19 @@ function formatearFecha(fecha) {
   return `${day}/${month}/${year}`;
 }
 
+function formatearMonto(monto) {
+  const montoNumerico = Number(monto);
+
+  if (Number.isNaN(montoNumerico)) {
+    return "$0";
+  }
+
+  return montoNumerico.toLocaleString("es-AR", {
+    style: "currency",
+    currency: "ARS",
+  });
+}
+
 export default function DetailTurn() {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
@@ -160,6 +173,34 @@ export default function DetailTurn() {
       detalle: "Podés reservar una clase puntual o abonarte si hay cupo fijo disponible.",
     };
   }, [esAbonadoActivo, esCliente, fechaClase, ocupacion, turno, usuario]);
+
+  const estadoReservaPuntual = useMemo(() => {
+    if (!esCliente || !usuario || !ocupacion) return null;
+
+    const esDelUsuario = (registro) => String(registro.usuario_id) === String(usuario.id);
+    const reservaNoAbonadoConfirmada = ocupacion.reservasFecha?.some(
+      (reserva) =>
+        esDelUsuario(reserva) &&
+        reserva.tipo_reserva === "NO_ABONADO" &&
+        reserva.estado === "CONFIRMADA"
+    );
+
+    if (reservaNoAbonadoConfirmada) {
+      return "RESERVADA";
+    }
+
+    const esperaNoAbonado = ocupacion.colaNoAbonados?.find(esDelUsuario);
+
+    if (esperaNoAbonado?.estado === "CUPO_RESERVADO") {
+      return "CUPO_RESERVADO";
+    }
+
+    if (esperaNoAbonado) {
+      return "EN_ESPERA";
+    }
+
+    return null;
+  }, [esCliente, ocupacion, usuario]);
 
   const fetchTurnoData = useCallback(async (fecha = fechaClase) => {
     try {
@@ -302,9 +343,87 @@ export default function DetailTurn() {
     }
   }
 
+  function calcularSenaTurno() {
+    const precioClase = Number(turno?.Actividad?.precio_clase);
+
+    if (!precioClase || Number.isNaN(precioClase)) {
+      return 0;
+    }
+
+    return precioClase * 0.5;
+  }
+
+  async function solicitarTarjetaSena() {
+    const montoSena = calcularSenaTurno();
+
+    if (montoSena <= 0) {
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "error",
+        title: "No se pudo calcular el monto de la seña",
+        showConfirmButton: false,
+        timer: 3000,
+      });
+      return null;
+    }
+
+    const { value: tarjetaDebito } = await Swal.fire({
+      title: "Pagar seña",
+      html: `
+        <p style="margin: 0 0 12px;">Clase del ${formatearFecha(fechaClase)} - Seña ${formatearMonto(montoSena)}</p>
+        <input id="swal-card-number" class="swal2-input" placeholder="Numero de tarjeta">
+        <input id="swal-card-name" class="swal2-input" placeholder="Nombre">
+        <input id="swal-card-lastname" class="swal2-input" placeholder="Apellido">
+        <input id="swal-card-expiration" class="swal2-input" placeholder="Vencimiento MM/AA">
+        <input id="swal-card-cvv" class="swal2-input" placeholder="CVV">
+      `,
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: "Pagar y reservar",
+      cancelButtonText: "Cancelar",
+      preConfirm: () => {
+        const tarjeta = {
+          numero: document.getElementById("swal-card-number")?.value.trim(),
+          nombre: document.getElementById("swal-card-name")?.value.trim(),
+          apellido: document.getElementById("swal-card-lastname")?.value.trim(),
+          vencimiento: document.getElementById("swal-card-expiration")?.value.trim(),
+          cvv: document.getElementById("swal-card-cvv")?.value.trim(),
+        };
+
+        if (
+          !tarjeta.numero ||
+          !tarjeta.nombre ||
+          !tarjeta.apellido ||
+          !tarjeta.vencimiento ||
+          !tarjeta.cvv
+        ) {
+          Swal.showValidationMessage("Completá todos los datos de la tarjeta");
+          return false;
+        }
+
+        return tarjeta;
+      },
+    });
+
+    return tarjetaDebito || null;
+  }
+
   async function handleReservaNoAbonado() {
+    if (cuposFecha <= 0) {
+      await ejecutarAccion(
+        () => crearReserva({ turno_id: turno.id, fecha: fechaClase }),
+        "Solicitud procesada"
+      );
+      return;
+    }
+
+    const tarjetaDebito = await solicitarTarjetaSena();
+
+    if (!tarjetaDebito) return;
+
     await ejecutarAccion(
-      () => crearReserva({ turno_id: turno.id, fecha: fechaClase }),
+      () => crearReserva({ turno_id: turno.id, fecha: fechaClase, tarjetaDebito }),
       "Reserva procesada"
     );
   }
@@ -486,8 +605,15 @@ export default function DetailTurn() {
 
           <div className="home-header-actions" style={{ marginTop: "1rem" }}>
             {esCliente && !esAbonadoActivo && (
-              <button className="btn-primary" disabled={saving} onClick={handleReservaNoAbonado}>
-                Reservar clase
+              <button
+                className="btn-primary"
+                disabled={saving || Boolean(estadoReservaPuntual)}
+                onClick={handleReservaNoAbonado}
+              >
+                {estadoReservaPuntual === "RESERVADA" && "Clase ya reservada"}
+                {estadoReservaPuntual === "CUPO_RESERVADO" && "Cupo reservado"}
+                {estadoReservaPuntual === "EN_ESPERA" && "En cola"}
+                {!estadoReservaPuntual && "Reservar clase"}
               </button>
             )}
             {esCliente && esAbonadoActivo && (
