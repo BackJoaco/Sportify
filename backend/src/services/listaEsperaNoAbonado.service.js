@@ -23,6 +23,10 @@ export function findByTurnoFecha(turnoId, fecha) {
   return listaEsperaNoAbonadoRepository.findByTurnoFecha(turnoId, fecha);
 }
 
+export function findActiva(usuarioId, turnoId, fecha) {
+  return listaEsperaNoAbonadoRepository.findActiva(usuarioId, turnoId, fecha);
+}
+
 export function reservarCupo(id) {
   const hasta = new Date();
   hasta.setHours(hasta.getHours() + 24);
@@ -34,6 +38,10 @@ export function reservarCupo(id) {
 
 export function confirmar(id) {
   return listaEsperaNoAbonadoRepository.updateEstado(id, { estado: 'CONFIRMADO' });
+}
+
+export function deleteById(id) {
+  return listaEsperaNoAbonadoRepository.deleteById(id);
 }
 
 export function deleteByUsuarioId(usuarioId, transaction) {

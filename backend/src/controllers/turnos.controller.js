@@ -89,6 +89,18 @@ export async function bajaAbonado(req, res) {
   }
 }
 
+export async function salirDeColaAbonado(req, res) {
+  try {
+    const { id } = req.params;
+    const usuarioId = req.body.usuario_id || req.usuario.id;
+    const resultado = await abonadoTurnoFlow.salirDeColaAbonado(usuarioId, id);
+
+    return res.status(200).json(resultado);
+  } catch (error) {
+    return res.status(400).json({ message: error.message });
+  }
+}
+
 export async function getOcupacion(req, res) {
   try {
     const { id } = req.params;

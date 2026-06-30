@@ -3,13 +3,13 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import Swal from "sweetalert2";
 import {
   altaAbonadoTurno,
-  bajaAbonadoTurno,
   deleteTurno,
   getOcupacionTurno,
   getTurnoById,
+  salirDeColaAbonadoTurno,
   updateTurno,
 } from "../../api/turno.api";
-import { cancelarClaseAbonado, crearReserva, crearReservaStaff } from "../../api/reservas.api";
+import { cancelarReserva, crearReserva, crearReservaStaff, salirDeColaNoAbonado } from "../../api/reservas.api";
 import { getClientes } from "../../api/usuario.api";
 import { useAuth } from "../../context/AuthContext";
 import "./DetailTurn.css";
@@ -44,6 +44,15 @@ function fechaInput(fecha) {
   const month = String(fecha.getMonth() + 1).padStart(2, "0");
   const day = String(fecha.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
+}
+
+function normalizarFechaHora(fecha, hora) {
+  if (!fecha || !hora) {
+    return null;
+  }
+
+  const fechaHora = new Date(`${fecha}T${hora}`);
+  return Number.isNaN(fechaHora.getTime()) ? null : fechaHora;
 }
 
 function proximaFechaParaDia(diaSemana) {
@@ -97,35 +106,49 @@ export default function DetailTurn() {
   const esAdmin = usuario?.rol === "ADMINISTRADOR";
   const esEmpleado = usuario?.rol === "EMPLEADO";
   const esCliente = usuario?.rol === "CLIENTE";
+  const fechaClaseSeleccionada = useMemo(
+    () => normalizarFechaHora(fechaClase, turno?.hora_inicio),
+    [fechaClase, turno]
+  );
+  const claseYaPaso = useMemo(() => {
+    if (!fechaClaseSeleccionada) return false;
+    return fechaClaseSeleccionada <= new Date();
+  }, [fechaClaseSeleccionada]);
 
   const esAbonadoActivo = useMemo(() => {
     return ocupacion?.abonados?.some((abonado) => String(abonado.usuario_id) === String(usuario?.id));
+  }, [ocupacion, usuario]);
+
+  const colaAbonadoUsuario = useMemo(() => {
+    if (!ocupacion || !usuario) return null;
+
+    const esDelUsuario = (registro) => String(registro.usuario_id) === String(usuario.id);
+    return ocupacion.colaAbonados?.find(esDelUsuario) || null;
+  }, [ocupacion, usuario]);
+
+  const reservaConfirmadaUsuario = useMemo(() => {
+    if (!ocupacion || !usuario) return null;
+
+    return ocupacion.reservasFecha?.find(
+      (reserva) =>
+        String(reserva.usuario_id) === String(usuario.id) &&
+        reserva.estado === "CONFIRMADA"
+    ) || null;
+  }, [ocupacion, usuario]);
+
+  const colaNoAbonadoUsuario = useMemo(() => {
+    if (!ocupacion || !usuario) return null;
+
+    const esDelUsuario = (registro) => String(registro.usuario_id) === String(usuario.id);
+    return ocupacion.colaNoAbonados?.find(esDelUsuario) || null;
   }, [ocupacion, usuario]);
 
   const estadoCliente = useMemo(() => {
     if (!esCliente || !usuario || !ocupacion) return null;
 
     const esDelUsuario = (registro) => String(registro.usuario_id) === String(usuario.id);
-    const reservasCliente = ocupacion.reservasFecha?.filter(esDelUsuario) || [];
-    const reservaAbonadoConfirmada = reservasCliente.find(
-      (reserva) => reserva.tipo_reserva === "ABONADO" && reserva.estado === "CONFIRMADA"
-    );
-    const reservaAbonadoCancelada = reservasCliente.find(
-      (reserva) => reserva.tipo_reserva === "ABONADO" && reserva.estado === "CANCELADA"
-    );
-    const reservaNoAbonadoConfirmada = reservasCliente.find(
-      (reserva) => reserva.tipo_reserva === "NO_ABONADO" && reserva.estado === "CONFIRMADA"
-    );
-    const esperaNoAbonado = ocupacion.colaNoAbonados?.find(esDelUsuario);
+    const esperaNoAbonado = colaNoAbonadoUsuario;
     const esperaAbonado = ocupacion.colaAbonados?.find(esDelUsuario);
-
-    if (esAbonadoActivo && reservaAbonadoCancelada && !reservaAbonadoConfirmada) {
-      return {
-        tipo: "warning",
-        titulo: "Estás abonado a este turno",
-        detalle: `Cancelaste la clase del ${formatearFecha(fechaClase)}. Tu lugar fijo sigue activo para las próximas clases.`,
-      };
-    }
 
     if (esAbonadoActivo) {
       return {
@@ -135,7 +158,23 @@ export default function DetailTurn() {
       };
     }
 
-    if (reservaNoAbonadoConfirmada) {
+    if (colaAbonadoUsuario?.estado === "CUPO_RESERVADO") {
+      return {
+        tipo: "warning",
+        titulo: "Tenés un cupo de abonado reservado",
+        detalle: "Si salís de la cola, ese lugar puede reasignarse al siguiente cliente en espera.",
+      };
+    }
+
+    if (colaAbonadoUsuario) {
+      return {
+        tipo: "info",
+        titulo: "Estás en cola de abonados",
+        detalle: "Podés salir de esta cola cuando quieras.",
+      };
+    }
+
+    if (reservaConfirmadaUsuario) {
       return {
         tipo: "success",
         titulo: "Reservaste esta clase puntual",
@@ -172,24 +211,17 @@ export default function DetailTurn() {
       titulo: "No tenés inscripción activa en este turno",
       detalle: "Podés reservar una clase puntual o abonarte si hay cupo fijo disponible.",
     };
-  }, [esAbonadoActivo, esCliente, fechaClase, ocupacion, turno, usuario]);
+  }, [colaAbonadoUsuario, colaNoAbonadoUsuario, esAbonadoActivo, esCliente, fechaClase, ocupacion, turno, usuario]);
 
   const estadoReservaPuntual = useMemo(() => {
     if (!esCliente || !usuario || !ocupacion) return null;
 
     const esDelUsuario = (registro) => String(registro.usuario_id) === String(usuario.id);
-    const reservaNoAbonadoConfirmada = ocupacion.reservasFecha?.some(
-      (reserva) =>
-        esDelUsuario(reserva) &&
-        reserva.tipo_reserva === "NO_ABONADO" &&
-        reserva.estado === "CONFIRMADA"
-    );
-
-    if (reservaNoAbonadoConfirmada) {
+    if (reservaConfirmadaUsuario) {
       return "RESERVADA";
     }
 
-    const esperaNoAbonado = ocupacion.colaNoAbonados?.find(esDelUsuario);
+    const esperaNoAbonado = colaNoAbonadoUsuario;
 
     if (esperaNoAbonado?.estado === "CUPO_RESERVADO") {
       return "CUPO_RESERVADO";
@@ -200,7 +232,7 @@ export default function DetailTurn() {
     }
 
     return null;
-  }, [esCliente, ocupacion, usuario]);
+  }, [colaNoAbonadoUsuario, esCliente, ocupacion, reservaConfirmadaUsuario, usuario]);
 
   const fetchTurnoData = useCallback(async (fecha = fechaClase) => {
     try {
@@ -410,6 +442,10 @@ export default function DetailTurn() {
   }
 
   async function handleReservaNoAbonado() {
+    if (claseYaPaso) {
+      return;
+    }
+
     if (cuposFecha <= 0) {
       await ejecutarAccion(
         () => crearReserva({ turno_id: turno.id, fecha: fechaClase }),
@@ -428,19 +464,168 @@ export default function DetailTurn() {
     );
   }
 
-  async function handleCancelarClaseAbonado() {
+  async function handleSalirColaNoAbonado() {
+    if (!colaNoAbonadoUsuario) return;
+
     await ejecutarAccion(
-      () => cancelarClaseAbonado({ turno_id: turno.id, fecha: fechaClase }),
-      "Clase cancelada"
+      () => salirDeColaNoAbonado({ turno_id: turno.id, fecha: fechaClase }),
+      "Saliste de la cola de no abonados"
     );
   }
 
-  async function handleAltaAbonado() {
-    await ejecutarAccion(() => altaAbonadoTurno(turno.id), "Solicitud de abono procesada");
+  async function handleSalirColaAbonado() {
+    if (!colaAbonadoUsuario) return;
+
+    const result = await Swal.fire({
+      title: "¿Salir de la cola de abonados?",
+      text: colaAbonadoUsuario.estado === "CUPO_RESERVADO"
+        ? "Si salís, el cupo reservado se podrá reasignar al siguiente en espera."
+        : "Vas a salir de la cola de abonados.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "var(--blue)",
+      cancelButtonColor: "var(--gray)",
+      confirmButtonText: "Sí, salir de la cola",
+      cancelButtonText: "Volver",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      setSaving(true);
+      const response = await salirDeColaAbonadoTurno(turno.id);
+
+      Swal.fire({
+        title: "Cola de abonados actualizada",
+        text: response.message,
+        icon: response.cupoLiberado ? "success" : "info",
+        confirmButtonColor: "var(--blue)",
+      });
+
+      await fetchTurnoData(fechaClase);
+    } catch (err) {
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "error",
+        title: err.message || err.mensaje || "Error al salir de la cola",
+        showConfirmButton: false,
+        timer: 3500,
+      });
+    } finally {
+      setSaving(false);
+    }
   }
 
-  async function handleBajaAbonado() {
-    await ejecutarAccion(() => bajaAbonadoTurno(turno.id), "Abono dado de baja");
+  async function handleCancelarClaseAbonado() {
+    if (!reservaConfirmadaUsuario) return;
+
+    const tieneSenaAbonada = reservaConfirmadaUsuario.estado_pago !== "PENDIENTE";
+
+    const result = await Swal.fire({
+      title: "¿Estás seguro?",
+      text: tieneSenaAbonada
+        ? "Se evaluará el tiempo restante para determinar la devolución de tu seña."
+        : "La reserva se cancelará y no hay pagos para devolver.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "var(--blue)",
+      cancelButtonColor: "var(--gray)",
+      confirmButtonText: "Sí, cancelar reserva",
+      cancelButtonText: "Volver",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      setSaving(true);
+      const response = await cancelarReserva(reservaConfirmadaUsuario.id);
+
+      Swal.fire({
+        title: "Reserva cancelada",
+        text: response.message,
+        icon: response.devuelveSena ? "success" : "info",
+        confirmButtonColor: "var(--blue)",
+      });
+
+      await fetchTurnoData(fechaClase);
+    } catch (err) {
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "error",
+        title: err.message || err.mensaje || "Error al cancelar",
+        showConfirmButton: false,
+        timer: 3500,
+      });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleAltaAbonado() {
+    const necesitaReservaInicial =
+      !claseYaPaso &&
+      cuposFecha > 0 &&
+      !reservaConfirmadaUsuario;
+
+    if (!necesitaReservaInicial) {
+      const mensaje = abonadosCount >= turno.cupo_maximo
+        ? "El cliente fue agregado a la cola de abonados."
+        : "Solicitud de abono procesada";
+
+      await ejecutarAccion(() => altaAbonadoTurno(turno.id), mensaje);
+      return;
+    }
+
+    const tarjetaDebito = await solicitarTarjetaSena();
+
+    if (!tarjetaDebito) return;
+
+    let reservaInicial = null;
+
+    try {
+      setSaving(true);
+
+      reservaInicial = await crearReserva({
+        turno_id: turno.id,
+        fecha: fechaClase,
+        tarjetaDebito,
+      });
+
+      const resultadoAbono = await altaAbonadoTurno(turno.id);
+
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "success",
+        title: resultadoAbono.message || resultadoAbono.mensaje || "Cliente abonado al turno correctamente.",
+        showConfirmButton: false,
+        timer: 3000,
+      });
+
+      await fetchTurnoData(fechaClase);
+      return reservaInicial;
+    } catch (err) {
+      if (typeof reservaInicial?.data?.id !== "undefined") {
+        try {
+          await cancelarReserva(reservaInicial.data.id);
+        } catch {
+          // Si la reversión falla, dejamos el error original.
+        }
+      }
+
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "error",
+        title: err.message || err.mensaje || "Error al procesar el abono",
+        showConfirmButton: false,
+        timer: 3500,
+      });
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function handleInscripcionTercero() {
@@ -492,6 +677,18 @@ export default function DetailTurn() {
 
   const abonadosCount = ocupacion?.abonados?.length || 0;
   const cuposFecha = ocupacion?.cuposDisponiblesFecha ?? 0;
+  const mostrarBotonCancelarClase = Boolean(reservaConfirmadaUsuario) && !claseYaPaso;
+  const mostrarBotonAbono = esCliente && !esAbonadoActivo && !colaAbonadoUsuario;
+  const mostrarBotonAbonoEnCola = esCliente && !esAbonadoActivo && abonadosCount >= turno.cupo_maximo;
+  const mostrarBotonSalirColaNoAbonados = esCliente && Boolean(colaNoAbonadoUsuario);
+  const mostrarBotonSalirColaAbonados = esCliente && Boolean(colaAbonadoUsuario);
+  const textoBotonSalirColaNoAbonados = colaNoAbonadoUsuario?.estado === "CUPO_RESERVADO"
+    ? "Salir de la lista de espera"
+    : "Salir de la cola de no abonados";
+  const textoBotonSalirColaAbonados = colaAbonadoUsuario?.estado === "CUPO_RESERVADO"
+    ? "Salir de la cola de abonados y liberar mi cupo"
+    : "Salir de la cola de abonados";
+  const puedeReservarClase = esCliente && !esAbonadoActivo && !colaNoAbonadoUsuario && !colaAbonadoUsuario && !claseYaPaso && !reservaConfirmadaUsuario;
 
   return (
     <div className="home-container">
@@ -604,19 +801,26 @@ export default function DetailTurn() {
           </div>
 
           <div className="home-header-actions" style={{ marginTop: "1rem" }}>
-            {esCliente && !esAbonadoActivo && (
+            {puedeReservarClase && (
               <button
                 className="btn-primary"
                 disabled={saving || Boolean(estadoReservaPuntual)}
                 onClick={handleReservaNoAbonado}
               >
-                {estadoReservaPuntual === "RESERVADA" && "Clase ya reservada"}
-                {estadoReservaPuntual === "CUPO_RESERVADO" && "Cupo reservado"}
-                {estadoReservaPuntual === "EN_ESPERA" && "En cola"}
-                {!estadoReservaPuntual && "Reservar clase"}
+                {cuposFecha <= 0 ? "Inscribirse en lista de espera" : "Reservar clase"}
               </button>
             )}
-            {esCliente && esAbonadoActivo && (
+            {mostrarBotonSalirColaNoAbonados && (
+              <button className="btn-secondary" disabled={saving} onClick={handleSalirColaNoAbonado}>
+                {textoBotonSalirColaNoAbonados}
+              </button>
+            )}
+            {mostrarBotonSalirColaAbonados && (
+              <button className="btn-secondary" disabled={saving} onClick={handleSalirColaAbonado}>
+                {textoBotonSalirColaAbonados}
+              </button>
+            )}
+            {mostrarBotonCancelarClase && (
               <button className="btn-secondary" disabled={saving} onClick={handleCancelarClaseAbonado}>
                 Cancelar esta clase
               </button>
@@ -645,14 +849,9 @@ export default function DetailTurn() {
           </div>
 
           <div className="home-header-actions" style={{ marginTop: "1rem" }}>
-            {esCliente && !esAbonadoActivo && (
+            {mostrarBotonAbono && (
               <button className="btn-primary" disabled={saving} onClick={handleAltaAbonado}>
-                Abonarme al turno
-              </button>
-            )}
-            {esCliente && esAbonadoActivo && (
-              <button className="btn-secondary" disabled={saving} onClick={handleBajaAbonado}>
-                Darme de baja del abono
+                {mostrarBotonAbonoEnCola ? "Ingresar en cola de abonados" : "Abonarme al turno"}
               </button>
             )}
           </div>

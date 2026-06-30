@@ -242,3 +242,27 @@ export async function cancelarClaseAbonado(usuarioId, turnoId, fecha) {
     siguienteNotificado: siguiente
   };
 }
+
+export async function salirDeColaNoAbonado(usuarioId, turnoId, fecha) {
+  await turnoService.getTurnoById(turnoId);
+
+  const espera = await listaEsperaNoAbonadoService.findActiva(usuarioId, turnoId, fecha);
+  if (!espera) {
+    throw new Error('No estás en la cola de no abonados para esta clase.');
+  }
+
+  const estadoAnterior = espera.estado;
+  const siguiente = estadoAnterior === 'CUPO_RESERVADO'
+    ? await reservarCupoParaSiguienteNoAbonado(turnoId, fecha)
+    : null;
+
+  await listaEsperaNoAbonadoService.deleteById(espera.id);
+
+  return {
+    message: siguiente
+      ? 'Saliste de la cola de no abonados y el cupo fue reasignado al siguiente en espera.'
+      : 'Saliste de la cola de no abonados.',
+    siguienteNotificado: siguiente,
+    cupoLiberado: estadoAnterior === 'CUPO_RESERVADO'
+  };
+}

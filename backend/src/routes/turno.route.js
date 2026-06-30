@@ -13,7 +13,7 @@ router.get("/:id", authMiddleware, turnoController.getTurnoById);
 router.get("/:id/reservas/count", authMiddleware, turnoController.getReservasCount);
 router.get("/:id/ocupacion", authMiddleware, turnoController.getOcupacion);
 router.post("/:id/abonados", authMiddleware, turnoController.altaAbonado);
-router.patch("/:id/abonados/baja", authMiddleware, turnoController.bajaAbonado);
+router.post("/:id/abonados/salir-cola", authMiddleware, turnoController.salirDeColaAbonado);
 router.put('/modificar/:id', authMiddleware, esAdministrador, turnoController.modificarTurno);
 
 export default router;
