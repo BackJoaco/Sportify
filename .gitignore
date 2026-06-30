@@ -27,6 +27,9 @@ temp/
 # Configuración de VSCode
 .vscode/
 
+# Configuración de Github
+.github/
+
 # Configuración de JetBrains
 .idea/
 

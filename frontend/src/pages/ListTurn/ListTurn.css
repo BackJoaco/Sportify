@@ -177,6 +177,11 @@
     overflow-y: auto;
 }
 
+.dia-celda-fuera-rango {
+    background-color: var(--off-white);
+    opacity: 0.55;
+}
+
 .turno-badge {
     color: white;
     padding: 0.4rem;
