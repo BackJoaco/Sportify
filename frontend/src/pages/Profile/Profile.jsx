@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import Swal from "sweetalert2";
 import { FaArrowLeft, FaEye, FaEyeSlash } from "react-icons/fa";
-import { deleteClientAccount, updateProfile } from "../../api/usuario.api";
+import { updateProfile } from "../../api/usuario.api";
 import "./Profile.css";
 
 export default function Profile() {
@@ -11,7 +11,6 @@ export default function Profile() {
     const navigate = useNavigate();
     const [isEditing, setIsEditing] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [deletingAccount, setDeletingAccount] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
 
     const [formData, setFormData] = useState({
@@ -127,51 +126,6 @@ export default function Profile() {
         navigate("/login");
     }
 
-    async function handleDeleteAccount() {
-        const result = await Swal.fire({
-            title: "Dar de baja tu usuario",
-            text: "Al darte de baja, se darán de baja tus turnos, créditos y demás cosas asociadas que tengas. ¿Estás seguro?",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonText: "Sí, darme de baja",
-            cancelButtonText: "Cancelar",
-            confirmButtonColor: "#e74c3c",
-            reverseButtons: true,
-        });
-
-        if (!result.isConfirmed) {
-            return;
-        }
-
-        setDeletingAccount(true);
-
-        try {
-            await deleteClientAccount();
-            setUsuario(null);
-
-            await Swal.fire({
-                icon: "success",
-                title: "Usuario dado de baja",
-                text: "Tu cuenta y la información asociada fueron dadas de baja correctamente.",
-                confirmButtonText: "Aceptar",
-            });
-
-            navigate("/login", { replace: true });
-        } catch (err) {
-            Swal.fire({
-                toast: true,
-                position: "top-end",
-                icon: "error",
-                title: err.message || "Error al dar de baja el usuario",
-                showConfirmButton: false,
-                timer: 3000,
-                timerProgressBar: true,
-            });
-        } finally {
-            setDeletingAccount(false);
-        }
-    }
-
     return (
         <div className="profile-container">
             <div className="profile-card">
@@ -231,17 +185,6 @@ export default function Profile() {
                                 Cerrar sesión
                             </button>
                         </div>
-                        {usuario.rol === "CLIENTE" && (
-                            <div className="profile-danger-zone">
-                                <button
-                                    className="btn-delete-account"
-                                    onClick={handleDeleteAccount}
-                                    disabled={deletingAccount}
-                                >
-                                    {deletingAccount ? "Dando de baja..." : "Darme de baja"}
-                                </button>
-                            </div>
-                        )}
                     </>
                 ) : (
                     <form onSubmit={handleSubmit} className="profile-form">

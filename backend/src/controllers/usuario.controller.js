@@ -1,7 +1,5 @@
 import * as usuarioService
     from '../services/usuario.service.js';
-import { deleteClientAccountFlow } from '../flows/usuario/deleteClientAccount.flow.js';
-import { clearAuthCookie } from '../utils/cookies.js';
 
 export async function getProfile(req, res) {
     try {
@@ -27,24 +25,6 @@ export async function updateProfile(req, res) {
         return res.status(200).json(usuarioActualizado);
     } catch (error) {
         console.log(error);
-        return res.status(400).json({ message: error.message });
-    }
-}
-
-export async function deleteClientAccount(req, res) {
-    try {
-        const { id } = req.usuario;
-        const resultado = await deleteClientAccountFlow(id);
-
-        clearAuthCookie(res);
-
-        return res.status(200).json({
-            message: resultado.alreadyDeleted
-                ? 'La cuenta ya se encontraba dada de baja'
-                : 'Cuenta dada de baja correctamente',
-            deleted: resultado.deleted || null
-        });
-    } catch (error) {
         return res.status(400).json({ message: error.message });
     }
 }

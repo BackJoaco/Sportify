@@ -33,21 +33,6 @@ export async function updateProfile(datos) {
   return data;
 }
 
-export async function deleteClientAccount() {
-  const res = await fetch(`${API_URL}/usuario/perfil`, {
-    method: "DELETE",
-    credentials: "include",
-  });
-
-  const data = await res.json();
-
-  if (!res.ok) {
-    throw data;
-  }
-
-  return data;
-}
-
 export async function createEmployee(datos) {
   const res = await fetch(`${API_URL}/usuario/empleados`, {
     method: "POST",
