@@ -92,37 +92,6 @@
   transform: scale(0.98);
 }
 
-.profile-danger-zone {
-  border-top: 1px solid #f1c0ba;
-  padding-top: 16px;
-}
-
-.btn-delete-account {
-  width: 100%;
-  padding: 12px;
-  border: none;
-  border-radius: 8px;
-  background: #e74c3c;
-  color: white;
-  font-size: 14px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.btn-delete-account:hover:not(:disabled) {
-  background: #c0392b;
-}
-
-.btn-delete-account:active:not(:disabled) {
-  transform: scale(0.98);
-}
-
-.btn-delete-account:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
 .btn-edit {
   background: var(--blue);
   color: white;

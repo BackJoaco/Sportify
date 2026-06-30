@@ -11,6 +11,9 @@ router.post('/crear', authMiddleware, esAdministrador, turnoController.create);
 router.delete("/:id", authMiddleware, esAdministrador, turnoController.deleteTurno);
 router.get("/:id", authMiddleware, turnoController.getTurnoById);
 router.get("/:id/reservas/count", authMiddleware, turnoController.getReservasCount);
+router.get("/:id/ocupacion", authMiddleware, turnoController.getOcupacion);
+router.post("/:id/abonados", authMiddleware, turnoController.altaAbonado);
+router.patch("/:id/abonados/baja", authMiddleware, turnoController.bajaAbonado);
 router.put('/modificar/:id', authMiddleware, esAdministrador, turnoController.modificarTurno);
 
 export default router;

@@ -10,7 +10,6 @@ const router = Router();
 
 router.get('/perfil', authMiddleware, usuarioController.getProfile);
 router.put('/perfil', authMiddleware, usuarioController.updateProfile);
-router.delete('/perfil', authMiddleware, usuarioController.deleteClientAccount);
 router.get('/clientes', authMiddleware, esEmpleado, usuarioController.obtenerClientes);
 router.get('/', authMiddleware, esAdministrador, usuarioController.getUsersExceptAdmins);
 router.post('/empleados', authMiddleware, esAdministrador, usuarioController.registerEmployee);

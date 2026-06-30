@@ -152,7 +152,7 @@ export default function Payments() {
                     <td>
                       {pago.Reserva?.Turno ? (
                         <div className="payment-date-cell">
-                          <span>{formatearFecha(pago.Reserva.Turno.fecha)}</span>
+                          <span>{formatearFecha(pago.Reserva.fecha)}</span>
                           <span className="payment-hour-text">
                             {formatearHora(pago.Reserva.Turno.hora_inicio)}
                           </span>
