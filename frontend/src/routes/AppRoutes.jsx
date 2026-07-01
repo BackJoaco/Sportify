@@ -19,6 +19,7 @@ import UserManagement from "../pages/UserManagement/UserManagement";
 import ModifyActivity from "../pages/ModifyActivity/ModifyActivity";
 import Payments from "../pages/Payments/Payments";
 import DemandaActividades from "../pages/Statistics/Statistics"; 
+import HistorialCreditos from "../pages/SeeCredits/SeeCredits"; 
 
 export default function AppRoutes() {
   return (
@@ -172,6 +173,15 @@ export default function AppRoutes() {
             <ProtectedRoute allowedRoles={["ADMINISTRADOR"]}>
               <DemandaActividades />
             </ProtectedRoute>
+          </PrivateRoute>
+        }
+      />
+
+      <Route
+        path="/mis-creditos"
+        element={
+          <PrivateRoute>
+            <HistorialCreditos />
           </PrivateRoute>
         }
       />
