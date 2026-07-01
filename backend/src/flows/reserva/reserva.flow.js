@@ -1,10 +1,12 @@
 import crypto from 'crypto';
 import * as abonadoTurnoService from '../../services/abonadoTurno.service.js';
+import * as listaEsperaAbonadoService from '../../services/listaEsperaAbonado.service.js';
 import * as listaEsperaNoAbonadoService from '../../services/listaEsperaNoAbonado.service.js';
 import { pagarSenaReserva } from '../payment/pago.flow.js';
 import * as reservaService from '../../services/reserva.service.js';
 import * as turnoService from '../../services/turno.service.js';
 import * as usuarioService from '../../services/usuario.service.js';
+import * as notificacionService from '../../services/notificacion.service.js';
 import { calcularCuposDisponiblesFecha } from '../../utils/ocupacionTurno.js';
 
 const DIAS = ['DOMINGO', 'LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO'];
@@ -39,14 +41,36 @@ async function calcularCuposDisponibles(turno, fecha) {
   return calcularCuposDisponiblesFecha(turno, abonadosActivos, reservasFecha);
 }
 
-async function reservarCupoParaSiguienteNoAbonado(turnoId, fecha) {
-  const siguiente = await listaEsperaNoAbonadoService.findSiguienteEnEspera(turnoId, fecha);
+export async function asignarSiguienteWaitlist(turnoId, fecha) {
+  let siguiente = await listaEsperaAbonadoService.findSiguienteEnEspera(turnoId);
+  let esAbonado = true;
+
+  if (!siguiente) {
+    siguiente = await listaEsperaNoAbonadoService.findSiguienteEnEspera(turnoId, fecha);
+    esAbonado = false;
+  }
+
   if (!siguiente) {
     return null;
   }
 
-  await listaEsperaNoAbonadoService.reservarCupo(siguiente.id);
-  return siguiente;
+  if (esAbonado) {
+    await listaEsperaAbonadoService.reservarCupo(siguiente.id, 1);
+  } else {
+    await listaEsperaNoAbonadoService.reservarCupo(siguiente.id, 1);
+  }
+
+  await notificacionService.create({
+    usuario_id: siguiente.usuario_id,
+    mensaje: 'Se liberó un cupo en el turno al que estabas inscripto en lista de espera. Tienes exactamente 1 hora para confirmar tu reserva.',
+    leida: false,
+    fecha_creacion: new Date()
+  });
+
+  return {
+    ...(siguiente.toJSON ? siguiente.toJSON() : siguiente),
+    esAbonado
+  };
 }
 
 export async function create(usuario_id, turno_id, fecha) {
@@ -164,7 +188,7 @@ export async function cancelarReserva(reservaId, usuarioId) {
 
   await reservaService.marcarComoCancelada(reservaId);
 
-  const siguiente = await reservarCupoParaSiguienteNoAbonado(reserva.turno_id, reserva.fecha);
+  const siguiente = await asignarSiguienteWaitlist(reserva.turno_id, reserva.fecha);
 
   if (reserva.tipo_reserva === 'ABONADO') {
     return {
@@ -232,7 +256,7 @@ export async function cancelarClaseAbonado(usuarioId, turnoId, fecha) {
     await reservaService.marcarComoCancelada(reserva.id);
   }
 
-  const siguiente = await reservarCupoParaSiguienteNoAbonado(turnoId, fecha);
+  const siguiente = await asignarSiguienteWaitlist(turnoId, fecha);
 
   return {
     message: siguiente
@@ -253,7 +277,7 @@ export async function salirDeColaNoAbonado(usuarioId, turnoId, fecha) {
 
   const estadoAnterior = espera.estado;
   const siguiente = estadoAnterior === 'CUPO_RESERVADO'
-    ? await reservarCupoParaSiguienteNoAbonado(turnoId, fecha)
+    ? await asignarSiguienteWaitlist(turnoId, fecha)
     : null;
 
   await listaEsperaNoAbonadoService.deleteById(espera.id);

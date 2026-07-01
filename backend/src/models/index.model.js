@@ -11,6 +11,7 @@ import CreditoModel from './credito.model.js';
 import AbonadoTurnoModel from './abonadoTurno.model.js';
 import ListaEsperaAbonadoModel from './listaEsperaAbonado.model.js';
 import ListaEsperaNoAbonadoModel from './listaEsperaNoAbonado.model.js';
+import NotificacionModel from './notificacion.model.js';
 
 const Usuario = UsuarioModel(sequelize);
 const Actividad = ActividadModel(sequelize);
@@ -23,6 +24,7 @@ const Credito = CreditoModel(sequelize);
 const AbonadoTurno = AbonadoTurnoModel(sequelize);
 const ListaEsperaAbonado = ListaEsperaAbonadoModel(sequelize);
 const ListaEsperaNoAbonado = ListaEsperaNoAbonadoModel(sequelize);
+const Notificacion = NotificacionModel(sequelize);
 
 // --- Suscripciones ---
 Usuario.hasMany(SuscripcionAbonado, {
@@ -301,6 +303,21 @@ Credito.belongsTo(Reserva, {
   }
 });
 
+// --- Notificaciones ---
+Usuario.hasMany(Notificacion, {
+  foreignKey: {
+    name: 'usuario_id',
+    allowNull: false
+  }
+});
+
+Notificacion.belongsTo(Usuario, {
+  foreignKey: {
+    name: 'usuario_id',
+    allowNull: false
+  }
+});
+
 export {
   Usuario,
   Actividad,
@@ -312,5 +329,6 @@ export {
   Credito,
   AbonadoTurno,
   ListaEsperaAbonado,
-  ListaEsperaNoAbonado
+  ListaEsperaNoAbonado,
+  Notificacion
 };

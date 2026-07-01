@@ -5,6 +5,7 @@ import { FaSignOutAlt } from "react-icons/fa";
 import AdminHome from "./AdminHome/AdminHome";
 import ClientHome from "./ClientHome/ClientHome";
 import EmployeeHome from "./EmployeeHome/EmployeeHome";
+import NotificationBell from "../../components/NotificationBell/NotificationBell";
 import "./Home.css";
 
 export default function Home() {
@@ -39,12 +40,15 @@ export default function Home() {
           <span>{usuario.rol}</span>
         </div>
 
-        <button
-          className="home-logout-button"
-          onClick={() => setShowLogoutConfirm(true)}
-        >
-          <FaSignOutAlt /> Cerrar sesion
-        </button>
+        <div className="home-navbar-actions">
+          <NotificationBell />
+          <button
+            className="home-logout-button"
+            onClick={() => setShowLogoutConfirm(true)}
+          >
+            <FaSignOutAlt /> Cerrar sesion
+          </button>
+        </div>
       </nav>
 
       {renderHomeByRole()}

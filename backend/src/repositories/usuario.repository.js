@@ -90,3 +90,11 @@ export async function deleteUsuarioInstance(usuario, transaction) {
     await usuario.destroy({ transaction });
     return 1;
 }
+
+export async function findAllAdmins() {
+    return Usuario.findAll({
+        where: {
+            rol: 'ADMINISTRADOR'
+        }
+    });
+}

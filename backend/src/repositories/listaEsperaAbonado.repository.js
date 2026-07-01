@@ -60,3 +60,12 @@ export async function deleteByUsuarioId(usuarioId, transaction) {
     transaction
   });
 }
+
+export async function countWaiting(turnoId) {
+  return ListaEsperaAbonado.count({
+    where: {
+      turno_id: turnoId,
+      estado: 'EN_ESPERA'
+    }
+  });
+}
