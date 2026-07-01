@@ -1,0 +1,80 @@
+/* Layout para la grilla de tarjetas de estadísticas */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 1.5rem;
+  width: 100%;
+}
+
+/* Encabezado de cada tarjeta */
+.stat-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stat-card-header h2 {
+  margin: 0;
+  color: var(--dark-blue);
+}
+
+.stat-total {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--blue);
+}
+
+.stat-total-label {
+  font-size: 0.8rem;
+  color: var(--gray);
+  font-weight: normal;
+  margin-left: 0.3rem;
+}
+
+/* Valores destacados dentro de la grilla */
+.stat-value-peak {
+  font-weight: bold;
+  color: var(--dark-blue);
+}
+
+.stat-value-empty {
+  font-weight: bold;
+  color: var(--gray);
+}
+
+/* Desglose de días */
+.stat-breakdown-container {
+  margin-top: 1.5rem;
+  border-top: 1px solid var(--silver);
+  padding-top: 1rem;
+}
+
+.stat-breakdown-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--gray);
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+.stat-breakdown-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.day-badge {
+  background-color: var(--off-white);
+  color: var(--dark-blue);
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: normal;
+}
+
+.day-badge.peak {
+  background-color: var(--blue);
+  color: white;
+  font-weight: bold;
+}
