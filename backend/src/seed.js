@@ -9,7 +9,7 @@ const usuariosSeed = [
     nombre: 'Admin',
     apellido: 'Sportify',
     dni: '10000000',
-    email: 'admin@sporify.com',
+    email: 'admin@sportify.com',
     rol: 'ADMINISTRADOR',
     estado: 'HABILITADO'
   },
