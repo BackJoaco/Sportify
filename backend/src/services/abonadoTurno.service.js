@@ -24,6 +24,10 @@ export function findByUsuarioId(usuarioId) {
   return abonadoTurnoRepository.findByUsuarioId(usuarioId);
 }
 
+export function findSuspendedByUsuarioId(usuarioId) {
+  return abonadoTurnoRepository.findSuspendedByUsuarioId(usuarioId);
+}
+
 export function deleteByUsuarioId(usuarioId, transaction) {
   return abonadoTurnoRepository.deleteByUsuarioId(usuarioId, transaction);
 }

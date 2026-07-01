@@ -52,6 +52,26 @@ export async function registrarSena({
     });
 }
 
+export async function registrarSuscripcionMensual({
+    monto,
+    usuarioId,
+    metodoPago = 'MERCADO_PAGO'
+}) {
+    const montoNumerico = Number(monto);
+
+    if (!monto || Number.isNaN(montoNumerico) || montoNumerico <= 0) {
+        throw new Error('Debe ingresar un monto valido para la suscripcion mensual');
+    }
+
+    return pagoRepository.create({
+        monto,
+        tipo_pago: 'SUSCRIPCION_MENSUAL',
+        metodo_pago: metodoPago,
+        estado: 'COMPLETADO',
+        usuario_id: usuarioId
+    });
+}
+
 export async function findByUsuarioId(usuarioId) {
     return pagoRepository.findByUsuarioId(usuarioId);
 }

@@ -37,7 +37,7 @@ export async function getById(id) {
       },
       {
         model: Actividad,
-        attributes: ['id', 'nombre', 'precio_clase']
+        attributes: ['id', 'nombre', 'precio_clase', 'precio_mensual']
       }
     ]
   });

@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import { getMisReservas } from "../../../api/reservas.api";
-import { getMisPagos, pagarSenaReserva } from "../../../api/pago.api";
+import { getMisPagos, obtenerMontoSenaReserva, pagarSenaReserva } from "../../../api/pago.api";
 import {
   FaCalendarAlt,
   FaCalendarCheck,
@@ -12,6 +12,7 @@ import {
   FaWallet,
 } from "react-icons/fa";
 import Swal from "sweetalert2";
+import PaymentModal from "../../../components/PaymentModal/PaymentModal";
 import "./ClientHome.css";
 
 export default function ClientHome() {
@@ -24,14 +25,8 @@ export default function ClientHome() {
   const [reservasError, setReservasError] = useState("");
   const [pagosError, setPagosError] = useState("");
   const [reservaAPagar, setReservaAPagar] = useState(null);
+  const [montoAPagar, setMontoAPagar] = useState(0);
   const [pagando, setPagando] = useState(false);
-  const [tarjeta, setTarjeta] = useState({
-    numero: "",
-    nombre: "",
-    apellido: "",
-    vencimiento: "",
-    cvv: "",
-  });
 
   async function cargarReservas() {
     try {
@@ -145,49 +140,41 @@ export default function ClientHome() {
     });
   }
 
-  function calcularSena(reserva) {
-    const precioClase = Number(reserva?.Turno?.Actividad?.precio_clase);
+  async function abrirModalPago(reserva) {
+    try {
+      setPagando(true);
+      const resultado = await obtenerMontoSenaReserva({ reservaId: reserva.id });
 
-    if (!precioClase || Number.isNaN(precioClase)) {
-      return 0;
+      setReservaAPagar(reserva);
+      setMontoAPagar(Number(resultado.monto) || 0);
+    } catch (err) {
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "error",
+        title: err.message || err.mensaje || "No se pudo calcular el monto de la seña",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+      });
+      setReservaAPagar(null);
+      setMontoAPagar(0);
+    } finally {
+      setPagando(false);
     }
-
-    return precioClase * 0.5;
-  }
-
-  function abrirModalPago(reserva) {
-    setReservaAPagar(reserva);
-    setTarjeta({
-      numero: "",
-      nombre: "",
-      apellido: "",
-      vencimiento: "",
-      cvv: "",
-    });
   }
 
   function cerrarModalPago() {
     if (!pagando) {
       setReservaAPagar(null);
+      setMontoAPagar(0);
     }
   }
 
-  function handleTarjetaChange(e) {
-    const { name, value } = e.target;
-    setTarjeta((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  }
-
-  async function handlePagarSena(e) {
-    e.preventDefault();
-
+  async function handlePagarSena(tarjetaDebito) {
     if (!reservaAPagar) return;
 
-    const monto = calcularSena(reservaAPagar);
-
-    if (monto <= 0) {
+    if (montoAPagar <= 0) {
       Swal.fire({
         toast: true,
         position: "top-end",
@@ -203,11 +190,9 @@ export default function ClientHome() {
     setPagando(true);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
       await pagarSenaReserva({
         reservaId: reservaAPagar.id,
-        tarjetaDebito: tarjeta,
+        tarjetaDebito,
       });
 
       Swal.fire({
@@ -450,110 +435,17 @@ export default function ClientHome() {
         </article>
       </section>
 
-      {reservaAPagar && (
-        <div className="payment-modal">
-          <div className="payment-dialog">
-            <div className="payment-header">
-              <div>
-                <span>Pagar seña</span>
-                <h2>{reservaAPagar.Turno?.Actividad?.nombre || "Reserva"}</h2>
-              </div>
-              <strong>
-                ${calcularSena(reservaAPagar).toLocaleString("es-AR")}
-              </strong>
-            </div>
-
-            <form className="payment-form" onSubmit={handlePagarSena}>
-              <div className="form-group">
-                <label htmlFor="numero">Numero de tarjeta</label>
-                <input
-                  id="numero"
-                  name="numero"
-                  value={tarjeta.numero}
-                  onChange={handleTarjetaChange}
-                  placeholder="0000 0000 0000 0000"
-                  required
-                />
-              </div>
-
-              <div className="payment-row">
-                <div className="form-group">
-                  <label htmlFor="nombre">Nombre</label>
-                  <input
-                    id="nombre"
-                    name="nombre"
-                    value={tarjeta.nombre}
-                    onChange={handleTarjetaChange}
-                    required
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="apellido">Apellido</label>
-                  <input
-                    id="apellido"
-                    name="apellido"
-                    value={tarjeta.apellido}
-                    onChange={handleTarjetaChange}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="payment-row">
-                <div className="form-group">
-                  <label htmlFor="vencimiento">Vencimiento</label>
-                  <input
-                    id="vencimiento"
-                    name="vencimiento"
-                    value={tarjeta.vencimiento}
-                    onChange={handleTarjetaChange}
-                    placeholder="MM/AA"
-                    required
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="cvv">CVV</label>
-                  <input
-                    id="cvv"
-                    name="cvv"
-                    value={tarjeta.cvv}
-                    onChange={handleTarjetaChange}
-                    placeholder="123"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="payment-actions">
-                <button
-                  type="button"
-                  className="btn-payment-cancel"
-                  onClick={cerrarModalPago}
-                  disabled={pagando}
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="btn-payment-submit"
-                  disabled={pagando}
-                >
-                  {pagando ? "Pagando..." : "Confirmar pago"}
-                </button>
-              </div>
-
-              {pagando && (
-                <div className="payment-processing">
-                  <div className="payment-spinner" />
-                  <p>Realizando pago...</p>
-                </div>
-              )}
-            </form>
-          </div>
-        </div>
-      )}
+      <PaymentModal
+        open={Boolean(reservaAPagar)}
+        title={reservaAPagar ? `Pagar seña - ${reservaAPagar.Turno?.Actividad?.nombre || "Reserva"}` : "Pagar seña"}
+        subtitle={reservaAPagar ? `Clase del ${formatearFecha(reservaAPagar.fecha)}` : ""}
+        amount={montoAPagar}
+        amountLabel="Seña"
+        confirmLabel="Pagar y reservar"
+        onClose={cerrarModalPago}
+        onSubmit={handlePagarSena}
+        loading={pagando}
+      />
     </main>
   );
 }
