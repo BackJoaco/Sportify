@@ -584,15 +584,13 @@ export default function DetailTurn() {
     const debeIrACola =
       !esAbonadoActivo &&
       !colaAbonadoUsuario &&
-      !claseYaPaso &&
       abonadosCount >= turno.cupo_maximo;
 
     if (debeIrACola) {
-      const mensaje = abonadosCount >= turno.cupo_maximo
-        ? "El cliente fue agregado a la cola de abonados."
-        : "Solicitud de abono procesada";
-
-      await ejecutarAccion(() => altaAbonadoTurno(turno.id), mensaje);
+      await ejecutarAccion(
+        () => altaAbonadoTurno(turno.id),
+        "El cliente fue agregado a la cola de abonados."
+      );
       return;
     }
 
