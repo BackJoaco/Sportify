@@ -38,6 +38,12 @@
   padding: 0.25rem 0.55rem;
 }
 
+.home-navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
 .home-logout-button {
   display: inline-flex;
   align-items: center;
@@ -140,4 +146,16 @@
   .logout-actions {
     flex-direction: column;
   }
+}
+
+.tools-container {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.btn-tool {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
 }

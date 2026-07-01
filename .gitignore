@@ -30,6 +30,9 @@ temp/
 # Configuración de Github
 .github/
 
+# Configuración de agentes
+.agents/
+
 # Configuración de JetBrains
 .idea/
 

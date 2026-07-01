@@ -85,6 +85,9 @@ export default function AdminHome() {
             <button className="btn-primary btn-tool" onClick={() => navigate("/usuarios")}>
               <FaUsers /> Gestionar Usuarios
             </button>
+            <button className="btn-primary btn-tool" onClick={() => navigate("/demo-panel")}>
+              <FaTools /> Panel de Simulación
+            </button>
           </div>
         </article>
       </section >
