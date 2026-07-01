@@ -10,8 +10,10 @@ import {
   updateTurno,
 } from "../../api/turno.api";
 import { cancelarReserva, crearReserva, crearReservaStaff, salirDeColaNoAbonado } from "../../api/reservas.api";
+import { obtenerMontoSenaTurno, obtenerMontoSuscripcionMensual, pagarSuscripcionMensual } from "../../api/pago.api";
 import { getClientes } from "../../api/usuario.api";
 import { useAuth } from "../../context/AuthContext";
+import PaymentModal from "../../components/PaymentModal/PaymentModal";
 import "./DetailTurn.css";
 
 const HORAS_TURNO = Array.from({ length: 13 }, (_, i) => {
@@ -71,19 +73,6 @@ function formatearFecha(fecha) {
   return `${day}/${month}/${year}`;
 }
 
-function formatearMonto(monto) {
-  const montoNumerico = Number(monto);
-
-  if (Number.isNaN(montoNumerico)) {
-    return "$0";
-  }
-
-  return montoNumerico.toLocaleString("es-AR", {
-    style: "currency",
-    currency: "ARS",
-  });
-}
-
 export default function DetailTurn() {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
@@ -96,6 +85,13 @@ export default function DetailTurn() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [pagoModal, setPagoModal] = useState({
+    open: false,
+    mode: null,
+    amount: 0,
+    title: "",
+    subtitle: "",
+  });
   const [formData, setFormData] = useState({
     entrenador: "",
     dia_semana: "",
@@ -211,12 +207,10 @@ export default function DetailTurn() {
       titulo: "No tenés inscripción activa en este turno",
       detalle: "Podés reservar una clase puntual o abonarte si hay cupo fijo disponible.",
     };
-  }, [colaAbonadoUsuario, colaNoAbonadoUsuario, esAbonadoActivo, esCliente, fechaClase, ocupacion, turno, usuario]);
+  }, [colaAbonadoUsuario, colaNoAbonadoUsuario, esAbonadoActivo, esCliente, fechaClase, ocupacion, reservaConfirmadaUsuario, turno, usuario]);
 
   const estadoReservaPuntual = useMemo(() => {
     if (!esCliente || !usuario || !ocupacion) return null;
-
-    const esDelUsuario = (registro) => String(registro.usuario_id) === String(usuario.id);
     if (reservaConfirmadaUsuario) {
       return "RESERVADA";
     }
@@ -375,70 +369,75 @@ export default function DetailTurn() {
     }
   }
 
-  function calcularSenaTurno() {
-    const precioClase = Number(turno?.Actividad?.precio_clase);
-
-    if (!precioClase || Number.isNaN(precioClase)) {
-      return 0;
-    }
-
-    return precioClase * 0.5;
+  function abrirPagoModal(data) {
+    setPagoModal({
+      open: true,
+      mode: data.mode,
+      amount: data.amount,
+      title: data.title,
+      subtitle: data.subtitle,
+    });
   }
 
-  async function solicitarTarjetaSena() {
-    const montoSena = calcularSenaTurno();
+  function cerrarPagoModal() {
+    if (saving) {
+      return;
+    }
 
-    if (montoSena <= 0) {
+    setPagoModal({
+      open: false,
+      mode: null,
+      amount: 0,
+      title: "",
+      subtitle: "",
+    });
+  }
+
+  async function handleConfirmarPago(tarjetaDebito) {
+    try {
+      setSaving(true);
+
+      if (pagoModal.mode === "sena") {
+        const respuestaReserva = await crearReserva({
+          turno_id: turno.id,
+          fecha: fechaClase,
+          tarjetaDebito,
+        });
+
+        Swal.fire({
+          toast: true,
+          position: "top-end",
+          icon: respuestaReserva.enEspera ? "info" : "success",
+          title: respuestaReserva.mensaje || respuestaReserva.message || "Reserva procesada",
+          showConfirmButton: false,
+          timer: 3000,
+        });
+
+        await fetchTurnoData(fechaClase);
+      }
+
+      if (pagoModal.mode === "abonado") {
+        await pagarSuscripcionMensual({
+          turnoId: turno.id,
+          tarjetaDebito,
+        });
+
+        await ejecutarAccion(() => altaAbonadoTurno(turno.id), "Solicitud de abono procesada");
+      }
+
+      cerrarPagoModal();
+    } catch (err) {
       Swal.fire({
         toast: true,
         position: "top-end",
         icon: "error",
-        title: "No se pudo calcular el monto de la seña",
+        title: err.message || err.mensaje || "Error al procesar el pago",
         showConfirmButton: false,
-        timer: 3000,
+        timer: 3500,
       });
-      return null;
+    } finally {
+      setSaving(false);
     }
-
-    const { value: tarjetaDebito } = await Swal.fire({
-      title: "Pagar seña",
-      html: `
-        <p style="margin: 0 0 12px;">Clase del ${formatearFecha(fechaClase)} - Seña ${formatearMonto(montoSena)}</p>
-        <input id="swal-card-number" class="swal2-input" placeholder="Numero de tarjeta">
-        <input id="swal-card-name" class="swal2-input" placeholder="Nombre">
-        <input id="swal-card-lastname" class="swal2-input" placeholder="Apellido">
-        <input id="swal-card-expiration" class="swal2-input" placeholder="Vencimiento MM/AA">
-        <input id="swal-card-cvv" class="swal2-input" placeholder="CVV">
-      `,
-      focusConfirm: false,
-      showCancelButton: true,
-      confirmButtonText: "Pagar y reservar",
-      cancelButtonText: "Cancelar",
-      preConfirm: () => {
-        const tarjeta = {
-          numero: document.getElementById("swal-card-number")?.value.trim(),
-          nombre: document.getElementById("swal-card-name")?.value.trim(),
-          apellido: document.getElementById("swal-card-lastname")?.value.trim(),
-          vencimiento: document.getElementById("swal-card-expiration")?.value.trim(),
-          cvv: document.getElementById("swal-card-cvv")?.value.trim(),
-        };
-
-        if (
-          !tarjeta.numero ||
-          !tarjeta.nombre ||
-          !tarjeta.apellido ||
-          !tarjeta.vencimiento ||
-          !tarjeta.cvv
-        ) {
-          Swal.showValidationMessage("Completá todos los datos de la tarjeta");
-          return false;
-        }
-
-        return tarjeta;
-      },
-    });
-
-    return tarjetaDebito || null;
   }
 
   async function handleReservaNoAbonado() {
@@ -454,14 +453,32 @@ export default function DetailTurn() {
       return;
     }
 
-    const tarjetaDebito = await solicitarTarjetaSena();
+    try {
+      setSaving(true);
+      const resultado = await obtenerMontoSenaTurno({ turnoId: turno.id });
 
-    if (!tarjetaDebito) return;
+      if (!resultado?.monto || Number(resultado.monto) <= 0) {
+        throw new Error("No se pudo calcular el monto de la seña");
+      }
 
-    await ejecutarAccion(
-      () => crearReserva({ turno_id: turno.id, fecha: fechaClase, tarjetaDebito }),
-      "Reserva procesada"
-    );
+      abrirPagoModal({
+        mode: "sena",
+        amount: Number(resultado.monto),
+        title: `Pagar seña - ${turno?.Actividad?.nombre || "Reserva"}`,
+        subtitle: `Clase del ${formatearFecha(fechaClase)}`,
+      });
+    } catch (err) {
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "error",
+        title: err.message || err.mensaje || "No se pudo calcular el monto de la seña",
+        showConfirmButton: false,
+        timer: 3000,
+      });
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function handleSalirColaNoAbonado() {
@@ -564,12 +581,13 @@ export default function DetailTurn() {
   }
 
   async function handleAltaAbonado() {
-    const necesitaReservaInicial =
+    const debeIrACola =
+      !esAbonadoActivo &&
+      !colaAbonadoUsuario &&
       !claseYaPaso &&
-      cuposFecha > 0 &&
-      !reservaConfirmadaUsuario;
+      abonadosCount >= turno.cupo_maximo;
 
-    if (!necesitaReservaInicial) {
+    if (debeIrACola) {
       const mensaje = abonadosCount >= turno.cupo_maximo
         ? "El cliente fue agregado a la cola de abonados."
         : "Solicitud de abono procesada";
@@ -578,50 +596,28 @@ export default function DetailTurn() {
       return;
     }
 
-    const tarjetaDebito = await solicitarTarjetaSena();
-
-    if (!tarjetaDebito) return;
-
-    let reservaInicial = null;
-
     try {
       setSaving(true);
+      const resultado = await obtenerMontoSuscripcionMensual({ turnoId: turno.id });
 
-      reservaInicial = await crearReserva({
-        turno_id: turno.id,
-        fecha: fechaClase,
-        tarjetaDebito,
-      });
-
-      const resultadoAbono = await altaAbonadoTurno(turno.id);
-
-      Swal.fire({
-        toast: true,
-        position: "top-end",
-        icon: "success",
-        title: resultadoAbono.message || resultadoAbono.mensaje || "Cliente abonado al turno correctamente.",
-        showConfirmButton: false,
-        timer: 3000,
-      });
-
-      await fetchTurnoData(fechaClase);
-      return reservaInicial;
-    } catch (err) {
-      if (typeof reservaInicial?.data?.id !== "undefined") {
-        try {
-          await cancelarReserva(reservaInicial.data.id);
-        } catch {
-          // Si la reversión falla, dejamos el error original.
-        }
+      if (!resultado?.monto || Number(resultado.monto) <= 0) {
+        throw new Error("No se pudo calcular el monto del abono mensual");
       }
 
+      abrirPagoModal({
+        mode: "abonado",
+        amount: Number(resultado.monto),
+        title: `Abonarte al turno - ${turno?.Actividad?.nombre || "Turno"}`,
+        subtitle: "Se cobra el mes en curso con 20% de descuento sobre las clases restantes.",
+      });
+    } catch (err) {
       Swal.fire({
         toast: true,
         position: "top-end",
         icon: "error",
-        title: err.message || err.mensaje || "Error al procesar el abono",
+        title: err.message || err.mensaje || "No se pudo calcular el monto del abono mensual",
         showConfirmButton: false,
-        timer: 3500,
+        timer: 3000,
       });
     } finally {
       setSaving(false);
@@ -857,6 +853,18 @@ export default function DetailTurn() {
           </div>
         </div>
       </div>
+
+      <PaymentModal
+        open={pagoModal.open}
+        title={pagoModal.title}
+        subtitle={pagoModal.subtitle}
+        amount={pagoModal.amount}
+        amountLabel={pagoModal.mode === "abonado" ? "Abono mensual" : "Seña"}
+        confirmLabel={pagoModal.mode === "abonado" ? "Pagar y abonar" : "Pagar y reservar"}
+        onClose={cerrarPagoModal}
+        onSubmit={handleConfirmarPago}
+        loading={saving}
+      />
     </div>
   );
 }

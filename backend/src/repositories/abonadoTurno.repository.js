@@ -54,6 +54,16 @@ export async function findByUsuarioId(usuarioId) {
   });
 }
 
+export async function findSuspendedByUsuarioId(usuarioId) {
+  return AbonadoTurno.findAll({
+    where: {
+      usuario_id: usuarioId,
+      estado: 'SUSPENDIDO'
+    },
+    include: [Turno]
+  });
+}
+
 export async function deleteByUsuarioId(usuarioId, transaction) {
   return AbonadoTurno.destroy({
     where: { usuario_id: usuarioId },

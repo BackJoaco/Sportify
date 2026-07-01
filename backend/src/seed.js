@@ -2,7 +2,7 @@ import { sequelize } from './config/database.js';
 import { Actividad, Turno, Usuario } from './models/index.model.js';
 import { hashPassword } from './utils/bcrypt.js';
 
-const DEFAULT_PASSWORD = 'asdasd1.';
+const DEFAULT_PASSWORD = 'Asdasd1.';
 
 const usuariosSeed = [
   {
