@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { FaUserEdit, FaIdCard, FaCalendarAlt, FaDumbbell, FaTools, FaUsers } from "react-icons/fa";
+import { FaUserEdit, FaIdCard, FaCalendarAlt, FaDumbbell, FaTools, FaUsers, FaChartBar } from "react-icons/fa";
 import { useAuth } from "../../../context/AuthContext";
 
 export default function AdminHome() {
@@ -82,11 +82,16 @@ export default function AdminHome() {
           </div>
 
           <div className="tools-container">
+            
             <button className="btn-primary btn-tool" onClick={() => navigate("/usuarios")}>
               <FaUsers /> Gestionar Usuarios
             </button>
             <button className="btn-primary btn-tool" onClick={() => navigate("/demo-panel")}>
               <FaTools /> Panel de Simulación
+            </button>
+
+            <button className="btn-primary btn-tool" onClick={() => navigate("/estadisticas/demanda")}>
+              <FaChartBar /> Demanda de Actividades
             </button>
           </div>
         </article>

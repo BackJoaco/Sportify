@@ -19,6 +19,7 @@ import UserManagement from "../pages/UserManagement/UserManagement";
 import ModifyActivity from "../pages/ModifyActivity/ModifyActivity";
 import Payments from "../pages/Payments/Payments";
 import DemoPanel from "../pages/DemoPanel/DemoPanel";
+import DemandaActividades from "../pages/Statistics/Statistics"; 
 
 export default function AppRoutes() {
   return (
@@ -171,6 +172,17 @@ export default function AppRoutes() {
           <PrivateRoute>
             <ProtectedRoute allowedRoles={["ADMINISTRADOR"]}>
               <DemoPanel />
+            </ProtectedRoute>
+          </PrivateRoute>
+        }
+      />
+
+      <Route
+        path="/estadisticas/demanda"
+        element={
+          <PrivateRoute>
+            <ProtectedRoute allowedRoles={["ADMINISTRADOR"]}>
+              <DemandaActividades />
             </ProtectedRoute>
           </PrivateRoute>
         }
