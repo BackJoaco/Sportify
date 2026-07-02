@@ -1,4 +1,5 @@
 import * as listaEsperaNoAbonadoRepository from '../repositories/listaEsperaNoAbonado.repository.js';
+import * as notificacionService from './notificacion.service.js';
 
 export async function agregar(usuarioId, turnoId, fecha) {
   const existente = await listaEsperaNoAbonadoRepository.findActiva(usuarioId, turnoId, fecha);
@@ -7,12 +8,16 @@ export async function agregar(usuarioId, turnoId, fecha) {
   }
 
   const posicion = (await listaEsperaNoAbonadoRepository.countActivasByTurnoFecha(turnoId, fecha)) + 1;
-  return listaEsperaNoAbonadoRepository.create({
+  const result = await listaEsperaNoAbonadoRepository.create({
     usuario_id: usuarioId,
     turno_id: turnoId,
     fecha,
     posicion
   });
+
+  await notificacionService.verificarYNotificarAltaDemanda(turnoId);
+
+  return result;
 }
 
 export function findSiguienteEnEspera(turnoId, fecha) {
@@ -27,9 +32,9 @@ export function findActiva(usuarioId, turnoId, fecha) {
   return listaEsperaNoAbonadoRepository.findActiva(usuarioId, turnoId, fecha);
 }
 
-export function reservarCupo(id) {
+export function reservarCupo(id, horas = 24) {
   const hasta = new Date();
-  hasta.setHours(hasta.getHours() + 24);
+  hasta.setHours(hasta.getHours() + horas);
   return listaEsperaNoAbonadoRepository.updateEstado(id, {
     estado: 'CUPO_RESERVADO',
     cupo_reservado_hasta: hasta

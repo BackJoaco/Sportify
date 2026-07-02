@@ -18,6 +18,7 @@ import SetPassword from "../pages/SetPassword/SetPassword";
 import UserManagement from "../pages/UserManagement/UserManagement";
 import ModifyActivity from "../pages/ModifyActivity/ModifyActivity";
 import Payments from "../pages/Payments/Payments";
+import DemoPanel from "../pages/DemoPanel/DemoPanel";
 import DemandaActividades from "../pages/Statistics/Statistics"; 
 import HistorialCreditos from "../pages/SeeCredits/SeeCredits"; 
 
@@ -162,6 +163,17 @@ export default function AppRoutes() {
         element={
           <PrivateRoute>
             <UserManagement />
+          </PrivateRoute>
+        }
+      />
+
+      <Route
+        path="/demo-panel"
+        element={
+          <PrivateRoute>
+            <ProtectedRoute allowedRoles={["ADMINISTRADOR"]}>
+              <DemoPanel />
+            </ProtectedRoute>
           </PrivateRoute>
         }
       />

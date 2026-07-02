@@ -1,5 +1,6 @@
 import { sequelize } from './config/database.js';
-import { Actividad, Turno, Usuario, Reserva, Credito } from './models/index.model.js';
+import { Actividad, Turno, Usuario, Reserva, Credito, Notificacion } from './models/index.model.js';
+
 import { hashPassword } from './utils/bcrypt.js';
 
 const DEFAULT_PASSWORD = 'Asdasd1.';
@@ -189,6 +190,18 @@ async function runSeed() {
 
     for (const turno of turnosSeed) {
       await upsertTurno(turno, actividadesPorNombre, transaction);
+    }
+
+    // Seed Notificaciones de prueba
+    const admin = await Usuario.findOne({ where: { email: 'admin@sportify.com' }, transaction });
+
+    if (admin) {
+      await Notificacion.create({
+        usuario_id: admin.id,
+        mensaje: 'Bienvenido al panel de administración. Aquí podrás gestionar actividades, turnos y usuarios.',
+        leida: false,
+        fecha_creacion: new Date()
+      }, { transaction });
     }
 
     const usuarioConCreditos = await Usuario.findOne({

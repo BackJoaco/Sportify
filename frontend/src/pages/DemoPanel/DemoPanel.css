@@ -1,0 +1,151 @@
+.demo-panel-container {
+  min-height: 100vh;
+  background-color: var(--off-white);
+  padding: 40px 20px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  box-sizing: border-box;
+}
+
+.demo-panel-card {
+  background: var(--white);
+  padding: 40px;
+  border-radius: 12px;
+  width: min(800px, 100%);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.demo-panel-header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.demo-panel-header h1 {
+  margin: 10px 0 5px 0;
+  color: var(--dark-blue);
+  font-size: 28px;
+}
+
+.demo-panel-desc {
+  color: var(--gray);
+  font-size: 15px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.demo-input-section {
+  background: rgba(30, 91, 240, 0.03);
+  border: 1px solid rgba(30, 91, 240, 0.1);
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.demo-input-section label {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--dark-blue);
+}
+
+.demo-input-section input {
+  padding: 10px 14px;
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  font-size: 16px;
+  width: min(150px, 100%);
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.2s ease;
+}
+
+.demo-input-section input:focus {
+  border-color: var(--blue);
+}
+
+.input-helper {
+  font-size: 12px;
+  color: var(--gray);
+}
+
+.demo-actions-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.demo-action-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  background: var(--off-white);
+  transition: all 0.25s ease;
+  gap: 20px;
+}
+
+.demo-action-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border-color: rgba(30, 91, 240, 0.15);
+}
+
+.demo-action-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  flex: 1;
+}
+
+.demo-icon {
+  font-size: 24px;
+  color: var(--blue);
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+
+.text-danger {
+  color: #ff4757 !important;
+}
+
+.demo-action-info h3 {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  color: var(--dark-blue);
+  font-weight: 700;
+}
+
+.demo-action-info p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--gray);
+  line-height: 1.45;
+}
+
+.demo-action-item button {
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  min-width: 170px;
+}
+
+@media (max-width: 768px) {
+  .demo-action-item {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .demo-action-item button {
+    width: 100%;
+  }
+}
