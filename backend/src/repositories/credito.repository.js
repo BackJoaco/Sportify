@@ -6,3 +6,14 @@ export async function deleteByUsuarioId(usuarioId, transaction) {
         transaction
     });
 }
+
+export async function getHistorialByUsuario(usuarioId) {
+  return await Credito.findAll({
+    where: {
+      usuario_id: usuarioId
+    },
+    order: [
+      ['createdAt', 'DESC'] // Del más nuevo al más viejo
+    ]
+  });
+}

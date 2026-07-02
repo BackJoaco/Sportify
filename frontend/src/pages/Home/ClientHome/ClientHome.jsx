@@ -14,6 +14,7 @@ import {
 import Swal from "sweetalert2";
 import PaymentModal from "../../../components/PaymentModal/PaymentModal";
 import "./ClientHome.css";
+import { getMisCreditos } from "../../../api/credito.api";
 
 export default function ClientHome() {
   const { usuario } = useAuth();
@@ -27,6 +28,11 @@ export default function ClientHome() {
   const [reservaAPagar, setReservaAPagar] = useState(null);
   const [montoAPagar, setMontoAPagar] = useState(0);
   const [pagando, setPagando] = useState(false);
+// Estados para Créditos (NUEVO)
+  const [creditos, setCreditos] = useState([]);
+  const [loadingCreditos, setLoadingCreditos] = useState(true);
+  const [creditosError, setCreditosError] = useState("");
+
 
   async function cargarReservas() {
     try {
@@ -56,10 +62,27 @@ export default function ClientHome() {
     }
   }
 
+  // NUEVA FUNCIÓN: Cargar Créditos
+  async function cargarCreditos() {
+    try {
+      setLoadingCreditos(true);
+      const data = await getMisCreditos();
+      // Si el backend devuelve { mensaje: "...", data: [...] }
+      setCreditos(data.data || data || []);
+      setCreditosError("");
+    } catch (err) {
+      setCreditos([]);
+      setCreditosError(err.message || "No se pudieron cargar los créditos");
+    } finally {
+      setLoadingCreditos(false);
+    }
+  }
+
   useEffect(() => {
     Promise.resolve().then(() => {
       cargarReservas();
       cargarPagos();
+      cargarCreditos(); // Sumamos la llamada a la carga inicial
     });
   }, []);
 
@@ -75,6 +98,10 @@ export default function ClientHome() {
   );
 
   const pagosRecientes = pagos.slice(0, 3);
+
+  // NUEVO: Filtros de Créditos
+  const creditosDisponibles = creditos.filter((credito) => credito.estado === "DISPONIBLE");
+  const creditosRecientes = creditos.slice(0, 3); // Mostramos solo los últimos 3 en el panel
 
   function formatearFecha(fecha) {
     if (!fecha) return "Sin fecha";
@@ -236,7 +263,7 @@ export default function ClientHome() {
     },
     {
       label: "Creditos disponibles",
-      value: "0",
+      value: creditosDisponibles.length, //Idealmente acá deberías llamar a un endpoint que cuente los créditos disponibles
       icon: <FaWallet />,
     },
   ];
@@ -306,7 +333,7 @@ export default function ClientHome() {
               <h2>Reservas activas</h2>
             </div>
             
-            {/* NUEVO BOTÓN VER MÁS */}
+            
             <button 
               className="btn-ver-mas" 
               onClick={() => navigate("/reserva/mis-reservas")}
@@ -412,27 +439,56 @@ export default function ClientHome() {
           )}
         </article>
 
+        
         <article className="home-panel">
-          <div className="panel-title">
-            <FaWallet />
-            <h2>Informacion asociada</h2>
+          <div className="panel-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <FaWallet />
+              <h2>Mis Créditos</h2>
+            </div>
+            
+            <button className="btn-ver-mas" onClick={() => navigate("/mis-creditos")}>
+              Ver todos
+            </button>
           </div>
 
-          <div className="info-list">
-            <div>
-              <span>Rol</span>
-              <p>{usuario.rol}</p>
+          {loadingCreditos ? (
+            <div className="empty-panel"><p>Cargando créditos...</p></div>
+          ) : creditosError ? (
+            <div className="empty-panel"><p>{creditosError}</p></div>
+          ) : creditos.length === 0 ? (
+            <div className="empty-panel"><p>No tenés créditos registrados en tu historial.</p></div>
+          ) : (
+            <div className="payment-history-list">
+              {creditosRecientes.map((credito) => (
+                <div className="payment-history-item" key={credito.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <strong style={{ display: 'block' }}>Crédito #{credito.id}</strong>
+                    <span style={{ fontSize: '0.85rem', color: 'var(--gray)' }}>
+                      Vence: {formatearFechaCompleta(credito.fecha_vencimiento)}
+                    </span>
+                  </div>
+                  
+                  <div className="payment-history-meta">
+                    <span 
+                      style={{
+                        padding: "0.3rem 0.8rem",
+                        borderRadius: "20px",
+                        fontSize: "0.8rem",
+                        fontWeight: "bold",
+                        backgroundColor: credito.estado === 'DISPONIBLE' ? "#e8f5e9" : credito.estado === 'USADO' ? "#e3f2fd" : "#ffebee",
+                        color: credito.estado === 'DISPONIBLE' ? "#2e7d32" : credito.estado === 'USADO' ? "#1565c0" : "#c62828",
+                      }}
+                    >
+                      {credito.estado}
+                    </span>
+                  </div>
+                </div>
+              ))}
             </div>
-            <div>
-              <span>Creditos</span>
-              <p>Sin creditos disponibles</p>
-            </div>
-            <div>
-              <span>Asistencias</span>
-              <p>Sin registros cargados</p>
-            </div>
-          </div>
+          )}
         </article>
+
       </section>
 
       <PaymentModal
