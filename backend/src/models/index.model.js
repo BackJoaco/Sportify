@@ -20,6 +20,7 @@ const Credito = CreditoModel(sequelize);
 const AbonadoTurno = AbonadoTurnoModel(sequelize);
 const ListaEsperaAbonado = ListaEsperaAbonadoModel(sequelize);
 const ListaEsperaNoAbonado = ListaEsperaNoAbonadoModel(sequelize);
+const Notificacion = NotificacionModel(sequelize);
 
 // --- Turnos ---
 Actividad.hasMany(Turno, {
@@ -220,6 +221,21 @@ Usuario.hasMany(Credito, {
 });
 
 Credito.belongsTo(Usuario, {
+  foreignKey: {
+    name: 'usuario_id',
+    allowNull: false
+  }
+});
+
+// --- Notificaciones ---
+Usuario.hasMany(Notificacion, {
+  foreignKey: {
+    name: 'usuario_id',
+    allowNull: false
+  }
+});
+
+Notificacion.belongsTo(Usuario, {
   foreignKey: {
     name: 'usuario_id',
     allowNull: false
