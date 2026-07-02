@@ -167,3 +167,7 @@ export async function reactivateAndUpdate(id, data) {
     await usuarioRepository.restore(id);
     return usuarioRepository.update(id, data);
 }
+
+export async function findAllAdmins() {
+    return usuarioRepository.findAllAdmins();
+}

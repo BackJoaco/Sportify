@@ -9,6 +9,7 @@ import CreditoModel from './credito.model.js';
 import AbonadoTurnoModel from './abonadoTurno.model.js';
 import ListaEsperaAbonadoModel from './listaEsperaAbonado.model.js';
 import ListaEsperaNoAbonadoModel from './listaEsperaNoAbonado.model.js';
+import NotificacionModel from './notificacion.model.js';
 
 const Usuario = UsuarioModel(sequelize);
 const Actividad = ActividadModel(sequelize);
@@ -234,5 +235,6 @@ export {
   Credito,
   AbonadoTurno,
   ListaEsperaAbonado,
-  ListaEsperaNoAbonado
+  ListaEsperaNoAbonado,
+  Notificacion
 };

@@ -1,0 +1,131 @@
+.notif-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(26, 47, 80, 0.5); /* using var(--dark-blue) as base */
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1.5rem;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.notif-modal-card {
+  background: var(--white);
+  border-radius: 14px;
+  width: min(480px, 100%);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.18);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: scaleIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.notif-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  background-color: rgba(30, 91, 240, 0.02);
+}
+
+.notif-modal-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: var(--dark-blue);
+  font-weight: 750;
+}
+
+.notif-modal-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.6rem;
+  border-radius: 20px;
+}
+
+.notif-modal-badge.no-leida {
+  background-color: rgba(30, 91, 240, 0.1);
+  color: var(--blue);
+  border: 1px solid rgba(30, 91, 240, 0.2);
+}
+
+.notif-modal-badge.leida {
+  background-color: rgba(127, 140, 141, 0.1);
+  color: var(--gray);
+  border: 1px solid rgba(127, 140, 141, 0.2);
+}
+
+.notif-modal-body {
+  padding: 1.75rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.notif-modal-message {
+  margin: 0;
+  font-size: 1.05rem;
+  color: #2c3e50;
+  line-height: 1.5;
+  font-weight: 550;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.notif-modal-date {
+  font-size: 0.8rem;
+  color: var(--gray);
+  align-self: flex-start;
+}
+
+.notif-modal-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  display: flex;
+  justify-content: flex-end;
+  background-color: rgba(0, 0, 0, 0.01);
+}
+
+.notif-modal-close-btn {
+  background-color: var(--blue);
+  color: var(--white);
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  padding: 0.65rem 1.5rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.notif-modal-close-btn:hover {
+  background-color: var(--cyan);
+  transform: translateY(-1px);
+}
+
+.notif-modal-close-btn:active {
+  transform: translateY(0);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
