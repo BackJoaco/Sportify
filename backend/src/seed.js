@@ -1,5 +1,5 @@
 import { sequelize } from './config/database.js';
-import { Actividad, Turno, Usuario } from './models/index.model.js';
+import { Actividad, Turno, Usuario, Reserva, Credito } from './models/index.model.js';
 import { hashPassword } from './utils/bcrypt.js';
 
 const DEFAULT_PASSWORD = 'Asdasd1.';
@@ -59,6 +59,14 @@ const usuariosSeed = [
     dni: '10000006',
     email: 'empleado2@sportify.com',
     rol: 'EMPLEADO',
+    estado: 'HABILITADO'
+  },
+  {
+    nombre: 'Tomás',
+    apellido: 'Rios',
+    dni: '10000007',
+    email: 'creditos@sportify.com',
+    rol: 'CLIENTE',
     estado: 'HABILITADO'
   }
 ];
@@ -182,6 +190,65 @@ async function runSeed() {
     for (const turno of turnosSeed) {
       await upsertTurno(turno, actividadesPorNombre, transaction);
     }
+
+    const usuarioConCreditos = await Usuario.findOne({
+      where: { email: 'creditos@sportify.com' },
+      transaction
+    });
+
+    const unTurno = await Turno.findOne({ transaction });
+
+    if (usuarioConCreditos && unTurno) {
+      // 1. Creamos una reserva base (necesaria por la FK de la tabla creditos)
+      const [reservaOrigen] = await Reserva.findOrCreate({
+        where: { 
+          usuario_id: usuarioConCreditos.id,
+          turno_id: unTurno.id,
+          fecha: '2026-06-15'
+        },
+        defaults: {
+          tipo_reserva: 'NO_ABONADO',
+          estado: 'CANCELADA',
+          estado_pago: 'PAGADO_COMPLETO',
+          codigo_qr: 'QR-SEED-PROBANDO-CREDITOS'
+        },
+        transaction
+      });
+
+      // Calcular fechas de vencimiento
+      const fechaVencimientoFutura = new Date();
+      fechaVencimientoFutura.setDate(fechaVencimientoFutura.getDate() + 15); // Vence en 15 días
+
+      const fechaVencimientoPasada = new Date();
+      fechaVencimientoPasada.setDate(fechaVencimientoPasada.getDate() - 5); // Venció hace 5 días
+
+      // 2. Insertamos un crédito DISPONIBLE si no existe
+      await Credito.findOrCreate({
+        where: { 
+          usuario_id: usuarioConCreditos.id,
+          reserva_origen_id: reservaOrigen.id,
+          estado: 'DISPONIBLE'
+        },
+        defaults: {
+          fecha_vencimiento: fechaVencimientoFutura
+        },
+        transaction
+      });
+
+      // 3. Insertamos un crédito ya VENCIDO para probar filtros del historial
+      await Credito.findOrCreate({
+        where: { 
+          usuario_id: usuarioConCreditos.id,
+          reserva_origen_id: reservaOrigen.id,
+          estado: 'VENCIDO'
+        },
+        defaults: {
+          fecha_vencimiento: fechaVencimientoPasada
+        },
+        transaction
+      });
+    }
+
   });
 
   console.log('Seed ejecutado correctamente.');
