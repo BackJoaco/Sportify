@@ -10,7 +10,7 @@ export default (sequelize) => {
       allowNull: false
     },
     metodo_pago: {
-      type: DataTypes.ENUM('MERCADO_PAGO', 'EFECTIVO'),
+      type: DataTypes.ENUM('MERCADO_PAGO', 'EFECTIVO', 'CREDITO'),
       allowNull: false
     },
     estado: {

@@ -7,15 +7,22 @@ export default (sequelize) => {
       type: DataTypes.ENUM('ACTIVO', 'BAJA', 'SUSPENDIDO'),
       defaultValue: 'ACTIVO'
     },
+    mes_anio: { type: DataTypes.DATEONLY, allowNull: false },
     fecha_alta: {
       type: DataTypes.DATEONLY,
-      allowNull: false,
-      defaultValue: DataTypes.NOW
+      allowNull: false
     },
-    fecha_baja: { type: DataTypes.DATEONLY, allowNull: true }
+    cancelaciones_mes: { type: DataTypes.INTEGER, defaultValue: 0 },
+    pierde_descuento: { type: DataTypes.BOOLEAN, defaultValue: false }
   }, {
     tableName: 'abonados_turnos',
     timestamps: true,
-    paranoid: true
+    paranoid: true,
+    indexes: [
+      {
+        unique: true,
+        fields: ['usuario_id', 'turno_id', 'mes_anio']
+      }
+    ]
   });
 };
