@@ -54,11 +54,11 @@ export async function asignarSiguienteWaitlist(turnoId, fecha) {
     return null;
   }
 
-  if (esAbonado) {
-    await listaEsperaAbonadoService.reservarCupo(siguiente.id, 1);
-  } else {
-    await listaEsperaNoAbonadoService.reservarCupo(siguiente.id, 1);
-  }
+  //if (esAbonado) {
+  // await listaEsperaAbonadoService.reservarCupo(siguiente.id, 1);
+  //} else {
+  //  await listaEsperaNoAbonadoService.reservarCupo(siguiente.id, 1);
+  //}
 
   await notificacionService.create({
     usuario_id: siguiente.usuario_id,
@@ -188,7 +188,7 @@ export async function cancelarReserva(reservaId, usuarioId) {
 
   await reservaService.marcarComoCancelada(reservaId);
 
-  const siguiente = await asignarSiguienteWaitlist(reserva.turno_id, reserva.fecha);
+  //const siguiente = await asignarSiguienteWaitlist(reserva.turno_id, reserva.fecha); 
 
   if (reserva.tipo_reserva === 'ABONADO') {
     return {
@@ -268,25 +268,24 @@ export async function cancelarClaseAbonado(usuarioId, turnoId, fecha) {
 }
 
 export async function salirDeColaNoAbonado(usuarioId, turnoId, fecha) {
-  await turnoService.getTurnoById(turnoId);
+  const turno = await turnoService.getTurnoById(turnoId);
+  if(!turno) {
+    throw new Error('El turno especificado no existe.');
+  }
 
   const espera = await listaEsperaNoAbonadoService.findActiva(usuarioId, turnoId, fecha);
   if (!espera) {
     throw new Error('No estás en la cola de no abonados para esta clase.');
   }
 
-  const estadoAnterior = espera.estado;
-  const siguiente = estadoAnterior === 'CUPO_RESERVADO'
-    ? await asignarSiguienteWaitlist(turnoId, fecha)
-    : null;
+  //const estadoAnterior = espera.estado;
+  //const siguiente = estadoAnterior === 'CUPO_RESERVADO'
+    //? await asignarSiguienteWaitlist(turnoId, fecha)
+    //: null;
 
   await listaEsperaNoAbonadoService.deleteById(espera.id);
 
   return {
-    message: siguiente
-      ? 'Saliste de la cola de no abonados y el cupo fue reasignado al siguiente en espera.'
-      : 'Saliste de la cola de no abonados.',
-    siguienteNotificado: siguiente,
-    cupoLiberado: estadoAnterior === 'CUPO_RESERVADO'
+    message:'Saliste de la cola de no abonados.'
   };
 }
