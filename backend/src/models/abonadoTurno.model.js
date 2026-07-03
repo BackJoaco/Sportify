@@ -7,7 +7,14 @@ export default (sequelize) => {
       type: DataTypes.ENUM('ACTIVO', 'BAJA', 'SUSPENDIDO'),
       defaultValue: 'ACTIVO'
     },
-    mes_anio: { type: DataTypes.DATEONLY, allowNull: false },
+    mes_anio: { 
+      type: DataTypes.INTEGER, 
+      allowNull: false,
+      validate: {
+        min: 1,
+        max: 12
+      }
+    },
     fecha_alta: {
       type: DataTypes.DATEONLY,
       allowNull: false

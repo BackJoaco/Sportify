@@ -1,3 +1,4 @@
+import { Op } from 'sequelize';
 import { AbonadoTurno, Turno, Usuario } from '../models/index.model.js';
 
 export async function create(data) {
@@ -68,5 +69,25 @@ export async function deleteByUsuarioId(usuarioId, transaction) {
   return AbonadoTurno.destroy({
     where: { usuario_id: usuarioId },
     transaction
+  });
+}
+
+export async function findActivosByMes(mes) {
+  return AbonadoTurno.findAll({
+    where: {
+      mes_anio: mes,
+      estado: 'ACTIVO'
+    }
+  });
+}
+
+export async function findActivoByMes(usuarioId, turnoId, mes) {
+  return AbonadoTurno.findOne({
+    where: {
+      usuario_id: usuarioId,
+      turno_id: turnoId,
+      mes_anio: mes,
+      estado: 'ACTIVO'
+    }
   });
 }

@@ -31,3 +31,11 @@ export function findSuspendedByUsuarioId(usuarioId) {
 export function deleteByUsuarioId(usuarioId, transaction) {
   return abonadoTurnoRepository.deleteByUsuarioId(usuarioId, transaction);
 }
+
+export function findActivosByMes(mes) {
+  return abonadoTurnoRepository.findActivosByMes(mes);
+}
+
+export function findActivoByMes(usuarioId, turnoId, mes) {
+  return abonadoTurnoRepository.findActivoByMes(usuarioId, turnoId, mes);
+}
