@@ -2,8 +2,6 @@ import * as pagoService from '../../services/pago.service.js';
 import * as reservaService from '../../services/reserva.service.js';
 import * as turnoService from '../../services/turno.service.js';
 import * as abonadoTurnoService from '../../services/abonadoTurno.service.js';
-import * as suscripcionAbonadoService from '../../services/suscripcionAbonado.service.js';
-import { calcularCuposDisponiblesFecha } from '../../utils/ocupacionTurno.js';
 
 const DIAS_SEMANA = ['DOMINGO', 'LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO'];
 
