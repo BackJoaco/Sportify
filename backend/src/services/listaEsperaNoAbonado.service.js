@@ -52,3 +52,7 @@ export function deleteById(id) {
 export function deleteByUsuarioId(usuarioId, transaction) {
   return listaEsperaNoAbonadoRepository.deleteByUsuarioId(usuarioId, transaction);
 }
+
+export function reordenarPosiciones(turnoId, fecha, posicionLiberada) {
+  return listaEsperaNoAbonadoRepository.reordenarPosiciones(turnoId, fecha, posicionLiberada);
+}

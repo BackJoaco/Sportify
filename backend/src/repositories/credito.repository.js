@@ -7,6 +7,10 @@ export async function deleteByUsuarioId(usuarioId, transaction) {
     });
 }
 
+export async function create(data) {
+    return Credito.create(data);
+}
+
 export async function getHistorialByUsuario(usuarioId) {
   return await Credito.findAll({
     where: {

@@ -38,6 +38,13 @@ export async function countActivosByTurno(turnoId) {
   });
 }
 
+export async function updateCancelaciones(id, cancelaciones, estado) {
+  return AbonadoTurno.update(
+    { cancelaciones_mes: cancelaciones, estado },
+    { where: { id } }
+  );
+}
+
 export async function darDeBaja(id) {
   return AbonadoTurno.update(
     {

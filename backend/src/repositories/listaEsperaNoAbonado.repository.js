@@ -1,4 +1,5 @@
 import { ListaEsperaNoAbonado, Usuario } from '../models/index.model.js';
+  const { Op } = await import('sequelize');
 
 export async function create(data) {
   return ListaEsperaNoAbonado.create(data);
@@ -20,7 +21,7 @@ export async function findActiva(usuarioId, turnoId, fecha) {
       usuario_id: usuarioId,
       turno_id: turnoId,
       fecha,
-      estado: ['EN_ESPERA', 'CUPO_RESERVADO']
+      estado: ['EN_ESPERA']
     }
   });
 }
@@ -69,6 +70,17 @@ export async function countWaiting(turnoId) {
     where: {
       turno_id: turnoId,
       estado: 'EN_ESPERA'
+    }
+  });
+}
+
+export async function reordenarPosiciones(turnoId, fecha, posicionLiberada) {
+  return ListaEsperaNoAbonado.decrement('posicion', {
+    by: 1,
+    where: {
+      turno_id: turnoId,
+      fecha,
+      posicion: { [Op.gt]: posicionLiberada }
     }
   });
 }

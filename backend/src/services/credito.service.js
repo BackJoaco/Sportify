@@ -4,6 +4,10 @@ export async function deleteByUsuarioId(usuarioId, transaction) {
     return creditoRepository.deleteByUsuarioId(usuarioId, transaction);
 }
 
+export async function create(data) {
+    return creditoRepository.create(data);
+}
+
 export async function obtenerHistorial(usuarioId) {
   const creditos = await creditoRepository.getHistorialByUsuario(usuarioId);
   const ahora = new Date();

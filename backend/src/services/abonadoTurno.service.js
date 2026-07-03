@@ -16,6 +16,10 @@ export function countActivosByTurno(turnoId) {
   return abonadoTurnoRepository.countActivosByTurno(turnoId);
 }
 
+export function updateCancelaciones(id, cancelaciones, estado) {
+  return abonadoTurnoRepository.updateCancelaciones(id, cancelaciones, estado);
+}
+
 export function darDeBaja(id) {
   return abonadoTurnoRepository.darDeBaja(id);
 }
