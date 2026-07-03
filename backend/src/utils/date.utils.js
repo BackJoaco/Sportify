@@ -56,3 +56,43 @@ export function getRemainingClassesInSportifyMonth(diaSemana) {
 
   return remainingDates;
 }
+
+/**
+ * Obtiene todas las fechas de las clases en el ciclo Sportify actual 
+ * (del 11 al 10), tanto pasadas como futuras.
+ */
+export function getAllClassesInSportifyMonth(diaSemana) {
+  const targetDay = DIAS_SEMANA_MAP[diaSemana];
+  if (targetDay === undefined) {
+    throw new Error('Día de la semana inválido');
+  }
+
+  const today = new Date();
+  const day = today.getDate();
+  const month = today.getMonth();
+  const year = today.getFullYear();
+
+  let startCycleDate;
+  let endCycleDate;
+
+  if (day >= 11) {
+    startCycleDate = new Date(year, month, 11, 0, 0, 0);
+    endCycleDate = new Date(year, month + 1, 10, 23, 59, 59);
+  } else {
+    startCycleDate = new Date(year, month - 1, 11, 0, 0, 0);
+    endCycleDate = new Date(year, month, 10, 23, 59, 59);
+  }
+
+  const allDates = [];
+  let currentDate = new Date(startCycleDate);
+
+  while (currentDate <= endCycleDate) {
+    if (currentDate.getDay() === targetDay) {
+      const isoDate = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`;
+      allDates.push(isoDate);
+    }
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+
+  return allDates;
+}

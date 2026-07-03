@@ -14,7 +14,7 @@ router.get('/clientes', authMiddleware, esEmpleado, usuarioController.obtenerCli
 router.get('/', authMiddleware, esAdministrador, usuarioController.getUsersExceptAdmins);
 router.post('/empleados', authMiddleware, esAdministrador, usuarioController.registerEmployee);
 router.delete('/empleados/:id', authMiddleware, esAdministrador, usuarioController.deleteEmployee);
-router.post('/empleados/set-password', usuarioController.setContrasena); // 
+router.post('/empleados/set-password', usuarioController.setContrasena); 
 router.get('/empleados/:id', authMiddleware, esAdministrador, usuarioController.getEmployee);
 
 

@@ -1,5 +1,5 @@
 import { ListaEsperaNoAbonado, Usuario } from '../models/index.model.js';
-  const { Op } = await import('sequelize');
+import { Op } from 'sequelize';
 
 export async function create(data) {
   return ListaEsperaNoAbonado.create(data);
