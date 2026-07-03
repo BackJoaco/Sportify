@@ -20,7 +20,8 @@ import ModifyActivity from "../pages/ModifyActivity/ModifyActivity";
 import Payments from "../pages/Payments/Payments";
 import DemoPanel from "../pages/DemoPanel/DemoPanel";
 import DemandaActividades from "../pages/Statistics/Statistics"; 
-import HistorialCreditos from "../pages/SeeCredits/SeeCredits"; 
+import HistorialCreditos from "../pages/SeeCredits/SeeCredits";
+import DevolucionesPendientes from "../pages/Devolution/Devolution"; 
 
 export default function AppRoutes() {
   return (
@@ -194,6 +195,17 @@ export default function AppRoutes() {
         element={
           <PrivateRoute>
             <HistorialCreditos />
+          </PrivateRoute>
+        }
+      />
+
+      <Route
+        path="/administracion/devoluciones"
+        element={
+          <PrivateRoute>
+            <ProtectedRoute allowedRoles={["ADMINISTRADOR"]}>
+              <DevolucionesPendientes />
+            </ProtectedRoute>
           </PrivateRoute>
         }
       />
