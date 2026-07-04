@@ -1,4 +1,4 @@
-import { Actividad, Pago, Reserva, Turno } from '../models/index.model.js';
+import { Actividad, Pago, Reserva, Turno, Usuario, AbonadoTurno } from '../models/index.model.js';
 
 export async function create(data) {
     return Pago.create(data);
@@ -37,4 +37,39 @@ export async function findSenaCompletadaByReserva(reservaId) {
             estado: 'COMPLETADO'
         }
     });
+}
+
+export async function getPagosPendientes() {
+  return await Pago.findAll({
+    where: {
+      estado: 'PENDIENTE'
+    },
+    include: [
+      {
+        model: Usuario,
+        attributes: ['id', 'nombre', 'apellido', 'dni', 'email']
+      },
+      // Traemos datos si la deuda es de una suscripción mensual
+      {
+        model: AbonadoTurno,
+        required: false,
+        include: [{
+          model: Turno,
+          attributes: ['dia_semana', 'hora_inicio'],
+          include: [{ model: Actividad, attributes: ['nombre'] }]
+        }]
+      },
+      // Traemos datos si la deuda es de un turno normal (no abonado)
+      {
+        model: Reserva,
+        required: false,
+        include: [{
+          model: Turno,
+          attributes: ['dia_semana', 'hora_inicio'],
+          include: [{ model: Actividad, attributes: ['nombre'] }]
+        }]
+      }
+    ],
+    order: [['createdAt', 'DESC']] // Los más recientes primero
+  });
 }

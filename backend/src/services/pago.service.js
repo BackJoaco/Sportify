@@ -93,3 +93,41 @@ export async function crearDevolucionSena(reservaId, usuarioId, monto) {
         usuario_id: usuarioId
     });
 }
+
+
+export async function listarDeudores() {
+  const pagosPendientes = await pagoRepository.getPagosPendientes();
+
+  return pagosPendientes.map(pago => {
+    const esAbono = pago.tipo_pago === 'SUSCRIPCION_MENSUAL';
+    
+    // Determinamos de dónde sacar la información de la clase según el tipo de deuda
+    let detalleActividad = 'Actividad no especificada';
+    let detalleHorario = '';
+
+    if (esAbono && pago.AbonadoTurno) {
+      detalleActividad = pago.AbonadoTurno.Turno.Actividad.nombre;
+      detalleHorario = `${pago.AbonadoTurno.Turno.dia_semana} ${pago.AbonadoTurno.Turno.hora_inicio}`;
+    } else if (!esAbono && pago.Reserva) {
+      detalleActividad = pago.Reserva.Turno.Actividad.nombre;
+      detalleHorario = `${pago.Reserva.Turno.dia_semana} ${pago.Reserva.Turno.hora_inicio}`;
+    }
+
+    return {
+      pago_id: pago.id,
+      monto_adeudado: Number(pago.monto),
+      concepto: pago.tipo_pago, // Ej: 'SUSCRIPCION_MENSUAL', 'RESTO_TURNO', etc.
+      fecha_emision_deuda: pago.createdAt,
+      clase: {
+        actividad: detalleActividad,
+        horario: detalleHorario
+      },
+      usuario: {
+        id: pago.Usuario.id,
+        nombre: `${pago.Usuario.nombre} ${pago.Usuario.apellido}`,
+        dni: pago.Usuario.dni,
+        email: pago.Usuario.email
+      }
+    };
+  });
+}

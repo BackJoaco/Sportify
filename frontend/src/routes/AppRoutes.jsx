@@ -22,6 +22,7 @@ import DemoPanel from "../pages/DemoPanel/DemoPanel";
 import DemandaActividades from "../pages/Statistics/Statistics"; 
 import HistorialCreditos from "../pages/SeeCredits/SeeCredits";
 import DevolucionesPendientes from "../pages/Devolution/Devolution"; 
+import PagosPendientes from "../pages/ListDebtors/ListDebtors";
 
 export default function AppRoutes() {
   return (
@@ -205,6 +206,17 @@ export default function AppRoutes() {
           <PrivateRoute>
             <ProtectedRoute allowedRoles={["ADMINISTRADOR"]}>
               <DevolucionesPendientes />
+            </ProtectedRoute>
+          </PrivateRoute>
+        }
+      />
+
+      <Route
+        path="/administracion/pagos-pendientes"
+        element={
+          <PrivateRoute>
+            <ProtectedRoute allowedRoles={["ADMINISTRADOR"]}>
+              <PagosPendientes />
             </ProtectedRoute>
           </PrivateRoute>
         }

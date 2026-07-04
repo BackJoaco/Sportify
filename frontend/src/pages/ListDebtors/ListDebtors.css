@@ -1,0 +1,80 @@
+.no-data-text {
+  text-align: center;
+  color: var(--text-grey, #7F8C8D);
+  padding: 3rem 1rem;
+  font-size: 1.1rem;
+}
+
+.deudores-table-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.deudores-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.deudores-table th {
+  background-color: var(--bg-alt, #FDFDF2);
+  color: var(--text-black, #1A1A1A);
+  padding: 1rem;
+  font-weight: bold;
+  border-bottom: 2px solid var(--silver-logo, #C0C0C0);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+}
+
+.deudores-table td {
+  padding: 1.2rem 1rem;
+  border-bottom: 1px solid var(--silver-logo, #C0C0C0);
+  color: var(--text-black, #1A1A1A);
+  vertical-align: middle;
+}
+
+.client-cell, .class-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.client-cell span, .class-cell span {
+  font-size: 0.85rem;
+  color: var(--text-grey, #7F8C8D);
+}
+
+.monto-deuda-cell {
+  font-weight: bold;
+  font-size: 1.1rem;
+  color: #c62828; /* Rojo para destacar que es dinero que falta cobrar */
+}
+
+.fecha-deuda {
+  font-size: 0.75rem;
+  color: var(--sub-text-grey, #A9A9A9);
+  margin-top: 0.3rem;
+}
+
+/* Badges para el concepto de la deuda */
+.concepto-badge {
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.concepto-badge.suscripcion_mensual {
+  background-color: #e3f2fd;
+  color: var(--primary-cobalt, #1E5BF0);
+}
+
+.concepto-badge.sena, .concepto-badge.resto_turno {
+  background-color: #fff3e0;
+  color: #e65100; /* Naranja para señas de turnos sueltos */
+}
+
+.deudores-table tbody tr:hover {
+  background-color: var(--bg-alt, #FDFDF2);
+}
