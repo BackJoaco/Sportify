@@ -212,6 +212,20 @@ async function runSeed() {
     const unTurno = await Turno.findOne({ transaction });
 
     if (usuarioConCreditos && unTurno) {
+
+      await AbonadoTurno.findOrCreate({
+        where: {
+          usuario_id: usuarioConCreditos.id,
+          turno_id: unTurno.id,
+          mes_anio: 7 // Suponiendo julio, ajustalo si es necesario
+        },
+        defaults: {
+          fecha_alta: new Date(),
+          cancelaciones_mes: 1, // Le sumamos 1 cancelación por la que generó el crédito
+          pierde_descuento: false // Todavía no llegó a las 3 cancelaciones de la Regla 3
+        },
+        transaction
+      });
       // 1. Creamos una reserva base (necesaria por la FK de la tabla creditos)
       const [reservaOrigen] = await Reserva.findOrCreate({
         where: { 
@@ -220,7 +234,7 @@ async function runSeed() {
           fecha: '2026-06-15'
         },
         defaults: {
-          tipo_reserva: 'NO_ABONADO',
+          tipo_reserva: 'ABONADO',
           estado: 'CANCELADA',
           estado_pago: 'PAGADO_COMPLETO',
           codigo_qr: 'QR-SEED-PROBANDO-CREDITOS'
