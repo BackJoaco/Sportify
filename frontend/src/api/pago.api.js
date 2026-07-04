@@ -35,7 +35,7 @@ export async function pagarSenaReserva(datos) {
 
 export async function obtenerMontoSenaReserva(datos) {
   const res = await fetch(`${API_URL}/pago/sena-reserva/monto`, {
-    method: "POST",
+    method: "POST", 
     headers: {
       "Content-Type": "application/json",
     },
@@ -54,7 +54,7 @@ export async function obtenerMontoSenaReserva(datos) {
 
 export async function obtenerMontoSenaTurno(datos) {
   const res = await fetch(`${API_URL}/pago/sena-turno/monto`, {
-    method: "POST",
+    method: "POST", 
     headers: {
       "Content-Type": "application/json",
     },
