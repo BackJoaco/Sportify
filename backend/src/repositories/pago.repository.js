@@ -28,3 +28,13 @@ export async function deleteByUsuarioId(usuarioId, transaction) {
         transaction
     });
 }
+
+export async function findSenaCompletadaByReserva(reservaId) {
+    return Pago.findOne({
+        where: {
+            reserva_id: reservaId,
+            tipo_pago: 'SENA',
+            estado: 'COMPLETADO'
+        }
+    });
+}

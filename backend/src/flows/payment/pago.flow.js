@@ -2,8 +2,7 @@ import * as pagoService from '../../services/pago.service.js';
 import * as reservaService from '../../services/reserva.service.js';
 import * as turnoService from '../../services/turno.service.js';
 import * as abonadoTurnoService from '../../services/abonadoTurno.service.js';
-import * as suscripcionAbonadoService from '../../services/suscripcionAbonado.service.js';
-import { calcularCuposDisponiblesFecha } from '../../utils/ocupacionTurno.js';
+import { getRemainingClassesInSportifyMonth, getAllClassesInSportifyMonth } from '../../utils/date.utils.js';
 
 const DIAS_SEMANA = ['DOMINGO', 'LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO'];
 
@@ -91,12 +90,8 @@ async function contarClasesReservablesDelMes(turno, fechasDelMes, fechaCorte = n
 }
 
 async function usuarioTieneSuspension(usuarioId) {
-    const [suscripcionesSuspendidas, abonadosSuspendidos] = await Promise.all([
-        suscripcionAbonadoService.findSuspendedByUsuarioId(usuarioId),
-        abonadoTurnoService.findSuspendedByUsuarioId(usuarioId)
-    ]);
-
-    return (suscripcionesSuspendidas?.length || 0) > 0 || (abonadosSuspendidos?.length || 0) > 0;
+    const abonadosSuspendidos = await abonadoTurnoService.findSuspendedByUsuarioId(usuarioId);
+    return (abonadosSuspendidos?.length || 0) > 0;
 }
 
 function calcularMontoSena(reserva) {
@@ -109,7 +104,7 @@ function calcularMontoSena(reserva) {
     return precioClase * 0.5;
 }
 
-async function calcularMontoAbonoMensual(turnoId, usuarioId, fechaBase = new Date()) {
+async function calcularMontoAbonoMensual(turnoId, usuarioId) {
     const turno = await turnoService.getTurnoById(turnoId);
     const precioMensual = Number(turno?.Actividad?.precio_mensual);
 
@@ -117,30 +112,30 @@ async function calcularMontoAbonoMensual(turnoId, usuarioId, fechaBase = new Dat
         throw new Error('No se pudo calcular el monto del abono mensual');
     }
 
-    const proximaClase = obtenerProximaFechaClase(turno.dia_semana, turno.hora_inicio, fechaBase);
+    const allDates = getAllClassesInSportifyMonth(turno.dia_semana);
+    const remainingDatesRaw = getRemainingClassesInSportifyMonth(turno.dia_semana);
 
-    if (!proximaClase) {
-        throw new Error('No se pudo calcular el monto del abono mensual');
+    const ahora = new Date();
+    const remainingDates = remainingDatesRaw.filter(fecha => {
+        const [year, month, day] = fecha.split('-');
+        const [hora, min] = turno.hora_inicio.split(':');
+        const fechaClase = new Date(year, month - 1, day, hora, min);
+        return fechaClase > ahora;
+    });
+
+    if (remainingDates.length <= 1) {
+        throw new Error('No puedes abonarte porque es la última clase del mes o ya no quedan clases.');
     }
 
-    const fechasDelMes = obtenerFechasDelMes(turno.dia_semana, proximaClase);
+    const clasesDelMes = allDates.length;
+    const clasesRestantes = remainingDates.length;
+    const clasesTranscurridas = clasesDelMes - clasesRestantes;
 
-    if (fechasDelMes.length === 0) {
-        throw new Error('No se pudo calcular el monto del abono mensual');
-    }
-
-    const clasesDelMes = fechasDelMes.length;
-    const clasesReservables = await contarClasesReservablesDelMes(turno, fechasDelMes, fechaBase);
-    const clasesNoReservables = clasesDelMes - clasesReservables;
     const sinDescuento = await usuarioTieneSuspension(usuarioId);
+    const montoBaseMes = sinDescuento ? precioMensual : precioMensual * 0.8;
+    const costoPorClase = montoBaseMes / clasesDelMes;
 
-    if (clasesDelMes <= 0) {
-        throw new Error('No se pudo calcular el monto del abono mensual');
-    }
-
-    const costoPorClase = precioMensual / clasesDelMes;
-    const montoBaseConDescuento = sinDescuento ? precioMensual : precioMensual * 0.8;
-    const montoCalculado = montoBaseConDescuento - (costoPorClase * clasesNoReservables);
+    const montoCalculado = montoBaseMes - (costoPorClase * clasesTranscurridas);
 
     return Math.max(0, Number(montoCalculado.toFixed(2)));
 }

@@ -1,11 +1,6 @@
 import * as turnosService from '../services/turno.service.js';
 import * as turnoFlow from "../flows/turnos/turno.flow.js";
 import * as abonadoTurnoFlow from "../flows/abonadoTurno/abonadoTurno.flow.js";
-import * as abonadoTurnoService from "../services/abonadoTurno.service.js";
-import * as listaEsperaAbonadoService from "../services/listaEsperaAbonado.service.js";
-import * as listaEsperaNoAbonadoService from "../services/listaEsperaNoAbonado.service.js";
-import * as reservaService from "../services/reserva.service.js";
-import { calcularCuposDisponiblesFecha } from "../utils/ocupacionTurno.js";
 
 export async function getTurnos(req, res) {
     try {
@@ -105,26 +100,9 @@ export async function getOcupacion(req, res) {
   try {
     const { id } = req.params;
     const { fecha } = req.query;
-    const turno = await turnosService.getTurnoById(id);
-    const abonados = await abonadoTurnoService.findActivosByTurno(id);
-    const colaAbonados = await listaEsperaAbonadoService.findByTurno(id);
-    const reservasFecha = fecha ? await reservaService.findByTurnoFecha(id, fecha) : [];
-    const colaNoAbonados = fecha ? await listaEsperaNoAbonadoService.findByTurnoFecha(id, fecha) : [];
-
-    const cuposDisponiblesFecha = fecha
-      ? calcularCuposDisponiblesFecha(turno, abonados, reservasFecha)
-      : null;
-
-    return res.status(200).json({
-      turno,
-      fecha: fecha || null,
-      cupo_maximo: turno.cupo_maximo,
-      abonados,
-      colaAbonados,
-      reservasFecha,
-      colaNoAbonados,
-      cuposDisponiblesFecha
-    });
+    const ocupacion = await turnoFlow.getOcupacionFlow(id, fecha);
+    
+    return res.status(200).json(ocupacion);
   } catch (error) {
     return res.status(400).json({ message: error.message });
   }

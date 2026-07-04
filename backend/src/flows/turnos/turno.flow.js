@@ -2,7 +2,39 @@ import * as turnoService from "../../services/turno.service.js";
 import * as actividadService from "../../services/actividad.service.js";
 import * as reservaService from "../../services/reserva.service.js";
 import * as abonadoTurnoService from "../../services/abonadoTurno.service.js";
+import * as listaEsperaAbonadoService from "../../services/listaEsperaAbonado.service.js";
+import * as listaEsperaNoAbonadoService from "../../services/listaEsperaNoAbonado.service.js";
 
+export async function getOcupacionFlow(turnoId, fecha) {
+  const turno = await turnoService.getTurnoById(turnoId);
+  const abonados = await abonadoTurnoService.findActivosByTurno(turnoId);
+  const colaAbonados = await listaEsperaAbonadoService.findByTurno(turnoId);
+
+  let reservasFecha = [];
+  let colaNoAbonados = [];
+  let cuposDisponiblesFecha = null;
+
+  if (fecha) {
+    reservasFecha = await reservaService.findByTurnoFecha(turnoId, fecha);
+    colaNoAbonados = await listaEsperaNoAbonadoService.findByTurnoFecha(turnoId, fecha);
+    
+    const cantidadReservas = await reservaService.countByTurnoAndFecha(turnoId, fecha);
+    cuposDisponiblesFecha = turno.cupo_maximo - cantidadReservas;
+    // Evitar cupos negativos por las dudas
+    if (cuposDisponiblesFecha < 0) cuposDisponiblesFecha = 0;
+  }
+
+  return {
+    turno,
+    fecha: fecha || null,
+    cupo_maximo: turno.cupo_maximo,
+    abonados,
+    colaAbonados,
+    reservasFecha,
+    colaNoAbonados,
+    cuposDisponiblesFecha
+  };
+}
 export async function getReservasCount(turnoId, fecha = null) {
   await turnoService.getTurnoById(turnoId);
 

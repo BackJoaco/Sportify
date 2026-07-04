@@ -6,12 +6,11 @@ export default (sequelize) => {
     id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
     monto: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
     tipo_pago: {
-      type: DataTypes.ENUM('SENA', 'RESTO_TURNO', 'CLASE_COMPLETA', 'SUSCRIPCION_MENSUAL'),
+      type: DataTypes.ENUM('SENA', 'RESTO_TURNO', 'CLASE_COMPLETA', 'SUSCRIPCION_MENSUAL', 'DEVOLUCION_SENA'),
       allowNull: false
     },
     metodo_pago: {
-      type: DataTypes.ENUM('MERCADO_PAGO', 'EFECTIVO'),
-      allowNull: false
+      type: DataTypes.ENUM('MERCADO_PAGO', 'EFECTIVO', 'CREDITO'),
     },
     estado: {
       type: DataTypes.ENUM('COMPLETADO', 'RECHAZADO', 'PENDIENTE'),

@@ -4,7 +4,7 @@ export default (sequelize) => {
   return sequelize.define('ListaEsperaAbonado', {
     id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
     estado: {
-      type: DataTypes.ENUM('EN_ESPERA', 'CUPO_RESERVADO', 'CONFIRMADO', 'RECHAZADO', 'EXPIRADO'),
+      type: DataTypes.ENUM('EN_ESPERA', 'NOTIFICADO', 'CONFIRMADO', 'RECHAZADO', 'EXPIRADO', 'CUPO_RESERVADO'),
       defaultValue: 'EN_ESPERA'
     },
     posicion: { type: DataTypes.INTEGER, allowNull: false },
@@ -12,6 +12,12 @@ export default (sequelize) => {
   }, {
     tableName: 'listas_espera_abonados',
     timestamps: true,
-    paranoid: true
+    paranoid: true,
+    indexes: [
+      {
+        unique: true,
+        fields: ['usuario_id', 'turno_id']
+      }
+    ]
   });
 };

@@ -16,6 +16,10 @@ export function countActivosByTurno(turnoId) {
   return abonadoTurnoRepository.countActivosByTurno(turnoId);
 }
 
+export function updateCancelaciones(id, cancelaciones, estado) {
+  return abonadoTurnoRepository.updateCancelaciones(id, cancelaciones, estado);
+}
+
 export function darDeBaja(id) {
   return abonadoTurnoRepository.darDeBaja(id);
 }
@@ -30,4 +34,12 @@ export function findSuspendedByUsuarioId(usuarioId) {
 
 export function deleteByUsuarioId(usuarioId, transaction) {
   return abonadoTurnoRepository.deleteByUsuarioId(usuarioId, transaction);
+}
+
+export function findActivosByMes(mes) {
+  return abonadoTurnoRepository.findActivosByMes(mes);
+}
+
+export function findActivoByMes(usuarioId, turnoId, mes) {
+  return abonadoTurnoRepository.findActivoByMes(usuarioId, turnoId, mes);
 }

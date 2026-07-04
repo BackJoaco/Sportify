@@ -79,3 +79,17 @@ export async function findByUsuarioId(usuarioId) {
 export async function deleteByUsuarioId(usuarioId, transaction) {
     return pagoRepository.deleteByUsuarioId(usuarioId, transaction);
 }
+
+export async function findSenaCompletadaByReserva(reservaId) {
+    return pagoRepository.findSenaCompletadaByReserva(reservaId);
+}
+
+export async function crearDevolucionSena(reservaId, usuarioId, monto) {
+    return pagoRepository.create({
+        monto,
+        tipo_pago: 'DEVOLUCION_SENA',
+        estado: 'PENDIENTE',
+        reserva_id: reservaId,
+        usuario_id: usuarioId
+    });
+}

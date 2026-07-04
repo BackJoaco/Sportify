@@ -239,7 +239,6 @@ async function runSeed() {
       await Credito.findOrCreate({
         where: { 
           usuario_id: usuarioConCreditos.id,
-          reserva_origen_id: reservaOrigen.id,
           estado: 'DISPONIBLE'
         },
         defaults: {
@@ -252,7 +251,6 @@ async function runSeed() {
       await Credito.findOrCreate({
         where: { 
           usuario_id: usuarioConCreditos.id,
-          reserva_origen_id: reservaOrigen.id,
           estado: 'VENCIDO'
         },
         defaults: {

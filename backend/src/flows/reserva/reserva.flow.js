@@ -7,7 +7,8 @@ import * as reservaService from '../../services/reserva.service.js';
 import * as turnoService from '../../services/turno.service.js';
 import * as usuarioService from '../../services/usuario.service.js';
 import * as notificacionService from '../../services/notificacion.service.js';
-import { calcularCuposDisponiblesFecha } from '../../utils/ocupacionTurno.js';
+import * as pagoService from '../../services/pago.service.js';
+import * as creditoService from '../../services/credito.service.js';
 
 const DIAS = ['DOMINGO', 'LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO'];
 
@@ -34,12 +35,6 @@ function validarFechaTurno(turno, fecha) {
   }
 }
 
-async function calcularCuposDisponibles(turno, fecha) {
-  const abonadosActivos = await abonadoTurnoService.findActivosByTurno(turno.id);
-  const reservasFecha = await reservaService.findByTurnoFecha(turno.id, fecha);
-
-  return calcularCuposDisponiblesFecha(turno, abonadosActivos, reservasFecha);
-}
 
 export async function asignarSiguienteWaitlist(turnoId, fecha) {
   let siguiente = await listaEsperaAbonadoService.findSiguienteEnEspera(turnoId);
@@ -54,11 +49,11 @@ export async function asignarSiguienteWaitlist(turnoId, fecha) {
     return null;
   }
 
-  if (esAbonado) {
-    await listaEsperaAbonadoService.reservarCupo(siguiente.id, 1);
-  } else {
-    await listaEsperaNoAbonadoService.reservarCupo(siguiente.id, 1);
-  }
+  //if (esAbonado) {
+  // await listaEsperaAbonadoService.reservarCupo(siguiente.id, 1);
+  //} else {
+  //  await listaEsperaNoAbonadoService.reservarCupo(siguiente.id, 1);
+  //}
 
   await notificacionService.create({
     usuario_id: siguiente.usuario_id,
@@ -102,14 +97,9 @@ export async function create(usuario_id, turno_id, fecha) {
     throw new Error('Ya tienes otra actividad reservada en este mismo horario.');
   }
 
-  const cuposDisponibles = await calcularCuposDisponibles(turno, fecha);
-  if (cuposDisponibles <= 0) {
-    const espera = await listaEsperaNoAbonadoService.agregar(usuario_id, turno_id, fecha);
-    return {
-      enEspera: true,
-      message: 'No hay cupo puntual disponible. Te agregamos a la cola de no abonados.',
-      data: espera
-    };
+  const count = await reservaService.countByTurnoAndFecha(turno_id, fecha);
+  if (count >= turno.cupo_maximo) {
+    throw new Error('La clase ya alcanzó el cupo máximo. No hay cupo puntual disponible, por favor inscríbete a la lista de espera.');
   }
 
   const uuid = crypto.randomUUID();
@@ -186,44 +176,74 @@ export async function cancelarReserva(reservaId, usuarioId) {
     throw new Error('No se puede cancelar una clase que ya ha comenzado o finalizado.');
   }
 
+  let generaDevolucion = false;
+  let generaCredito = false;
+  let mensajeExtra = '';
+
+  if (reserva.tipo_reserva === 'NO_ABONADO') {
+    if (horasFaltantes > 24) {
+      const sena = await pagoService.findSenaCompletadaByReserva(reservaId);
+      if (sena) {
+        await pagoService.crearDevolucionSena(reservaId, usuarioId, sena.monto);
+        generaDevolucion = true;
+        mensajeExtra = ' Se generó una devolución de tu seña (quedó en estado pendiente).';
+      } else {
+        mensajeExtra = ' Cancelada con anticipación, pero no tenías una seña registrada.';
+      }
+    } else {
+      mensajeExtra = ' Cancelada con menos de 24 hs de anticipación. No corresponde devolución.';
+    }
+  } else if (reserva.tipo_reserva === 'ABONADO') {
+    const today = new Date();
+    const jsMonth = today.getMonth();
+    const currentMonthInt = today.getDate() < 11 ? (jsMonth === 0 ? 12 : jsMonth) : (jsMonth + 1);
+    
+    const abono = await abonadoTurnoService.findActivoByMes(usuarioId, reserva.turno_id, currentMonthInt);
+    if (!abono) {
+      throw new Error('No se encontró un abono activo para este turno y mes.');
+    }
+    
+    if (abono.cancelaciones_mes >= 3) {
+      throw new Error('Llegaste al límite de 3 cancelaciones permitidas para este mes.');
+    }
+    
+    const nuevasCancelaciones = abono.cancelaciones_mes + 1;
+    const nuevoEstado = nuevasCancelaciones >= 3 ? 'SUSPENDIDO' : 'ACTIVO';
+    
+    await abonadoTurnoService.updateCancelaciones(abono.id, nuevasCancelaciones, nuevoEstado);
+    
+    if (nuevoEstado === 'SUSPENDIDO') {
+      await reservaService.cancelarReservasFuturasAbonadoByUsuarioTurno(usuarioId, reserva.turno_id);
+      mensajeExtra = ` Llegaste al límite de 3 cancelaciones. Tu abono ha sido suspendido y todas tus clases restantes del mes fueron canceladas.`;
+    } else {
+      mensajeExtra = ` (Llevas ${nuevasCancelaciones} de 3 cancelaciones permitidas en el mes).`;
+    }
+
+    if (horasFaltantes > 48) {
+      const fechaVencimiento = new Date();
+      fechaVencimiento.setDate(fechaVencimiento.getDate() + 30);
+      
+      await creditoService.create({
+        usuario_id: usuarioId,
+        estado: 'DISPONIBLE',
+        fecha_vencimiento: fechaVencimiento
+      });
+      generaCredito = true;
+      mensajeExtra += ' Se generó un crédito válido por 30 días.';
+    } else {
+      mensajeExtra += ' Cancelada con menos de 48 hs de anticipación. No corresponde crédito.';
+    }
+  }
+
   await reservaService.marcarComoCancelada(reservaId);
 
   const siguiente = await asignarSiguienteWaitlist(reserva.turno_id, reserva.fecha);
 
-  if (reserva.tipo_reserva === 'ABONADO') {
-    return {
-      message: siguiente
-        ? 'Clase cancelada. El cupo puntual fue reservado para el siguiente no abonado en cola.'
-        : 'Clase cancelada. No hay no abonados en cola para esta fecha.',
-      devuelveSena: false,
-      teniaSenaAbonada: false,
-      siguienteNotificado: siguiente
-    };
-  }
-
-  if (reserva.estado_pago === 'PENDIENTE') {
-    return {
-      message: siguiente
-        ? 'Reserva cancelada. No habia seña para devolver y se reservó el cupo para el siguiente en cola.'
-        : 'Reserva cancelada. No habia seña para devolver.',
-      devuelveSena: false,
-      teniaSenaAbonada: false,
-      siguienteNotificado: siguiente
-    };
-  }
-
-  const devuelveSena = horasFaltantes > 24;
-  const mensajeSena = devuelveSena
-    ? 'Se ha devuelto la seña ya que faltan mas de 24 horas.'
-    : 'No se devuelve la seña porque faltan menos de 24 horas para la clase.';
-
   return {
-    message: siguiente
-      ? `Reserva cancelada exitosamente. ${mensajeSena} Se reservó el cupo para el siguiente en cola.`
-      : `Reserva cancelada exitosamente. ${mensajeSena}`,
-    devuelveSena,
-    teniaSenaAbonada: true,
-    siguienteNotificado: siguiente
+    message: `Reserva cancelada exitosamente.${mensajeExtra}${siguiente ? ' Se notificó al siguiente cliente en la lista de espera.' : ''}`,
+    generaDevolucion,
+    generaCredito,
+    siguienteNotificado: siguiente || null
   };
 }
 
@@ -268,25 +288,21 @@ export async function cancelarClaseAbonado(usuarioId, turnoId, fecha) {
 }
 
 export async function salirDeColaNoAbonado(usuarioId, turnoId, fecha) {
-  await turnoService.getTurnoById(turnoId);
+  const turno = await turnoService.getTurnoById(turnoId);
+  if(!turno) {
+    throw new Error('El turno especificado no existe.');
+  }
 
   const espera = await listaEsperaNoAbonadoService.findActiva(usuarioId, turnoId, fecha);
   if (!espera) {
     throw new Error('No estás en la cola de no abonados para esta clase.');
   }
 
-  const estadoAnterior = espera.estado;
-  const siguiente = estadoAnterior === 'CUPO_RESERVADO'
-    ? await asignarSiguienteWaitlist(turnoId, fecha)
-    : null;
-
+  const posicionLiberada = espera.posicion;
   await listaEsperaNoAbonadoService.deleteById(espera.id);
+  await listaEsperaNoAbonadoService.reordenarPosiciones(turnoId, fecha, posicionLiberada);
 
   return {
-    message: siguiente
-      ? 'Saliste de la cola de no abonados y el cupo fue reasignado al siguiente en espera.'
-      : 'Saliste de la cola de no abonados.',
-    siguienteNotificado: siguiente,
-    cupoLiberado: estadoAnterior === 'CUPO_RESERVADO'
+    message: 'Saliste de la cola de no abonados.'
   };
 }

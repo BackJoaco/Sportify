@@ -1,4 +1,5 @@
 import * as notificacionService from '../services/notificacion.service.js';
+import * as notificacionFlow from '../flows/notificacion/notificacion.flow.js';
 
 export async function getMisNotificaciones(req, res) {
   try {
@@ -51,7 +52,7 @@ export async function marcarTodasComoLeidas(req, res) {
 
 export async function procesarRecordatoriosPago(req, res) {
   try {
-    const resultado = await notificacionService.verificarYGenerarRecordatoriosPago();
+    const resultado = await notificacionFlow.procesarRecordatoriosPago();
     return res.status(200).json(resultado);
   } catch (error) {
     return res.status(400).json({ message: error.message });
