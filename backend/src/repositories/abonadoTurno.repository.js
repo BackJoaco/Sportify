@@ -98,3 +98,16 @@ export async function findActivoByMes(usuarioId, turnoId, mes) {
     }
   });
 }
+
+export async function findActivoOSuspendidoByMes(usuarioId, turnoId, mes) {
+  return AbonadoTurno.findOne({
+    where: {
+      usuario_id: usuarioId,
+      turno_id: turnoId,
+      mes_anio: mes,
+      estado: {
+        [Op.in]: ['ACTIVO', 'SUSPENDIDO']
+      }
+    }
+  });
+}

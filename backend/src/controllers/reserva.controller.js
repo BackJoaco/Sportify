@@ -124,6 +124,23 @@ export async function salirDeColaNoAbonado(req, res) {
   }
 }
 
+export async function ingresarColaNoAbonado(req, res) {
+  try {
+    const { turno_id, fecha } = req.body;
+
+    if (!turno_id || !fecha) {
+      return res.status(400).json({
+        mensaje: 'Debe indicar un turno con fecha'
+      });
+    }
+
+    const resultado = await reservaFlow.ingresarColaNoAbonado(req.usuario.id, turno_id, fecha);
+    return res.status(201).json(resultado);
+  } catch (error) {
+    return res.status(400).json({ message: error.message });
+  }
+}
+
 export async function crearReservaPorEmpleado(req, res) {
   try {
     const { usuario_id, turno_id, fecha } = req.body;
