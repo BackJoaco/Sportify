@@ -321,7 +321,7 @@ export async function ingresarColaNoAbonado(usuarioId, turnoId, fecha) {
   }
 
   const reservaExistente = await reservaService.findByUsuarioTurnoFecha(usuarioId, turnoId, fecha);
-  if (reservaExistente && reservaExistente.estado === 'CONFIRMADA' && reservaExistente.tipo_reserva === 'NO_ABONADO') {
+  if (reservaExistente && reservaExistente.estado === 'CONFIRMADA') {
     throw new Error('Ya posees una reserva confirmada para esta clase.');
   }
 

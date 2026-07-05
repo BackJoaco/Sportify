@@ -792,7 +792,7 @@ export default function DetailTurn() {
               />
             </div>
             <div>
-              <span>Cupos puntuales disponibles</span>
+              <span>Cupos disponibles</span>
               <p>{cuposFecha} / {turno.cupo_maximo}</p>
             </div>
             <div>
@@ -817,7 +817,7 @@ export default function DetailTurn() {
                 disabled={saving}
                 onClick={handleIngresarColaNoAbonado}
               >
-                Ingresar a lista de espera puntual
+                Ingresar a lista de espera de no abonados
               </button>
             )}
             {mostrarBotonSalirColaNoAbonados && (
