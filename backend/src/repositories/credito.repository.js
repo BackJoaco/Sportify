@@ -37,3 +37,17 @@ export async function getCreditoVigente(creditoId, usuarioId, transaction) {
     transaction
   });
 }
+
+export async function getPrimerCreditoVigente(usuarioId, transaction) {
+  return await Credito.findOne({
+    where: {
+      usuario_id: usuarioId,
+      estado: 'DISPONIBLE',
+      fecha_vencimiento: {
+        [Op.gt]: new Date()
+      }
+    },
+    order: [['fecha_vencimiento', 'ASC']],
+    transaction
+  });
+}

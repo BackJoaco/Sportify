@@ -61,6 +61,25 @@ export async function crearReserva(datos) {
   return data;
 }
 
+export async function crearReservaConCredito(datos) {
+  const res = await fetch(`${API_URL}/reserva/crear-con-credito`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify(datos),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw data;
+  }
+
+  return data;
+}
+
 export async function cancelarReserva(id) {
   const res = await fetch(`${API_URL}/reserva/${id}/cancelar`, {
     method: "PATCH",

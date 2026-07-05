@@ -1,4 +1,5 @@
 import * as pagoRepository from '../repositories/pago.repository.js';
+import * as creditoRepository from '../repositories/credito.repository.js';
 import { sequelize } from '../config/database.js';
 import { Pago, Reserva, Credito } from '../models/index.model.js';
 
@@ -96,7 +97,7 @@ export async function crearDevolucionSena(reservaId, usuarioId, monto) {
     });
 }
 
-export async function procesarPagoConCredito({ usuarioId, creditoId, reservaId, montoClase, tipoPago }) {
+export async function procesarPagoConCredito({ usuarioId, reservaId, montoClase, tipoPago }) {
   // 1. Barrera de seguridad: Bloquear uso en abonos mensuales
   if (tipoPago === 'SUSCRIPCION_MENSUAL') {
     throw new Error('Los créditos solo pueden utilizarse para cubrir clases individuales, no abonos mensuales.');
@@ -106,9 +107,9 @@ export async function procesarPagoConCredito({ usuarioId, creditoId, reservaId, 
 
   try {
     // 2. Validar que el crédito le pertenezca y esté vigente
-    const credito = await creditoRepository.getCreditoVigente(creditoId, usuarioId, transaction);
+    const credito = await creditoRepository.getPrimerCreditoVigente(usuarioId, transaction);
     if (!credito) {
-      throw new Error('El crédito seleccionado no es válido, ya fue usado o se encuentra vencido.');
+      throw new Error('No posees créditos válidos o vigentes.');
     }
 
     // 3. Cambiar el estado del crédito a USADO

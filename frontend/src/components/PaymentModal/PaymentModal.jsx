@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { FaTicketAlt, FaCreditCard, FaArrowLeft } from "react-icons/fa";
 import "./PaymentModal.css";
 
 function formatearMonto(monto) {
@@ -31,12 +32,13 @@ export default function PaymentModal({
   confirmLabel = "Confirmar pago",
   cancelLabel = "Cancelar",
   loading = false,
-  isSena = false, 
-  onPayWithCredit, 
+  isSena = false,
+  onPayWithCredit,
   onClose,
   onSubmit,
 }) {
   const [tarjeta, setTarjeta] = useState(estadoInicialTarjeta);
+  const [view, setView] = useState("CARD");
 
   useEffect(() => {
     if (!open) {
@@ -89,17 +91,9 @@ export default function PaymentModal({
 
         {/* RENDERIZADO CONDICIONAL DE LA VISTA DEL MODAL */}
         {view === "SELECTION" ? (
-          
+
           /* --- VISTA 1: SELECCIÓN DE MÉTODO DE PAGO --- */
           <div className="payment-modal-selection" style={{ display: "flex", flexDirection: "column", gap: "1rem", marginTop: "1.5rem" }}>
-            <div style={{ padding: "1rem", backgroundColor: "#e8f5e9", borderRadius: "8px", border: "1px solid #a5d6a7", textAlign: "center" }}>
-              <p style={{ margin: "0 0 0.5rem 0", color: "#2e7d32", fontSize: "1.1rem" }}>
-                <strong>Pagar con Crédito</strong>
-              </p>
-              <p style={{ margin: 0, fontSize: "0.9rem", color: "#2e7d32" }}>
-                Si poseés créditos a tu favor, podés usar uno para confirmar tu lugar.
-              </p>
-            </div>
 
             <button
               type="button"
@@ -126,12 +120,12 @@ export default function PaymentModal({
 
           /* --- VISTA 2: FORMULARIO DE TARJETA ORIGINAL --- */
           <form className="payment-modal-form" onSubmit={handleSubmit} style={{ marginTop: "1rem" }}>
-            
+
             {/* Botón para volver a la selección si se arrepiente (solo aparece si tiene créditos) */}
             {isSena && (
-              <button 
-                type="button" 
-                onClick={() => setView("SELECTION")} 
+              <button
+                type="button"
+                onClick={() => setView("SELECTION")}
                 style={{ background: "none", border: "none", color: "#1E5BF0", cursor: "pointer", marginBottom: "1rem", display: "flex", alignItems: "center", gap: "0.4rem", padding: 0, fontWeight: "bold" }}
               >
                 <FaArrowLeft /> Volver a opciones de pago

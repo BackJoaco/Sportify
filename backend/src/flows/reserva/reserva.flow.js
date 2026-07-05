@@ -156,6 +156,35 @@ export async function createConSena(usuario_id, turno_id, fecha, tarjetaDebito) 
   };
 }
 
+export async function createConCredito(usuario_id, turno_id, fecha) {
+  const resultadoReserva = await create(usuario_id, turno_id, fecha);
+
+  if (resultadoReserva.enEspera) {
+    return resultadoReserva;
+  }
+
+  const reserva = resultadoReserva.data;
+  const turno = await turnoService.getTurnoById(turno_id);
+
+  try {
+    await pagoService.procesarPagoConCredito({
+      usuarioId: usuario_id,
+      reservaId: reserva.id,
+      montoClase: turno.Actividad.precio_clase,
+      tipoPago: 'CLASE_COMPLETA'
+    });
+  } catch (error) {
+    await reservaService.marcarComoCancelada(reserva.id);
+    throw error;
+  }
+
+  return {
+    ...resultadoReserva,
+    message: 'Reserva confirmada. Pagada con crédito exitosamente.',
+    data: reserva
+  };
+}
+
 export async function cancelarReserva(reservaId, usuarioId) {
   const reserva = await reservaService.findById(reservaId);
 

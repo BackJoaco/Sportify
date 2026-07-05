@@ -10,7 +10,7 @@ import {
   updateTurno,
   ingresarColaAbonado,
 } from "../../api/turno.api";
-import { cancelarReserva, crearReserva, crearReservaStaff, salirDeColaNoAbonado, ingresarColaNoAbonado } from "../../api/reservas.api";
+import { cancelarReserva, crearReserva, crearReservaStaff, salirDeColaNoAbonado, ingresarColaNoAbonado, crearReservaConCredito } from "../../api/reservas.api";
 import { 
   obtenerMontoSenaTurno, 
   obtenerMontoSuscripcionMensual, 
@@ -450,18 +450,9 @@ export default function DetailTurn() {
     try {
       setSaving(true);
 
-      const respuestaReserva = await crearReserva({
+      const respuestaReserva = await crearReservaConCredito({
         turno_id: turno.id,
         fecha: fechaClase,
-      });
-
-      const reservaId = respuestaReserva?.id || respuestaReserva?.data?.id;
-
-      // Solo mandamos el ID de la reserva y el monto. ¡El backend hace el resto!
-      await aplicarCreditoClase({
-        reservaId: reservaId,
-        montoClase: pagoModal.amount,
-        tipoPago: "CLASE_COMPLETA"
       });
 
       Swal.fire({

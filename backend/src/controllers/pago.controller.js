@@ -88,17 +88,16 @@ export async function aplicarCreditoUsuario(req, res) {
   try {
     const usuarioId = req.usuario.id; 
     // Recibimos los datos de la clase que el usuario quiere pagar
-    const { creditoId, reservaId, montoClase, tipoPago } = req.body;
+    const { reservaId, montoClase, tipoPago } = req.body;
 
-    if (!creditoId || !reservaId || !montoClase) {
+    if (!reservaId || !montoClase) {
       return res.status(400).json({ 
-        message: 'Faltan parámetros: se requiere el crédito, la reserva y el valor de la clase.' 
+        message: 'Faltan parámetros: se requiere la reserva y el valor de la clase.' 
       });
     }
 
     const resultado = await pagoService.procesarPagoConCredito({
       usuarioId,
-      creditoId,
       reservaId,
       montoClase,
       tipoPago
