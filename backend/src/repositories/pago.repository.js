@@ -1,4 +1,5 @@
 import { Actividad, Pago, Reserva, Turno, Usuario, AbonadoTurno } from '../models/index.model.js';
+import { Op } from 'sequelize'; 
 
 export async function create(data) {
     return Pago.create(data);
@@ -42,7 +43,10 @@ export async function findSenaCompletadaByReserva(reservaId) {
 export async function getPagosPendientes() {
   return await Pago.findAll({
     where: {
-      estado: 'PENDIENTE'
+      estado: 'PENDIENTE',
+      tipo_pago: {
+        [Op.ne]: 'DEVOLUCION_SENA' 
+      }
     },
     include: [
       {

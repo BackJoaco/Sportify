@@ -1,5 +1,5 @@
 import { sequelize } from './config/database.js';
-import { Actividad, Turno, Usuario, Reserva, Credito, Notificacion } from './models/index.model.js';
+import { Actividad, Turno, Usuario, Reserva, Credito, Notificacion, AbonadoTurno, Pago } from './models/index.model.js';
 
 import { hashPassword } from './utils/bcrypt.js';
 
@@ -67,6 +67,22 @@ const usuariosSeed = [
     apellido: 'Rios',
     dni: '10000007',
     email: 'creditos@sportify.com',
+    rol: 'CLIENTE',
+    estado: 'HABILITADO'
+  },
+  {
+    nombre: 'Deudor',
+    apellido: 'Prueba',
+    dni: '10000008',
+    email: 'deudor@sportify.com',
+    rol: 'CLIENTE',
+    estado: 'HABILITADO'
+  },
+  {
+    nombre: 'Acreedor',
+    apellido: 'Prueba',
+    dni: '10000009',
+    email: 'acreedor@sportify.com',
     rol: 'CLIENTE',
     estado: 'HABILITADO'
   }
@@ -273,7 +289,39 @@ async function runSeed() {
         transaction
       });
     }
+    // CASO 1: El deudor real (Debería aparecer en la lista)
+    const deudorPrueba = await Usuario.findOne({ where: { email: 'deudor@sportify.com' }, transaction });
+    if (deudorPrueba) {
+      await Pago.findOrCreate({
+        where: { 
+          usuario_id: deudorPrueba.id,
+          tipo_pago: 'SENA', 
+          estado: 'PENDIENTE'
+        },
+        defaults: {
+          monto: 12000,
+          metodo_pago: null
+        },
+        transaction
+      });
+    }
 
+    // CASO 2: El usuario al que le debemos plata (NO debería aparecer en la lista)
+    const acreedorPrueba = await Usuario.findOne({ where: { email: 'acreedor@sportify.com' }, transaction });
+    if (acreedorPrueba) {
+      await Pago.findOrCreate({
+        where: { 
+          usuario_id: acreedorPrueba.id,
+          tipo_pago: 'DEVOLUCION_SENA', 
+          estado: 'PENDIENTE'
+        },
+        defaults: {
+          monto: 15000,
+          metodo_pago: null
+        },
+        transaction
+      });
+    }
   });
 
   console.log('Seed ejecutado correctamente.');
