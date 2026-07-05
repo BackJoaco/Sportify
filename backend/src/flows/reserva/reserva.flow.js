@@ -223,9 +223,10 @@ export async function cancelarReserva(reservaId, usuarioId) {
       mensajeExtra = ' Cancelada con menos de 24 hs de anticipación. No corresponde devolución.';
     }
   } else if (reserva.tipo_reserva === 'ABONADO') {
-    const today = new Date();
-    const jsMonth = today.getMonth();
-    const currentMonthInt = today.getDate() < 11 ? (jsMonth === 0 ? 12 : jsMonth) : (jsMonth + 1);
+    const parts = reserva.fecha.split('-');
+    const day = parseInt(parts[2], 10);
+    const jsMonth = parseInt(parts[1], 10) - 1;
+    const currentMonthInt = day < 11 ? (jsMonth === 0 ? 12 : jsMonth) : (jsMonth + 1);
     
     const abono = await abonadoTurnoService.findActivoByMes(usuarioId, reserva.turno_id, currentMonthInt);
     if (!abono) {
