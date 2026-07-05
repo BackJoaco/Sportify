@@ -83,6 +83,21 @@ export async function pagarSuscripcionMensual(req, res) {
     }
 }
 
+export async function getDeudores(req, res) {
+  try {
+    const deudores = await pagoService.listarDeudores();
+    
+    return res.status(200).json({
+      mensaje: 'Lista de pagos pendientes obtenida correctamente.',
+      data: deudores
+    });
+  } catch (error) {
+    console.error('Error al listar pagos pendientes:', error);
+    return res.status(500).json({
+      mensaje: 'Ocurrió un error interno al buscar los deudores.'
+    });
+  }
+}
 
 export async function aplicarCreditoUsuario(req, res) {
   try {

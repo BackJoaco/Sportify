@@ -128,6 +128,23 @@ export async function obtenerMontoSuscripcionMensual(datos) {
   return data;
 }
 
+export async function getPagosPendientes() {
+  const res = await fetch(`${API_URL}/pago/pendientes`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include", // Importante para que valide que sos Administrador
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw data;
+  }
+
+  return data;
+}
 export async function aplicarCreditoClase(datosPago) {
   const res = await fetch(`${API_URL}/pago/aplicar-credito`, {
     method: "POST",

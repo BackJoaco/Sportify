@@ -1,7 +1,7 @@
 import { Router } from 'express';
 
 import * as pagoController from '../controllers/pago.controller.js';
-import { authMiddleware, esCliente, esEmpleado } from '../middleware/auth.middleware.js';
+import { authMiddleware, esCliente, esEmpleado, esAdministrador } from '../middleware/auth.middleware.js';
 
 const router = Router();
 
@@ -12,6 +12,7 @@ router.post('/sena-turno/monto', authMiddleware, esCliente, pagoController.obten
 router.post('/suscripcion-mensual/monto', authMiddleware, esCliente, pagoController.obtenerMontoSuscripcionMensual);
 router.post('/suscripcion-mensual', authMiddleware, esCliente, pagoController.pagarSuscripcionMensual);
 router.post('/sena-presencial', authMiddleware, esEmpleado, pagoController.registrarSenaPresencial);
+router.get('/pendientes', authMiddleware, esAdministrador, pagoController.getDeudores);
 router.post('/aplicar-credito', authMiddleware, pagoController.aplicarCreditoUsuario);
 
 export default router;
