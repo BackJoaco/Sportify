@@ -12,5 +12,6 @@ router.post('/sena-turno/monto', authMiddleware, esCliente, pagoController.obten
 router.get('/suscripcion-mensual/monto', authMiddleware, esCliente, pagoController.obtenerMontoSuscripcionMensual);
 router.get('/suscripcion-mensual', authMiddleware, esCliente, pagoController.pagarSuscripcionMensual);
 router.post('/sena-presencial', authMiddleware, esEmpleado, pagoController.registrarSenaPresencial);
+router.post('/aplicar-credito', authMiddleware, pagoController.aplicarCreditoUsuario);
 
 export default router;

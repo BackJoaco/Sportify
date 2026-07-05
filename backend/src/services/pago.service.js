@@ -1,4 +1,6 @@
 import * as pagoRepository from '../repositories/pago.repository.js';
+import { sequelize } from '../config/database.js';
+import { Pago, Reserva } from '../models/index.model.js';
 
 const TARJETA_RECHAZADA = '1111222233334444';
 
@@ -92,4 +94,58 @@ export async function crearDevolucionSena(reservaId, usuarioId, monto) {
         reserva_id: reservaId,
         usuario_id: usuarioId
     });
+}
+
+export async function procesarPagoConCredito({ usuarioId, creditoId, reservaId, montoClase, tipoPago }) {
+  // 1. Barrera de seguridad: Bloquear uso en abonos mensuales
+  if (tipoPago === 'SUSCRIPCION_MENSUAL') {
+    throw new Error('Los créditos solo pueden utilizarse para cubrir clases individuales, no abonos mensuales.');
+  }
+
+  const transaction = await sequelize.transaction();
+
+  try {
+    // 2. Validar que el crédito le pertenezca y esté vigente
+    const credito = await creditoRepository.getCreditoVigente(creditoId, usuarioId, transaction);
+    if (!credito) {
+      throw new Error('El crédito seleccionado no es válido, ya fue usado o se encuentra vencido.');
+    }
+
+    // 3. Cambiar el estado del crédito a USADO
+    await credito.update({ estado: 'USADO' }, { transaction });
+
+    // 4. Registrar el pago. El monto es el 100% del valor de la clase.
+    const payloadPagoCredito = {
+      monto: montoClase, 
+      tipo_pago: 'CLASE_COMPLETA', // Refleja que pagó la clase entera con el crédito
+      metodo_pago: 'CREDITO',
+      estado: 'COMPLETADO',
+      usuario_id: usuarioId,
+      reserva_id: reservaId,
+      abonado_turno_id: null // Refuerza que no aplica a suscripciones
+    };
+
+    await Pago.create(payloadPagoCredito, { transaction });
+
+    // 5. Actualizar la reserva original para que el sistema sepa que ya está saldada
+    await Reserva.update(
+      { estado_pago: 'PAGADO_COMPLETO' },
+      { 
+        where: { id: reservaId, usuario_id: usuarioId },
+        transaction 
+      }
+    );
+
+    await transaction.commit();
+
+    return {
+      mensaje: 'Crédito aplicado exitosamente. La clase está 100% cubierta.',
+      monto_restante_a_pagar: 0 // El frontend recibe esto y sabe que no debe cobrar nada más
+    };
+
+  } catch (error) {
+    await transaction.rollback();
+    console.error('Error al aplicar crédito:', error.message);
+    throw error;
+  }
 }

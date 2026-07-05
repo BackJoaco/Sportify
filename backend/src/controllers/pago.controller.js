@@ -82,3 +82,35 @@ export async function pagarSuscripcionMensual(req, res) {
         return res.status(400).json({ message: error.message });
     }
 }
+
+
+export async function aplicarCreditoUsuario(req, res) {
+  try {
+    const usuarioId = req.usuario.id; 
+    // Recibimos los datos de la clase que el usuario quiere pagar
+    const { creditoId, reservaId, montoClase, tipoPago } = req.body;
+
+    if (!creditoId || !reservaId || !montoClase) {
+      return res.status(400).json({ 
+        message: 'Faltan parámetros: se requiere el crédito, la reserva y el valor de la clase.' 
+      });
+    }
+
+    const resultado = await pagoService.procesarPagoConCredito({
+      usuarioId,
+      creditoId,
+      reservaId,
+      montoClase,
+      tipoPago
+    });
+
+    return res.status(200).json({
+      mensaje: 'Operación realizada con éxito.',
+      data: resultado
+    });
+  } catch (error) {
+    return res.status(400).json({
+      message: error.message || 'Error interno al procesar el crédito.'
+    });
+  }
+}
