@@ -10,8 +10,12 @@ import {
   updateTurno,
   ingresarColaAbonado,
 } from "../../api/turno.api";
-import { cancelarReserva, crearReserva, crearReservaStaff, salirDeColaNoAbonado, ingresarColaNoAbonado } from "../../api/reservas.api";
-import { obtenerMontoSenaTurno, obtenerMontoSuscripcionMensual, pagarSuscripcionMensual } from "../../api/pago.api";
+import { cancelarReserva, crearReserva, crearReservaStaff, salirDeColaNoAbonado, ingresarColaNoAbonado, crearReservaConCredito } from "../../api/reservas.api";
+import { 
+  obtenerMontoSenaTurno, 
+  obtenerMontoSuscripcionMensual, 
+  pagarSuscripcionMensual,
+  aplicarCreditoClase } from "../../api/pago.api";
 import { getClientes } from "../../api/usuario.api";
 import { useAuth } from "../../context/AuthContext";
 import PaymentModal from "../../components/PaymentModal/PaymentModal";
@@ -434,6 +438,42 @@ export default function DetailTurn() {
         position: "top-end",
         icon: "error",
         title: err.message || err.mensaje || "Error al procesar el pago",
+        showConfirmButton: false,
+        timer: 3500,
+      });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handlePagarConCredito() {
+    try {
+      setSaving(true);
+
+      const respuestaReserva = await crearReservaConCredito({
+        turno_id: turno.id,
+        fecha: fechaClase,
+      });
+
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "success",
+        title: "¡Reserva confirmada con crédito!",
+        showConfirmButton: false,
+        timer: 3000,
+      });
+
+      await fetchTurnoData(fechaClase);
+      cerrarPagoModal();
+
+    } catch (err) {
+      // Si el backend dice "No posees créditos", se muestra acá automáticamente.
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "error",
+        title: err.message || err.mensaje || "Error al procesar el crédito",
         showConfirmButton: false,
         timer: 3500,
       });
@@ -880,9 +920,11 @@ export default function DetailTurn() {
         amount={pagoModal.amount}
         amountLabel={pagoModal.mode === "abonado" ? "Abono mensual" : "Seña"}
         confirmLabel={pagoModal.mode === "abonado" ? "Pagar y abonar" : "Pagar y reservar"}
+        isSena={pagoModal.mode === "abonado" ? false : true}
         onClose={cerrarPagoModal}
         onSubmit={handleConfirmarPago}
         loading={saving}
+        onPayWithCredit={handlePagarConCredito}
       />
     </div>
   );

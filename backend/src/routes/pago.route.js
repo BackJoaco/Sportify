@@ -13,5 +13,6 @@ router.post('/suscripcion-mensual/monto', authMiddleware, esCliente, pagoControl
 router.post('/suscripcion-mensual', authMiddleware, esCliente, pagoController.pagarSuscripcionMensual);
 router.post('/sena-presencial', authMiddleware, esEmpleado, pagoController.registrarSenaPresencial);
 router.get('/pendientes', authMiddleware, esAdministrador, pagoController.getDeudores);
+router.post('/aplicar-credito', authMiddleware, pagoController.aplicarCreditoUsuario);
 
 export default router;

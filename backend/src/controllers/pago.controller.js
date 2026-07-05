@@ -98,3 +98,33 @@ export async function getDeudores(req, res) {
     });
   }
 }
+
+export async function aplicarCreditoUsuario(req, res) {
+  try {
+    const usuarioId = req.usuario.id; 
+    // Recibimos los datos de la clase que el usuario quiere pagar
+    const { reservaId, montoClase, tipoPago } = req.body;
+
+    if (!reservaId || !montoClase) {
+      return res.status(400).json({ 
+        message: 'Faltan parámetros: se requiere la reserva y el valor de la clase.' 
+      });
+    }
+
+    const resultado = await pagoService.procesarPagoConCredito({
+      usuarioId,
+      reservaId,
+      montoClase,
+      tipoPago
+    });
+
+    return res.status(200).json({
+      mensaje: 'Operación realizada con éxito.',
+      data: resultado
+    });
+  } catch (error) {
+    return res.status(400).json({
+      message: error.message || 'Error interno al procesar el crédito.'
+    });
+  }
+}
