@@ -181,6 +181,19 @@ export async function ingresarColaAbonado(usuarioId, turnoId, fechaBase = new Da
   const jsMonth = refDate.getMonth();
   const currentMonthInt = day < 11 ? (jsMonth === 0 ? 12 : jsMonth) : (jsMonth + 1);
 
+  const remainingDates = getRemainingClassesInSportifyMonth(turno.dia_semana, fechaBase);
+  if (remainingDates.length <= 1) {
+    throw new Error('No puedes anotarte a la lista de espera porque es la última clase del mes o ya no quedan clases.');
+  }
+
+  // Validar si el usuario ya tiene reservas NO_ABONADO futuras en el mes
+  for (const fecha of remainingDates) {
+    const reservaExistente = await reservaService.findByUsuarioTurnoFecha(usuarioId, turnoId, fecha);
+    if (reservaExistente && reservaExistente.estado === 'CONFIRMADA' && reservaExistente.tipo_reserva === 'NO_ABONADO') {
+      throw new Error(`Ya posees una reserva como no abonado para el día ${fecha}. Si deseas ingresar a la lista de espera de abonados, por favor cancela tus reservas puntuales primero.`);
+    }
+  }
+
   const abonoActivo = await abonadoTurnoService.findActivoOSuspendidoByMes(usuarioId, turnoId, currentMonthInt);
   if (abonoActivo) {
     throw new Error('Ya posees un abono vigente para este turno en este mes.');

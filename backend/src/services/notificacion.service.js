@@ -1,5 +1,7 @@
 import * as usuarioRepository from '../repositories/usuario.repository.js';
 import * as notificacionRepository from '../repositories/notificacion.repository.js'
+import * as listaEsperaAbonadoRepository from '../repositories/listaEsperaAbonado.repository.js';
+import * as listaEsperaNoAbonadoRepository from '../repositories/listaEsperaNoAbonado.repository.js';
 import { Turno, Actividad } from '../models/index.model.js';
 
 export async function findByUsuarioId(usuarioId) {
