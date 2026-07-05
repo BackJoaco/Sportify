@@ -1,6 +1,6 @@
 import * as pagoRepository from '../repositories/pago.repository.js';
 import { sequelize } from '../config/database.js';
-import { Pago, Reserva } from '../models/index.model.js';
+import { Pago, Reserva, Credito } from '../models/index.model.js';
 
 const TARJETA_RECHAZADA = '1111222233334444';
 

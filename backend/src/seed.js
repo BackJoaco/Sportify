@@ -1,5 +1,5 @@
 import { sequelize } from './config/database.js';
-import { Actividad, Turno, Usuario, Reserva, Credito, Notificacion } from './models/index.model.js';
+import { Actividad, Turno, Usuario, Reserva, Credito, Notificacion, AbonadoTurno } from './models/index.model.js';
 
 import { hashPassword } from './utils/bcrypt.js';
 
