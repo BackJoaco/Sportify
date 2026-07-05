@@ -10,6 +10,7 @@ router.get('/cliente/:usuarioId', authMiddleware, esEmpleado, reservaController.
 router.post('/crear', authMiddleware, esCliente, reservaController.create);
 router.patch("/:id/cancelar", authMiddleware, esCliente, reservaController.cancelarReserva);
 router.post('/cola-no-abonados/salir', authMiddleware, esCliente, reservaController.salirDeColaNoAbonado);
+router.post('/cola-no-abonados/ingresar', authMiddleware, esCliente, reservaController.ingresarColaNoAbonado);
 router.post('/staff',authMiddleware, esEmpleado, reservaController.crearReservaPorEmpleado); 
 
 export default router;

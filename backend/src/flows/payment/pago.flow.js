@@ -104,7 +104,7 @@ function calcularMontoSena(reserva) {
     return precioClase * 0.5;
 }
 
-async function calcularMontoAbonoMensual(turnoId, usuarioId) {
+async function calcularMontoAbonoMensual(turnoId, usuarioId, fechaBase = new Date()) {
     const turno = await turnoService.getTurnoById(turnoId);
     const precioMensual = Number(turno?.Actividad?.precio_mensual);
 
@@ -112,8 +112,8 @@ async function calcularMontoAbonoMensual(turnoId, usuarioId) {
         throw new Error('No se pudo calcular el monto del abono mensual');
     }
 
-    const allDates = getAllClassesInSportifyMonth(turno.dia_semana);
-    const remainingDatesRaw = getRemainingClassesInSportifyMonth(turno.dia_semana);
+    const allDates = getAllClassesInSportifyMonth(turno.dia_semana, fechaBase);
+    const remainingDatesRaw = getRemainingClassesInSportifyMonth(turno.dia_semana, fechaBase);
 
     const ahora = new Date();
     const remainingDates = remainingDatesRaw.filter(fecha => {
@@ -181,9 +181,9 @@ export async function obtenerMontoSenaTurnoCliente({ turnoId }) {
     };
 }
 
-export async function obtenerMontoSuscripcionMensualCliente({ turnoId }, usuarioId) {
+export async function obtenerMontoSuscripcionMensualCliente({ turnoId, fecha }, usuarioId) {
     return {
-        monto: await calcularMontoAbonoMensual(turnoId, usuarioId)
+        monto: await calcularMontoAbonoMensual(turnoId, usuarioId, fecha)
     };
 }
 
@@ -249,8 +249,8 @@ export async function pagarSenaPresencial({ reservaId }, empleadoId) {
     };
 }
 
-export async function pagarSuscripcionMensualCliente({ turnoId, tarjetaDebito }, usuarioId) {
-    const montoNumerico = await calcularMontoAbonoMensual(turnoId, usuarioId);
+export async function pagarSuscripcionMensualCliente({ turnoId, tarjetaDebito, fecha }, usuarioId) {
+    const montoNumerico = await calcularMontoAbonoMensual(turnoId, usuarioId, fecha);
 
     const resultadoPago = await pagoService.pago(tarjetaDebito);
 

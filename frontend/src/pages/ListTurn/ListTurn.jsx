@@ -68,6 +68,15 @@ function obtenerFinPeriodoVisible(fechaBase) {
     const fin = new Date(inicio);
     fin.setMonth(fin.getMonth() + 1);
     fin.setDate(10);
+
+    const hoy = normalizarFecha(new Date());
+    const milisegundosRestantes = fin.getTime() - hoy.getTime();
+    const diasRestantes = milisegundosRestantes / (1000 * 60 * 60 * 24);
+
+    if (diasRestantes <= 10 && diasRestantes >= 0) {
+        fin.setMonth(fin.getMonth() + 1);
+    }
+
     return fin;
 }
 

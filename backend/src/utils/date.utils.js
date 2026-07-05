@@ -18,31 +18,35 @@ const DIAS_SEMANA_MAP = {
  * @param {string} diaSemana Enum del día de la semana ('LUNES', 'MARTES'...)
  * @returns {Array<string>} Arreglo de fechas en formato YYYY-MM-DD
  */
-export function getRemainingClassesInSportifyMonth(diaSemana) {
+export function getRemainingClassesInSportifyMonth(diaSemana, referenceDate = new Date()) {
   const targetDay = DIAS_SEMANA_MAP[diaSemana];
   if (targetDay === undefined) {
     throw new Error('Día de la semana inválido');
   }
 
-  const today = new Date();
-  const day = today.getDate();
-  const month = today.getMonth();
-  const year = today.getFullYear();
+  const ref = new Date(referenceDate);
+  const day = ref.getDate();
+  const month = ref.getMonth();
+  const year = ref.getFullYear();
 
-  // Determinar la fecha límite del ciclo actual de abonados
+  // Determinar el inicio y fin del ciclo actual de abonados basado en la fecha de referencia
+  let startCycleDate;
   let endCycleDate;
   if (day >= 11) {
-    // Si estamos a día 11 o más, el ciclo cierra el 10 del mes SIGUIENTE
+    startCycleDate = new Date(year, month, 11, 0, 0, 0);
     endCycleDate = new Date(year, month + 1, 10, 23, 59, 59);
   } else {
-    // Si estamos antes del día 11, el ciclo cierra el 10 del mes ACTUAL
+    startCycleDate = new Date(year, month - 1, 11, 0, 0, 0);
     endCycleDate = new Date(year, month, 10, 23, 59, 59);
   }
 
   const remainingDates = [];
   
-  // Empezar a iterar desde hoy a las 00:00
-  let currentDate = new Date(year, month, day);
+  // Empezar a iterar desde el mayor entre hoy y el inicio del ciclo,
+  // así si se abonan por adelantado pagan todo el mes.
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  let currentDate = new Date(Math.max(today.getTime(), startCycleDate.getTime()));
 
   while (currentDate <= endCycleDate) {
     if (currentDate.getDay() === targetDay) {
@@ -61,16 +65,16 @@ export function getRemainingClassesInSportifyMonth(diaSemana) {
  * Obtiene todas las fechas de las clases en el ciclo Sportify actual 
  * (del 11 al 10), tanto pasadas como futuras.
  */
-export function getAllClassesInSportifyMonth(diaSemana) {
+export function getAllClassesInSportifyMonth(diaSemana, referenceDate = new Date()) {
   const targetDay = DIAS_SEMANA_MAP[diaSemana];
   if (targetDay === undefined) {
     throw new Error('Día de la semana inválido');
   }
 
-  const today = new Date();
-  const day = today.getDate();
-  const month = today.getMonth();
-  const year = today.getFullYear();
+  const ref = new Date(referenceDate);
+  const day = ref.getDate();
+  const month = ref.getMonth();
+  const year = ref.getFullYear();
 
   let startCycleDate;
   let endCycleDate;

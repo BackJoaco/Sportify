@@ -8,8 +8,9 @@ import {
   getTurnoById,
   salirDeColaAbonadoTurno,
   updateTurno,
+  ingresarColaAbonado,
 } from "../../api/turno.api";
-import { cancelarReserva, crearReserva, crearReservaStaff, salirDeColaNoAbonado } from "../../api/reservas.api";
+import { cancelarReserva, crearReserva, crearReservaStaff, salirDeColaNoAbonado, ingresarColaNoAbonado } from "../../api/reservas.api";
 import { obtenerMontoSenaTurno, obtenerMontoSuscripcionMensual, pagarSuscripcionMensual } from "../../api/pago.api";
 import { getClientes } from "../../api/usuario.api";
 import { useAuth } from "../../context/AuthContext";
@@ -420,9 +421,10 @@ export default function DetailTurn() {
         await pagarSuscripcionMensual({
           turnoId: turno.id,
           tarjetaDebito,
+          fecha: fechaClase,
         });
 
-        await ejecutarAccion(() => altaAbonadoTurno(turno.id), "Solicitud de abono procesada");
+        await ejecutarAccion(() => altaAbonadoTurno(turno.id, { fecha: fechaClase }), "Solicitud de abono procesada");
       }
 
       cerrarPagoModal();
@@ -581,22 +583,9 @@ export default function DetailTurn() {
   }
 
   async function handleAltaAbonado() {
-    const debeIrACola =
-      !esAbonadoActivo &&
-      !colaAbonadoUsuario &&
-      abonadosCount >= turno.cupo_maximo;
-
-    if (debeIrACola) {
-      await ejecutarAccion(
-        () => altaAbonadoTurno(turno.id),
-        "El cliente fue agregado a la cola de abonados."
-      );
-      return;
-    }
-
     try {
       setSaving(true);
-      const resultado = await obtenerMontoSuscripcionMensual({ turnoId: turno.id });
+      const resultado = await obtenerMontoSuscripcionMensual({ turnoId: turno.id, fecha: fechaClase });
 
       if (!resultado?.monto || Number(resultado.monto) <= 0) {
         throw new Error("No se pudo calcular el monto del abono mensual");
@@ -620,6 +609,20 @@ export default function DetailTurn() {
     } finally {
       setSaving(false);
     }
+  }
+
+  async function handleIngresarColaNoAbonado() {
+    await ejecutarAccion(
+      () => ingresarColaNoAbonado({ turno_id: turno.id, fecha: fechaClase }),
+      "Ingresaste a la lista de espera de la clase"
+    );
+  }
+
+  async function handleIngresarColaAbonado() {
+    await ejecutarAccion(
+      () => ingresarColaAbonado(turno.id, { fecha: fechaClase }),
+      "Ingresaste a la lista de espera de abonados"
+    );
   }
 
   async function handleInscripcionTercero() {
@@ -671,18 +674,26 @@ export default function DetailTurn() {
 
   const abonadosCount = ocupacion?.abonados?.length || 0;
   const cuposFecha = ocupacion?.cuposDisponiblesFecha ?? 0;
+  
   const mostrarBotonCancelarClase = Boolean(reservaConfirmadaUsuario) && !claseYaPaso;
-  const mostrarBotonAbono = esCliente && !esAbonadoActivo && !colaAbonadoUsuario;
-  const mostrarBotonAbonoEnCola = esCliente && !esAbonadoActivo && abonadosCount >= turno.cupo_maximo;
+  
   const mostrarBotonSalirColaNoAbonados = esCliente && Boolean(colaNoAbonadoUsuario);
   const mostrarBotonSalirColaAbonados = esCliente && Boolean(colaAbonadoUsuario);
+  
   const textoBotonSalirColaNoAbonados = colaNoAbonadoUsuario?.estado === "CUPO_RESERVADO"
     ? "Salir de la lista de espera"
     : "Salir de la cola de no abonados";
   const textoBotonSalirColaAbonados = colaAbonadoUsuario?.estado === "CUPO_RESERVADO"
     ? "Salir de la cola de abonados y liberar mi cupo"
     : "Salir de la cola de abonados";
-  const puedeReservarClase = esCliente && !esAbonadoActivo && !colaNoAbonadoUsuario && !colaAbonadoUsuario && !claseYaPaso && !reservaConfirmadaUsuario;
+
+  // Puntuales
+  const mostrarBotonReservaPuntual = esCliente && !claseYaPaso;
+  const mostrarBotonIngresoColaNoAbonado = esCliente && !claseYaPaso;
+
+  // Mensuales
+  const mostrarBotonAbonoDirecto = esCliente;
+  const mostrarBotonIngresoColaAbonado = esCliente;
 
   return (
     <div className="home-container">
@@ -782,11 +793,7 @@ export default function DetailTurn() {
             </div>
             <div>
               <span>Cupos puntuales disponibles</span>
-              <p>{cuposFecha}</p>
-            </div>
-            <div>
-              <span>No abonados confirmados</span>
-              <p>{ocupacion?.reservasFecha?.filter((r) => r.tipo_reserva === "NO_ABONADO" && r.estado === "CONFIRMADA").length || 0}</p>
+              <p>{cuposFecha} / {turno.cupo_maximo}</p>
             </div>
             <div>
               <span>Cola no abonados</span>
@@ -795,13 +802,22 @@ export default function DetailTurn() {
           </div>
 
           <div className="home-header-actions" style={{ marginTop: "1rem" }}>
-            {puedeReservarClase && (
+            {mostrarBotonReservaPuntual && (
               <button
                 className="btn-primary"
-                disabled={saving || Boolean(estadoReservaPuntual)}
+                disabled={saving}
                 onClick={handleReservaNoAbonado}
               >
-                {cuposFecha <= 0 ? "Inscribirse en lista de espera" : "Reservar clase"}
+                Reservar clase
+              </button>
+            )}
+            {mostrarBotonIngresoColaNoAbonado && (
+              <button
+                className="btn-primary"
+                disabled={saving}
+                onClick={handleIngresarColaNoAbonado}
+              >
+                Ingresar a lista de espera puntual
               </button>
             )}
             {mostrarBotonSalirColaNoAbonados && (
@@ -843,9 +859,14 @@ export default function DetailTurn() {
           </div>
 
           <div className="home-header-actions" style={{ marginTop: "1rem" }}>
-            {mostrarBotonAbono && (
+            {mostrarBotonAbonoDirecto && (
               <button className="btn-primary" disabled={saving} onClick={handleAltaAbonado}>
-                {mostrarBotonAbonoEnCola ? "Ingresar en cola de abonados" : "Abonarme al turno"}
+                Abonarme al turno
+              </button>
+            )}
+            {mostrarBotonIngresoColaAbonado && (
+              <button className="btn-primary" disabled={saving} onClick={handleIngresarColaAbonado}>
+                Ingresar a lista de espera de abonados
               </button>
             )}
           </div>
