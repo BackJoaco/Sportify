@@ -306,3 +306,44 @@ export async function salirDeColaNoAbonado(usuarioId, turnoId, fecha) {
     message: 'Saliste de la cola de no abonados.'
   };
 }
+
+export async function ingresarColaNoAbonado(usuarioId, turnoId, fecha) {
+  const turno = await turnoService.getTurnoById(turnoId);
+  if (!turno) {
+    throw new Error('El turno especificado no existe.');
+  }
+
+  validarFechaTurno(turno, fecha);
+
+  const espera = await listaEsperaNoAbonadoService.findActiva(usuarioId, turnoId, fecha);
+  if (espera) {
+    throw new Error('Ya estás en la cola de no abonados para esta clase.');
+  }
+
+  const reservaExistente = await reservaService.findByUsuarioTurnoFecha(usuarioId, turnoId, fecha);
+  if (reservaExistente && reservaExistente.estado === 'CONFIRMADA' && reservaExistente.tipo_reserva === 'NO_ABONADO') {
+    throw new Error('Ya posees una reserva confirmada para esta clase.');
+  }
+
+  const today = new Date();
+  const day = today.getDate();
+  const jsMonth = today.getMonth();
+  const currentMonthInt = day < 11 ? (jsMonth === 0 ? 12 : jsMonth) : (jsMonth + 1);
+
+  const abonoActivo = await abonadoTurnoService.findActivoOSuspendidoByMes(usuarioId, turnoId, currentMonthInt);
+  if (abonoActivo) {
+    throw new Error('Ya eres abonado de este turno. No puedes ingresar a la cola de no abonados.');
+  }
+
+  const reservasConfirmadas = await reservaService.countByTurnoAndFecha(turnoId, fecha);
+  if (reservasConfirmadas < turno.cupo_maximo) {
+    throw new Error('Hay cupos disponibles, puedes reservar directamente.');
+  }
+
+  const result = await listaEsperaNoAbonadoService.agregar(usuarioId, turnoId, fecha);
+  
+  return {
+    message: 'Ingresaste exitosamente a la cola de no abonados.',
+    posicion: result.posicion
+  };
+}

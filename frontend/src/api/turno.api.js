@@ -112,14 +112,14 @@ export async function getOcupacionTurno(id, fecha) {
   return data;
 }
 
-export async function altaAbonadoTurno(id, usuarioId = null) {
+export async function altaAbonadoTurno(id, datos = {}) {
   const res = await fetch(`${API_URL}/turno/${id}/abonados`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     credentials: "include",
-    body: JSON.stringify(usuarioId ? { usuario_id: usuarioId } : {}),
+    body: JSON.stringify(datos),
   });
 
   const data = await res.json();
@@ -139,6 +139,25 @@ export async function salirDeColaAbonadoTurno(id, usuarioId = null) {
     },
     credentials: "include",
     body: JSON.stringify(usuarioId ? { usuario_id: usuarioId } : {}),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw data;
+  }
+
+  return data;
+}
+
+export async function ingresarColaAbonado(id, datos = {}) {
+  const res = await fetch(`${API_URL}/turno/${id}/abonados/ingresar-cola`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify(datos),
   });
 
   const data = await res.json();
