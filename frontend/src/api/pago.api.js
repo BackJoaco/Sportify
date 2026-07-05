@@ -127,3 +127,23 @@ export async function obtenerMontoSuscripcionMensual(datos) {
 
   return data;
 }
+
+export async function aplicarCreditoClase(datosPago) {
+  const res = await fetch(`${API_URL}/pago/aplicar-credito`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    // datosPago debe incluir: creditoId, reservaId, montoClase, tipoPago
+    body: JSON.stringify(datosPago),
+    credentials: "include",
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw data;
+  }
+
+  return data;
+}

@@ -79,6 +79,30 @@ export async function create(req, res) {
   }
 }
 
+export async function crearConCredito(req, res) {
+  try {
+    const { turno_id, fecha } = req.body;
+    const usuario_id = req.usuario.id;
+
+    if (!turno_id || !fecha) {
+      return res.status(400).json({
+        mensaje: 'Los campos turno_id y fecha son obligatorios.'
+      });
+    }
+
+    const resultado = await reservaFlow.createConCredito(usuario_id, turno_id, fecha);
+
+    return res.status(201).json({
+      mensaje: resultado.message,
+      ...resultado
+    });
+  } catch (error) {
+    return res.status(400).json({
+      mensaje: error.message
+    });
+  }
+}
+
 export async function cancelarReserva(req, res) {
   try {
     const { id } = req.params;

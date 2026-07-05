@@ -156,6 +156,35 @@ export async function createConSena(usuario_id, turno_id, fecha, tarjetaDebito) 
   };
 }
 
+export async function createConCredito(usuario_id, turno_id, fecha) {
+  const resultadoReserva = await create(usuario_id, turno_id, fecha);
+
+  if (resultadoReserva.enEspera) {
+    return resultadoReserva;
+  }
+
+  const reserva = resultadoReserva.data;
+  const turno = await turnoService.getTurnoById(turno_id);
+
+  try {
+    await pagoService.procesarPagoConCredito({
+      usuarioId: usuario_id,
+      reservaId: reserva.id,
+      montoClase: turno.Actividad.precio_clase,
+      tipoPago: 'CLASE_COMPLETA'
+    });
+  } catch (error) {
+    await reservaService.marcarComoCancelada(reserva.id);
+    throw error;
+  }
+
+  return {
+    ...resultadoReserva,
+    message: 'Reserva confirmada. Pagada con crédito exitosamente.',
+    data: reserva
+  };
+}
+
 export async function cancelarReserva(reservaId, usuarioId) {
   const reserva = await reservaService.findById(reservaId);
 
@@ -194,9 +223,10 @@ export async function cancelarReserva(reservaId, usuarioId) {
       mensajeExtra = ' Cancelada con menos de 24 hs de anticipación. No corresponde devolución.';
     }
   } else if (reserva.tipo_reserva === 'ABONADO') {
-    const today = new Date();
-    const jsMonth = today.getMonth();
-    const currentMonthInt = today.getDate() < 11 ? (jsMonth === 0 ? 12 : jsMonth) : (jsMonth + 1);
+    const parts = reserva.fecha.split('-');
+    const day = parseInt(parts[2], 10);
+    const jsMonth = parseInt(parts[1], 10) - 1;
+    const currentMonthInt = day < 11 ? (jsMonth === 0 ? 12 : jsMonth) : (jsMonth + 1);
     
     const abono = await abonadoTurnoService.findActivoByMes(usuarioId, reserva.turno_id, currentMonthInt);
     if (!abono) {
