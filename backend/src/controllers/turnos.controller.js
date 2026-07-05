@@ -64,7 +64,8 @@ export async function altaAbonado(req, res) {
   try {
     const { id } = req.params;
     const usuarioId = req.body.usuario_id || req.usuario.id;
-    const resultado = await abonadoTurnoFlow.altaAbonado(usuarioId, id);
+    const fechaBase = req.body.fecha;
+    const resultado = await abonadoTurnoFlow.altaAbonado(usuarioId, id, fechaBase);
 
     return res.status(200).json(resultado);
   } catch (error) {
@@ -86,11 +87,22 @@ export async function bajaAbonado(req, res) {
 
 export async function salirDeColaAbonado(req, res) {
   try {
-    const { id } = req.params;
-    const usuarioId = req.body.usuario_id || req.usuario.id;
-    const resultado = await abonadoTurnoFlow.salirDeColaAbonado(usuarioId, id);
+    const { id } = req.params; 
 
+    const resultado = await abonadoTurnoFlow.salirDeColaAbonado(req.usuario.id, id);
     return res.status(200).json(resultado);
+  } catch (error) {
+    return res.status(400).json({ message: error.message });
+  }
+}
+
+export async function ingresarColaAbonado(req, res) {
+  try {
+    const { id } = req.params;
+    const fechaBase = req.body.fecha;
+
+    const resultado = await abonadoTurnoFlow.ingresarColaAbonado(req.usuario.id, id, fechaBase);
+    return res.status(201).json(resultado);
   } catch (error) {
     return res.status(400).json({ message: error.message });
   }

@@ -6,7 +6,7 @@ import * as usuarioService from '../../services/usuario.service.js';
 
 import { getRemainingClassesInSportifyMonth } from '../../utils/date.utils.js';
 
-export async function altaAbonado(usuarioId, turnoId) {
+export async function altaAbonado(usuarioId, turnoId, fechaBase = new Date()) {
   const usuario = await usuarioService.getProfile(usuarioId);
   const turno = await turnoService.getTurnoById(turnoId);
 
@@ -15,9 +15,9 @@ export async function altaAbonado(usuarioId, turnoId) {
   }
 
   // Obtener mes actual Sportify
-  const today = new Date();
-  const day = today.getDate();
-  const jsMonth = today.getMonth();
+  const refDate = new Date(fechaBase);
+  const day = refDate.getDate();
+  const jsMonth = refDate.getMonth();
   let currentMonthInt;
   if (day < 11) {
     currentMonthInt = jsMonth === 0 ? 12 : jsMonth;
@@ -31,7 +31,7 @@ export async function altaAbonado(usuarioId, turnoId) {
   }
 
   // Calcular las fechas restantes en este mes Sportify
-  const remainingDates = getRemainingClassesInSportifyMonth(turno.dia_semana);
+  const remainingDates = getRemainingClassesInSportifyMonth(turno.dia_semana, fechaBase);
 
   if (remainingDates.length <= 1) {
     throw new Error('No puedes abonarte porque es la última clase del mes o ya no quedan clases.');
@@ -63,7 +63,7 @@ export async function altaAbonado(usuarioId, turnoId) {
     usuario_id: usuarioId,
     turno_id: turnoId,
     mes_anio: currentMonthInt,
-    fecha_alta: today.toISOString().split('T')[0],
+    fecha_alta: new Date().toISOString().split('T')[0],
     estado: 'ACTIVO'
   });
 
@@ -162,5 +162,65 @@ export async function aceptarCupoAbonado(usuarioId, turnoId) {
     message: 'Cupo de abonado confirmado correctamente.',
     data: abonado,
     reservasConvertidas
+  };
+}
+
+export async function ingresarColaAbonado(usuarioId, turnoId, fechaBase = new Date()) {
+  const turno = await turnoService.getTurnoById(turnoId);
+  if (!turno) {
+    throw new Error('El turno especificado no existe.');
+  }
+
+  const espera = await listaEsperaAbonadoService.findActiva(usuarioId, turnoId);
+  if (espera) {
+    throw new Error('Ya estás en la cola de abonados para este turno.');
+  }
+
+  const refDate = new Date(fechaBase);
+  const day = refDate.getDate();
+  const jsMonth = refDate.getMonth();
+  const currentMonthInt = day < 11 ? (jsMonth === 0 ? 12 : jsMonth) : (jsMonth + 1);
+
+  const remainingDates = getRemainingClassesInSportifyMonth(turno.dia_semana, fechaBase);
+  if (remainingDates.length <= 1) {
+    throw new Error('No puedes anotarte a la lista de espera porque es la última clase del mes o ya no quedan clases.');
+  }
+
+  // Validar si el usuario ya tiene reservas NO_ABONADO futuras en el mes
+  for (const fecha of remainingDates) {
+    const reservaExistente = await reservaService.findByUsuarioTurnoFecha(usuarioId, turnoId, fecha);
+    if (reservaExistente && reservaExistente.estado === 'CONFIRMADA' && reservaExistente.tipo_reserva === 'NO_ABONADO') {
+      throw new Error(`Ya posees una reserva como no abonado para el día ${fecha}. Si deseas ingresar a la lista de espera de abonados, por favor cancela tus reservas puntuales primero.`);
+    }
+  }
+
+  const abonoActivo = await abonadoTurnoService.findActivoOSuspendidoByMes(usuarioId, turnoId, currentMonthInt);
+  if (abonoActivo) {
+    throw new Error('Ya posees un abono vigente para este turno en este mes.');
+  }
+
+  const abonadosActivos = await abonadoTurnoService.countActivosByTurno(turnoId);
+  let turnoLleno = (abonadosActivos >= turno.cupo_maximo);
+
+  if (!turnoLleno) {
+    const remainingDates = getRemainingClassesInSportifyMonth(turno.dia_semana, fechaBase);
+    for (const fecha of remainingDates) {
+      const count = await reservaService.countByTurnoAndFecha(turnoId, fecha);
+      if (count >= turno.cupo_maximo) {
+        turnoLleno = true;
+        break;
+      }
+    }
+  }
+
+  if (!turnoLleno) {
+    throw new Error('Hay cupos disponibles para abonados, puedes abonarte directamente.');
+  }
+
+  const result = await listaEsperaAbonadoService.agregar(usuarioId, turnoId);
+
+  return {
+    message: 'Ingresaste exitosamente a la cola de abonados.',
+    posicion: result.posicion
   };
 }
