@@ -15,6 +15,16 @@ export async function findActivo(usuarioId, turnoId) {
   });
 }
 
+export async function findSuspendido(usuarioId, turnoId) {
+  return AbonadoTurno.findOne({
+    where: {
+      usuario_id: usuarioId,
+      turno_id: turnoId,
+      estado: 'SUSPENDIDO'
+    }
+  });
+}
+
 export async function findActivosByTurno(turnoId) {
   return AbonadoTurno.findAll({
     where: {

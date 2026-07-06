@@ -83,6 +83,11 @@ export async function create(usuario_id, turno_id, fecha) {
     throw new Error('Ya sos abonado de este turno. No hace falta reservarlo como no abonado.');
   }
 
+  const abonadoSuspendido = await abonadoTurnoService.findSuspendido(usuario_id, turno_id);
+  if (abonadoSuspendido) {
+    throw new Error('Ya sos abonado de este turno. Regulariza tu suspension al abono para poder reservar esta clase.');
+  }
+
   const reservaExistente = await reservaService.findByUsuarioTurnoFecha(usuario_id, turno_id, fecha);
   if (reservaExistente && reservaExistente.estado !== 'CANCELADA') {
     throw new Error('Ya tienes una reserva o asistencia registrada para esta clase.');
@@ -369,8 +374,15 @@ export async function ingresarColaNoAbonado(usuarioId, turnoId, fecha) {
   if (reservasConfirmadas < turno.cupo_maximo) {
     throw new Error('Hay cupos disponibles, puedes reservar directamente.');
   }
+  console.log("hola1");
 
   const result = await listaEsperaNoAbonadoService.agregar(usuarioId, turnoId, fecha);
+  console.log("hola2");
+
+  const cantidadEncolados = await listaEsperaNoAbonadoService.countWaiting(turnoId, fecha);
+  if (cantidadEncolados === 1) {
+    await notificacionService.notificarAltaDemanda(turnoId, fecha);
+  }
   
   return {
     message: 'Ingresaste exitosamente a la cola de no abonados.',

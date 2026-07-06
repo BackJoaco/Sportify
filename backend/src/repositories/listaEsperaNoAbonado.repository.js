@@ -21,10 +21,22 @@ export async function findActiva(usuarioId, turnoId, fecha) {
       usuario_id: usuarioId,
       turno_id: turnoId,
       fecha,
-      estado: ['EN_ESPERA']
+      estado: ['EN_ESPERA'],
     }
   });
 }
+
+export async function findByUsuarioTurnoFechaConBorrados(usuarioId, turnoId, fecha) {
+  return ListaEsperaNoAbonado.findOne({
+    where: {
+      usuario_id: usuarioId,
+      turno_id: turnoId,
+      fecha
+    },
+    paranoid: false // Trae también registros que tengan deletedAt con fecha
+  });
+}
+
 
 export async function findSiguienteEnEspera(turnoId, fecha) {
   return ListaEsperaNoAbonado.findOne({
@@ -65,10 +77,11 @@ export async function deleteByUsuarioId(usuarioId, transaction) {
   });
 }
 
-export async function countWaiting(turnoId) {
+export async function countWaiting(turnoId, fecha) {
   return ListaEsperaNoAbonado.count({
     where: {
       turno_id: turnoId,
+      fecha,
       estado: 'EN_ESPERA'
     }
   });
