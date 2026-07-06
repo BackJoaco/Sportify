@@ -35,32 +35,26 @@ export async function findRepetida(usuarioId, mensaje) {
 }
 
 
-export async function verificarYNotificarAltaDemanda(turnoId) {
-  const countAbonados = await listaEsperaAbonadoRepository.countWaiting(turnoId);
-  const countNoAbonados = await listaEsperaNoAbonadoRepository.countWaiting(turnoId);
-  const totalWaiting = countAbonados + countNoAbonados;
+export async function notificarAltaDemanda(turnoId, fecha) {
+  const turno = await Turno.findByPk(turnoId, { include: [Actividad] });
+  const actividadNombre = turno?.Actividad?.nombre || 'Actividad';
+  const diaSemana = turno?.dia_semana || '';
+  const horaInicio = turno?.hora_inicio || '';
 
-  if (totalWaiting > 10) {
-    const turno = await Turno.findByPk(turnoId, { include: [Actividad] });
-    const actividadNombre = turno?.Actividad?.nombre || 'Actividad';
-    const diaSemana = turno?.dia_semana || '';
-    const horaInicio = turno?.hora_inicio || '';
+  const mensaje = `Alta demanda detectada para el turno de ${actividadNombre} en la fecha ${fecha} que cae (${diaSemana} a las ${horaInicio.substring(0, 5)} hs).`;
 
-    const mensaje = `Alta demanda detectada para el turno de ${actividadNombre} (${diaSemana} a las ${horaInicio.substring(0, 5)} hs). Hay ${totalWaiting} personas esperando cupo.`;
-
-    // Buscar todos los admins
-    const admins = await usuarioRepository.findAllAdmins();
-    for (const admin of admins) {
-      // Evitar notificaciones repetidas idénticas no leídas
-      const existente = await notificacionRepository.findRepetida(admin.id, mensaje);
-      if (!existente) {
-        await notificacionRepository.create({
-          usuario_id: admin.id,
-          mensaje,
-          leida: false,
-          fecha_creacion: new Date()
-        });
-      }
+  // Buscar todos los admins
+  const admins = await usuarioRepository.findAllAdmins();
+  for (const admin of admins) {
+    // Evitar notificaciones repetidas idénticas no leídas
+    const existente = await notificacionRepository.findRepetida(admin.id, mensaje);
+    if (!existente) {
+      await notificacionRepository.create({
+        usuario_id: admin.id,
+        mensaje,
+        leida: false,
+        fecha_creacion: new Date()
+      });
     }
   }
 }

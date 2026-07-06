@@ -8,6 +8,10 @@ export function findActivo(usuarioId, turnoId) {
   return abonadoTurnoRepository.findActivo(usuarioId, turnoId);
 }
 
+export function findSuspendido(usuarioId, turnoId) {
+  return abonadoTurnoRepository.findSuspendido(usuarioId, turnoId);
+}
+
 export function findActivosByTurno(turnoId) {
   return abonadoTurnoRepository.findActivosByTurno(turnoId);
 }
