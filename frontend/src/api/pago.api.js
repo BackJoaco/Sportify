@@ -164,3 +164,21 @@ export async function aplicarCreditoClase(datosPago) {
 
   return data;
 }
+
+export async function getMovimientos() {
+  const res = await fetch(`${API_URL}/pago/movimientos`, { // Ajustá la ruta según tu backend
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include", 
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw data;
+  }
+
+  return data;
+}
