@@ -187,3 +187,43 @@ export async function procesarPagoConCredito({ usuarioId, reservaId, montoClase,
     throw error;
   }
 }
+
+
+export async function listarMovimientos() {
+  const pagos = await pagoRepository.getTodosLosMovimientos();
+
+  return pagos.map(pago => {
+    const esAbono = pago.tipo_pago === 'SUSCRIPCION_MENSUAL';
+    
+    // Identificamos a qué clase pertenece el movimiento
+    let detalleActividad = 'Sin especificar / General';
+    let detalleHorario = '';
+
+    if (esAbono && pago.AbonadoTurno) {
+      detalleActividad = pago.AbonadoTurno.Turno.Actividad.nombre;
+      detalleHorario = `${pago.AbonadoTurno.Turno.dia_semana} ${pago.AbonadoTurno.Turno.hora_inicio}`;
+    } else if (!esAbono && pago.Reserva) {
+      detalleActividad = pago.Reserva.Turno.Actividad.nombre;
+      detalleHorario = `${pago.Reserva.Turno.dia_semana} ${pago.Reserva.Turno.hora_inicio}`;
+    }
+
+    return {
+      movimiento_id: pago.id,
+      monto: Number(pago.monto),
+      tipo_movimiento: pago.tipo_pago, // Ej: SENA, DEVOLUCION_SENA, SUSCRIPCION_MENSUAL
+      metodo_pago: pago.metodo_pago,   // Ej: MERCADO_PAGO, EFECTIVO, CREDITO
+      estado_pago: pago.estado,        // Ej: COMPLETADO, PENDIENTE, RECHAZADO
+      fecha_movimiento: pago.createdAt,
+      detalle_clase: {
+        actividad: detalleActividad,
+        horario: detalleHorario
+      },
+      usuario: {
+        id: pago.Usuario.id,
+        nombre: `${pago.Usuario.nombre} ${pago.Usuario.apellido}`,
+        dni: pago.Usuario.dni,
+        email: pago.Usuario.email
+      }
+    };
+  });
+}
