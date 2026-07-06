@@ -91,7 +91,8 @@ export async function crearDevolucionSena(reservaId, usuarioId, monto) {
     return pagoRepository.create({
         monto,
         tipo_pago: 'DEVOLUCION_SENA',
-        estado: 'PENDIENTE',
+        estado: 'COMPLETADO',
+        metodo_pago: 'MERCADO_PAGO',
         reserva_id: reservaId,
         usuario_id: usuarioId
     });
