@@ -13,7 +13,6 @@ import notificacionRoutes from './routes/notificacion.route.js';
 import demoRoutes from './routes/demo.route.js';
 import estadisticaRoutes from './routes/estadistica.route.js';
 import creditoRoutes from './routes/credito.route.js';
-import devolucionRoutes from './routes/devolucion.route.js';
 
 const app = express();
 
@@ -42,7 +41,6 @@ app.use('/api/pago', pagoRoutes);
 app.use('/api/reserva', reservaRoutes);
 app.use('/api/estadisticas', estadisticaRoutes);
 app.use('/api/creditos', creditoRoutes);
-app.use('/api/devoluciones', devolucionRoutes);
 app.use((req, res) => {
     res.status(404).json({ ok: false, message: 'Ruta no encontrada' });
 });

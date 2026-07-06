@@ -128,3 +128,20 @@ export async function aplicarCreditoUsuario(req, res) {
     });
   }
 }
+
+
+export async function getMovimientos(req, res) {
+  try {
+    const movimientos = await pagoService.listarMovimientos();
+    
+    return res.status(200).json({
+      mensaje: 'Historial de movimientos obtenido correctamente.',
+      data: movimientos
+    });
+  } catch (error) {
+    console.error('Error al listar movimientos:', error);
+    return res.status(500).json({
+      mensaje: 'Ocurrió un error interno al procesar el listado de movimientos.'
+    });
+  }
+}

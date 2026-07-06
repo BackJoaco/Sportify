@@ -14,5 +14,6 @@ router.post('/suscripcion-mensual', authMiddleware, esCliente, pagoController.pa
 router.post('/sena-presencial', authMiddleware, esEmpleado, pagoController.registrarSenaPresencial);
 router.get('/pendientes', authMiddleware, esAdministrador, pagoController.getDeudores);
 router.post('/aplicar-credito', authMiddleware, pagoController.aplicarCreditoUsuario);
+router.get('/movimientos', authMiddleware, esAdministrador, pagoController.getMovimientos);
 
 export default router;

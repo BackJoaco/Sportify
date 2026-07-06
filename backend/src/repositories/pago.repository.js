@@ -77,3 +77,36 @@ export async function getPagosPendientes() {
     order: [['createdAt', 'DESC']] // Los más recientes primero
   });
 }
+
+export async function getTodosLosMovimientos() {
+  return await Pago.findAll({
+    // Al no poner 'where', traemos TODOS los movimientos sin importar el estado o tipo
+    include: [
+      {
+        model: Usuario,
+        attributes: ['id', 'nombre', 'apellido', 'dni', 'email']
+      },
+      // Traemos datos si el movimiento pertenece a un turno normal / devolución de seña
+      {
+        model: Reserva,
+        required: false,
+        include: [{
+          model: Turno,
+          attributes: ['dia_semana', 'hora_inicio'],
+          include: [{ model: Actividad, attributes: ['nombre'] }]
+        }]
+      },
+      // Traemos datos si el movimiento pertenece a una suscripción mensual
+      {
+        model: AbonadoTurno,
+        required: false,
+        include: [{
+          model: Turno,
+          attributes: ['dia_semana', 'hora_inicio'],
+          include: [{ model: Actividad, attributes: ['nombre'] }]
+        }]
+      }
+    ],
+    order: [['createdAt', 'DESC']] // Los más recientes primero
+  });
+}
