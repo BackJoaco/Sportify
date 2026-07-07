@@ -34,6 +34,15 @@ export async function findRepetida(usuarioId, mensaje) {
   return notificacionRepository.findRepetida(usuarioId, mensaje);
 }
 
+export async function findRepetidaByDia(usuarioId, mensaje) {
+  const inicioHoy = new Date();
+  inicioHoy.setHours(0, 0, 0, 0);
+  const finHoy = new Date();
+  finHoy.setHours(23, 59, 59, 999);
+
+  return notificacionRepository.findRepetidaByDia(usuarioId, mensaje, inicioHoy, finHoy);
+}
+
 
 export async function notificarAltaDemanda(turnoId, fecha) {
   const turno = await Turno.findByPk(turnoId, { include: [Actividad] });

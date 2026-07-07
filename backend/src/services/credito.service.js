@@ -22,3 +22,9 @@ export async function obtenerHistorial(usuarioId) {
     };
   });
 }
+
+export async function obtenerUsuariosConCreditosPorVencer() {
+  const usuarios = await creditoRepository.getUsuariosConCreditosPorVencer();
+
+  return usuarios;
+}
