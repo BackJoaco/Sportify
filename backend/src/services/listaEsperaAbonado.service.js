@@ -51,3 +51,7 @@ export function deleteById(id) {
 export function deleteByUsuarioId(usuarioId, transaction) {
   return listaEsperaAbonadoRepository.deleteByUsuarioId(usuarioId, transaction);
 }
+
+export function countWaiting(turnoId){
+  return listaEsperaAbonadoRepository.countWaiting(turnoId)
+}

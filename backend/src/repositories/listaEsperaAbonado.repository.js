@@ -8,7 +8,7 @@ export async function countActivasByTurno(turnoId) {
   return ListaEsperaAbonado.count({
     where: {
       turno_id: turnoId,
-      estado: ['EN_ESPERA', 'CUPO_RESERVADO']
+      estado: ['EN_ESPERA']
     }
   });
 }

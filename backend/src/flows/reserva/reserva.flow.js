@@ -380,7 +380,9 @@ export async function ingresarColaNoAbonado(usuarioId, turnoId, fecha) {
   console.log("hola2");
 
   const cantidadEncoladosNoAbonados = await listaEsperaNoAbonadoService.countWaiting(turnoId, fecha);
-  if (cantidadEncolados === 10) {
+  const cantidadEncoladosAbonados = await listaEsperaAbonadoService.countWaiting(turnoId);
+
+  if ((cantidadEncoladosNoAbonados + cantidadEncoladosAbonados) === 10) {
     await notificacionService.notificarAltaDemanda(turnoId, fecha);
   }
   
