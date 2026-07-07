@@ -365,7 +365,7 @@ export default function Profile() {
                                     <div className="notif-body">
                                         <p className="notif-msg">{notif.mensaje}</p>
                                         <span className="notif-time">
-                                            {new Date(notif.fecha_creacion).toLocaleString("es-AR", {
+                                            {new Date(notif.createdAt).toLocaleString("es-AR", {
                                                 day: "2-digit",
                                                 month: "short",
                                                 hour: "2-digit",

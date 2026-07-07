@@ -3,7 +3,7 @@ import { Notificacion } from '../models/index.model.js';
 export async function findByUsuarioId(usuarioId) {
   return Notificacion.findAll({
     where: { usuario_id: usuarioId },
-    order: [['fecha_creacion', 'DESC']]
+    order: [['createdAt', 'DESC']]
   });
 }
 

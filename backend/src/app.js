@@ -41,6 +41,7 @@ app.use('/api/pago', pagoRoutes);
 app.use('/api/reserva', reservaRoutes);
 app.use('/api/estadisticas', estadisticaRoutes);
 app.use('/api/creditos', creditoRoutes);
+app.use('/api/notificacion', notificacionRoutes)
 app.use((req, res) => {
     res.status(404).json({ ok: false, message: 'Ruta no encontrada' });
 });

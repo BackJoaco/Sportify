@@ -53,7 +53,7 @@ export async function notificarAltaDemanda(turnoId, fecha) {
         usuario_id: admin.id,
         mensaje,
         leida: false,
-        fecha_creacion: new Date()
+        createdAt: new Date()
       });
     }
   }

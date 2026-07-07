@@ -59,7 +59,7 @@ export async function asignarSiguienteWaitlist(turnoId, fecha) {
     usuario_id: siguiente.usuario_id,
     mensaje: 'Se liberó un cupo en el turno al que estabas inscripto en lista de espera. Tienes exactamente 1 hora para confirmar tu reserva.',
     leida: false,
-    fecha_creacion: new Date()
+    createdAt: new Date()
   });
 
   return {
@@ -379,8 +379,8 @@ export async function ingresarColaNoAbonado(usuarioId, turnoId, fecha) {
   const result = await listaEsperaNoAbonadoService.agregar(usuarioId, turnoId, fecha);
   console.log("hola2");
 
-  const cantidadEncolados = await listaEsperaNoAbonadoService.countWaiting(turnoId, fecha);
-  if (cantidadEncolados === 1) {
+  const cantidadEncoladosNoAbonados = await listaEsperaNoAbonadoService.countWaiting(turnoId, fecha);
+  if (cantidadEncolados === 10) {
     await notificacionService.notificarAltaDemanda(turnoId, fecha);
   }
   
