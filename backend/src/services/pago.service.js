@@ -76,7 +76,35 @@ export async function registrarSuscripcionMensual({
 }
 
 export async function findByUsuarioId(usuarioId) {
-    return pagoRepository.findByUsuarioId(usuarioId);
+    const pagos = await pagoRepository.findByUsuarioId(usuarioId);
+
+    return pagos.map(pago => {
+        const esAbono = pago.tipo_pago === 'SUSCRIPCION_MENSUAL';
+
+        let detalleActividad = 'Sin especificar / General';
+        let detalleHorario = '';
+
+        if (esAbono && pago.AbonadoTurno) {
+            detalleActividad = pago.AbonadoTurno.Turno.Actividad.nombre;
+            detalleHorario = `${pago.AbonadoTurno.Turno.dia_semana} ${pago.AbonadoTurno.Turno.hora_inicio}`;
+        } else if (!esAbono && pago.Reserva) {
+            detalleActividad = pago.Reserva.Turno.Actividad.nombre;
+            detalleHorario = `${pago.Reserva.Turno.dia_semana} ${pago.Reserva.Turno.hora_inicio}`;
+        }
+
+        return {
+            pago_id: pago.id,
+            monto: Number(pago.monto),
+            concepto: pago.tipo_pago,
+            metodo_pago: pago.metodo_pago,
+            estado: pago.estado,
+            fecha: pago.createdAt,
+            clase: {
+                actividad: detalleActividad,
+                horario: detalleHorario
+            }
+        };
+    });
 }
 
 export async function deleteByUsuarioId(usuarioId, transaction) {

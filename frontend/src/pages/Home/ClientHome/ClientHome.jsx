@@ -37,8 +37,8 @@ export default function ClientHome() {
   async function cargarReservas() {
     try {
       setLoadingReservas(true);
-      const data = await getMisReservas();
-      setReservas(data || []);
+      const res = await getMisReservas();
+      setReservas(res.data || res || []);
       setReservasError("");
     } catch (err) {
       setReservas([]);
@@ -51,8 +51,8 @@ export default function ClientHome() {
   async function cargarPagos() {
     try {
       setLoadingPagos(true);
-      const data = await getMisPagos();
-      setPagos(data || []);
+      const res = await getMisPagos();
+      setPagos(res.data || res || []);
       setPagosError("");
     } catch (err) {
       setPagos([]);
@@ -67,7 +67,6 @@ export default function ClientHome() {
     try {
       setLoadingCreditos(true);
       const data = await getMisCreditos();
-      // Si el backend devuelve { mensaje: "...", data: [...] }
       setCreditos(data.data || data || []);
       setCreditosError("");
     } catch (err) {
@@ -126,10 +125,11 @@ export default function ClientHome() {
 
   function mapTipoPago(tipoPago) {
     const tipos = {
-      SENA: "Sena",
+      SENA: "Seña",
       RESTO_TURNO: "Resto del turno",
       CLASE_COMPLETA: "Clase completa",
       SUSCRIPCION_MENSUAL: "Suscripcion mensual",
+      DEVOLUCION_SENA: "Devolución de Seña"
     };
 
     return tipos[tipoPago] || tipoPago;

@@ -11,12 +11,21 @@ export async function findByUsuarioId(usuarioId) {
         include: [
             {
                 model: Reserva,
-                include: [
-                    {
-                        model: Turno,
-                        include: [Actividad]
-                    }
-                ]
+                required: false, // false para que traiga el pago aunque no tenga reserva (ej. si es abono)
+                include: [{
+                    model: Turno,
+                    attributes: ['dia_semana', 'hora_inicio'],
+                    include: [{ model: Actividad, attributes: ['nombre'] }]
+                }]
+            },
+            {
+                model: AbonadoTurno,
+                required: false,
+                include: [{
+                    model: Turno,
+                    attributes: ['dia_semana', 'hora_inicio'],
+                    include: [{ model: Actividad, attributes: ['nombre'] }]
+                }]
             }
         ],
         order: [['createdAt', 'DESC']]
