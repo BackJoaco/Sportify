@@ -220,7 +220,7 @@ export async function cancelarReserva(reservaId, usuarioId) {
       if (sena) {
         await pagoService.crearDevolucionSena(reservaId, usuarioId, sena.monto);
         generaDevolucion = true;
-        mensajeExtra = ' Se generó una devolución de tu seña (quedó en estado pendiente).';
+        mensajeExtra = ' Se generó una devolución de tu seña.';
       } else {
         mensajeExtra = ' Cancelada con anticipación, pero no tenías una seña registrada.';
       }
