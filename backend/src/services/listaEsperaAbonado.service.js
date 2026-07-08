@@ -1,20 +1,27 @@
 import * as listaEsperaAbonadoRepository from '../repositories/listaEsperaAbonado.repository.js';
-import * as notificacionService from './notificacion.service.js';
 
 export async function agregar(usuarioId, turnoId) {
-  const existente = await listaEsperaAbonadoRepository.findActiva(usuarioId, turnoId);
+  // Buscamos si existe (activo o borrado)
+  const existente = await listaEsperaAbonadoRepository.findByUsuarioTurnoConBorrados(usuarioId, turnoId);
+
+  const posicion = (await listaEsperaAbonadoRepository.countActivasByTurno(turnoId)) + 1;
+
   if (existente) {
+    // Si el registro estaba eliminado, lo restauramos y reiniciamos sus valores
+    if (existente.deletedAt) {
+      await existente.restore();
+      existente.estado = 'EN_ESPERA';
+      existente.posicion = posicion;
+      await existente.save();
+    }
     return existente;
   }
 
-  const posicion = (await listaEsperaAbonadoRepository.countActivasByTurno(turnoId)) + 1;
   const result = await listaEsperaAbonadoRepository.create({
     usuario_id: usuarioId,
     turno_id: turnoId,
     posicion
   });
-
-  await notificacionService.verificarYNotificarAltaDemanda(turnoId);
 
   return result;
 }

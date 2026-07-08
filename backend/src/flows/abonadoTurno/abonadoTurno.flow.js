@@ -1,5 +1,6 @@
 import * as abonadoTurnoService from '../../services/abonadoTurno.service.js';
 import * as listaEsperaAbonadoService from '../../services/listaEsperaAbonado.service.js';
+import * as listaEsperaNoAbonadoService from '../../services/listaEsperaNoAbonado.service.js';
 import * as reservaService from '../../services/reserva.service.js';
 import * as turnoService from '../../services/turno.service.js';
 import * as usuarioService from '../../services/usuario.service.js';
@@ -215,6 +216,11 @@ export async function ingresarColaAbonado(usuarioId, turnoId, fechaBase = new Da
 
   if (!turnoLleno) {
     throw new Error('Hay cupos disponibles para abonados, puedes abonarte directamente.');
+  }
+
+  const enListaEsperaNoAbonado = await listaEsperaNoAbonadoService.findActiva(usuarioId, turnoId, fechaBase);
+  if (enListaEsperaNoAbonado){
+    throw new Error('Ya te encuentras en lista de espera de no abonados, no puedes unirte a ambas colas a la vez')
   }
 
   const result = await listaEsperaAbonadoService.agregar(usuarioId, turnoId);

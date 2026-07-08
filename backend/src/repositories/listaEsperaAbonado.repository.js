@@ -23,6 +23,16 @@ export async function findActiva(usuarioId, turnoId) {
   });
 }
 
+export async function findByUsuarioTurnoConBorrados(usuarioId, turnoId) {
+  return ListaEsperaAbonado.findOne({
+    where: {
+      usuario_id: usuarioId,
+      turno_id: turnoId
+    },
+    paranoid: false // Trae también registros que tengan deletedAt
+  });
+}
+
 export async function findSiguienteEnEspera(turnoId) {
   return ListaEsperaAbonado.findOne({
     where: {

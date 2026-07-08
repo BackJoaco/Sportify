@@ -355,6 +355,11 @@ export async function ingresarColaNoAbonado(usuarioId, turnoId, fecha) {
     throw new Error('Ya estás en la cola de no abonados para esta clase.');
   }
 
+  const enListaEsperaAbonado = await listaEsperaAbonadoService.findActiva(usuarioId, turnoId);
+  if (enListaEsperaAbonado) {
+    throw new Error('Ya te encuentras en lista de espera de abonados, no puedes unirte a ambas colas a la vez.');
+  }
+
   const reservaExistente = await reservaService.findByUsuarioTurnoFecha(usuarioId, turnoId, fecha);
   if (reservaExistente && reservaExistente.estado === 'CONFIRMADA') {
     throw new Error('Ya posees una reserva confirmada para esta clase.');
