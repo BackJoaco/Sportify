@@ -1,37 +1,37 @@
 import * as reservaRepository from '../repositories/reserva.repository.js';
 
 export async function actualizarEstadoPago(id, estadoPago) {
-    const reserva = await reservaRepository.updateEstadoPago(id, estadoPago);
+  const reserva = await reservaRepository.updateEstadoPago(id, estadoPago);
 
-    if (!reserva) {
-        throw new Error('Reserva no encontrada');
-    }
+  if (!reserva) {
+    throw new Error('Reserva no encontrada');
+  }
 
-    return reserva;
+  return reserva;
 }
 
 export async function findById(id) {
-    const reserva = await reservaRepository.findById(id);
-    if (!reserva) {
-        throw new Error("La reserva no existe.");
-    }
-    return reserva;
+  const reserva = await reservaRepository.findById(id);
+  if (!reserva) {
+    throw new Error("La reserva no existe.");
+  }
+  return reserva;
 }
 
 export async function marcarComoCancelada(id) {
-  return reservaRepository.updateEstado(id, 'CANCELADA'); 
+  return reservaRepository.updateEstado(id, 'CANCELADA');
 }
 
 export async function findByUsuarioId(usuarioId) {
-    return reservaRepository.findByUsuarioId(usuarioId);
+  return reservaRepository.findByUsuarioId(usuarioId);
 }
 
-export async function create(data){
-    return reservaRepository.create(data);
+export async function create(data) {
+  return reservaRepository.create(data);
 }
 
 export async function deleteByUsuarioId(usuarioId, transaction) {
-    return reservaRepository.deleteByUsuarioId(usuarioId, transaction);
+  return reservaRepository.deleteByUsuarioId(usuarioId, transaction);
 }
 
 export async function countByTurno(turno_id) {
@@ -78,4 +78,8 @@ export async function cancelarReservasFuturasAbonadoByUsuarioTurno(usuario_id, t
 
 export async function cancelarMasivamentePorTurno(turno_id) {
   return await reservaRepository.cancelarMasivamentePorTurno(turno_id);
+}
+
+export async function findProximaReservaByUsuarioTurno(usuario_id, turno_id) {
+  return reservaRepository.findProximaReservaByUsuarioTurno(usuario_id, turno_id);
 }

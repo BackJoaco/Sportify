@@ -2,44 +2,44 @@ import { Actividad, Reserva, Turno } from '../models/index.model.js';
 import { Op } from 'sequelize';
 
 export async function findById(id) {
-    return Reserva.findByPk(id, {
-        include: [
-            {
-                model: Turno,
-                include: [Actividad]
-            }
-        ]
-    });
+  return Reserva.findByPk(id, {
+    include: [
+      {
+        model: Turno,
+        include: [Actividad]
+      }
+    ]
+  });
 }
 
 export async function findByUsuarioId(usuarioId) {
-    return Reserva.findAll({
-        where: { usuario_id: usuarioId },
-        include: [
-            {
-                model: Turno,
-                include: [Actividad]
-            }
-        ],
-        order: [
-            ['fecha', 'ASC'],
-            [Turno, 'hora_inicio', 'ASC']
-        ]
-    });
+  return Reserva.findAll({
+    where: { usuario_id: usuarioId },
+    include: [
+      {
+        model: Turno,
+        include: [Actividad]
+      }
+    ],
+    order: [
+      ['fecha', 'ASC'],
+      [Turno, 'hora_inicio', 'ASC']
+    ]
+  });
 }
 
 export async function updateEstadoPago(id, estadoPago) {
-    const reserva = await Reserva.findByPk(id);
+  const reserva = await Reserva.findByPk(id);
 
-    if (!reserva) {
-        return null;
-    }
+  if (!reserva) {
+    return null;
+  }
 
-    return reserva.update({ estado_pago: estadoPago });
+  return reserva.update({ estado_pago: estadoPago });
 }
 
-export async function create(data){
-    return Reserva.create(data);
+export async function create(data) {
+  return Reserva.create(data);
 }
 
 export async function deleteByUsuarioId(usuarioId, transaction) {
@@ -127,6 +127,20 @@ export async function findByUsuarioTurnoFecha(usuario_id, turno_id, fecha) {
   });
 }
 
+export async function findProximaReservaByUsuarioTurno(usuario_id, turno_id) {
+  const hoy = new Date().toISOString().split('T')[0];
+  return Reserva.findOne({
+    where: {
+      usuario_id,
+      turno_id,
+      estado: 'CONFIRMADA',
+      fecha: { [Op.gte]: hoy }
+    },
+    include: [{ model: Turno }],
+    order: [['fecha', 'ASC']]
+  });
+}
+
 export async function convertirReservasFuturasNoAbonadoAAbonado(usuario_id, turno_id) {
   const hoy = new Date().toISOString().split('T')[0];
 
@@ -174,12 +188,12 @@ export async function updateEstado(id, estado) {
 
 export async function cancelarMasivamentePorTurno(turno_id) {
   return await Reserva.update(
-    { estado: 'CANCELADA' }, 
-    { 
-      where: { 
+    { estado: 'CANCELADA' },
+    {
+      where: {
         turno_id,
-        estado: 'CONFIRMADA' 
-      } 
+        estado: 'CONFIRMADA'
+      }
     }
   );
 }

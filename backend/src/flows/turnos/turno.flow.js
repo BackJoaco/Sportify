@@ -17,7 +17,7 @@ export async function getOcupacionFlow(turnoId, fecha) {
   if (fecha) {
     reservasFecha = await reservaService.findByTurnoFecha(turnoId, fecha);
     colaNoAbonados = await listaEsperaNoAbonadoService.findByTurnoFecha(turnoId, fecha);
-    
+
     const cantidadReservas = await reservaService.countByTurnoAndFecha(turnoId, fecha);
     cuposDisponiblesFecha = turno.cupo_maximo - cantidadReservas;
     // Evitar cupos negativos por las dudas
@@ -85,4 +85,31 @@ export async function modificarTurnoFlow(id, datosNuevos) {
     impacto: huboCambios,
     reservasCanceladas
   };
+}
+
+export async function obtenerQRFlow(usuarioId, turnoId) {
+  // 1. Validar que el turno exista
+  await turnoService.getTurnoById(turnoId);
+
+  // 2. Obtener la próxima reserva activa del usuario para ese turno
+  const reserva = await reservaService.findProximaReservaByUsuarioTurno(usuarioId, turnoId);
+
+  if (!reserva) {
+    throw new Error("El usuario no posee reservas confirmadas para este turno en el futuro.");
+  }
+
+  const fechaActual = new Date();
+
+  const fechaReservaStr = typeof reserva.fecha === 'string' ? reserva.fecha : reserva.fecha.toISOString().split('T')[0];
+  const horaInicioStr = reserva.Turno.hora_inicio; // "HH:mm:ss"
+
+  const reservaDateTime = new Date(`${fechaReservaStr}T${horaInicioStr}`);
+
+  // 3. Validar si el turno aún no transcurrió (si la fecha actual es mayor, lanzamos error)
+  if (fechaActual > reservaDateTime) {
+    throw new Error("El turno ya ha pasado la hora de inicio del turno.");
+  }
+
+  // 4. Retornar el QR
+  return reserva.codigo_qr;
 }

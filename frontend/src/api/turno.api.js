@@ -168,3 +168,17 @@ export async function ingresarColaAbonado(id, datos = {}) {
 
   return data;
 }
+
+export async function getQRbyId(id) {
+  const res = await fetch(`${API_URL}/turno/${id}/obtenerQR`, {
+    credentials: "include",
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw data;
+  }
+
+  return data;
+}

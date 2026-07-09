@@ -9,16 +9,19 @@ import {
   salirDeColaAbonadoTurno,
   updateTurno,
   ingresarColaAbonado,
+  getQRbyId,
 } from "../../api/turno.api";
 import { cancelarReserva, crearReserva, crearReservaStaff, salirDeColaNoAbonado, ingresarColaNoAbonado, crearReservaConCredito } from "../../api/reservas.api";
-import { 
-  obtenerMontoSenaTurno, 
-  obtenerMontoSuscripcionMensual, 
+import {
+  obtenerMontoSenaTurno,
+  obtenerMontoSuscripcionMensual,
   pagarSuscripcionMensual,
-  aplicarCreditoClase } from "../../api/pago.api";
+  aplicarCreditoClase
+} from "../../api/pago.api";
 import { getClientes } from "../../api/usuario.api";
 import { useAuth } from "../../context/AuthContext";
 import PaymentModal from "../../components/PaymentModal/PaymentModal";
+import QRModal from "../../components/QRModal/QRModal";
 import "./DetailTurn.css";
 
 const HORAS_TURNO = Array.from({ length: 13 }, (_, i) => {
@@ -97,6 +100,8 @@ export default function DetailTurn() {
     title: "",
     subtitle: "",
   });
+  const [isQRModalOpen, setIsQRModalOpen] = useState(false);
+  const [qrCodeData, setQrCodeData] = useState("");
   const [formData, setFormData] = useState({
     entrenador: "",
     dia_semana: "",
@@ -709,17 +714,37 @@ export default function DetailTurn() {
     }
   }
 
+  async function handleObtenerQR() {
+    try {
+      setSaving(true);
+      const data = await getQRbyId(turno.id);
+      setQrCodeData(data.codigo_qr);
+      setIsQRModalOpen(true);
+    } catch (err) {
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "error",
+        title: err.message || err.mensaje || "No se pudo obtener el QR. Es posible que el turno ya haya transcurrido.",
+        showConfirmButton: false,
+        timer: 4000,
+      });
+    } finally {
+      setSaving(false);
+    }
+  }
+
   if (loading) return <div className="home-container">Cargando informacion...</div>;
   if (!turno) return null;
 
   const abonadosCount = ocupacion?.abonados?.length || 0;
   const cuposFecha = ocupacion?.cuposDisponiblesFecha ?? 0;
-  
+
   const mostrarBotonCancelarClase = Boolean(reservaConfirmadaUsuario) && !claseYaPaso;
-  
+
   const mostrarBotonSalirColaNoAbonados = esCliente && Boolean(colaNoAbonadoUsuario);
   const mostrarBotonSalirColaAbonados = esCliente && Boolean(colaAbonadoUsuario);
-  
+
   const textoBotonSalirColaNoAbonados = colaNoAbonadoUsuario?.estado === "CUPO_RESERVADO"
     ? "Salir de la lista de espera"
     : "Salir de la cola de no abonados";
@@ -813,6 +838,17 @@ export default function DetailTurn() {
               <span>Tu estado</span>
               <strong>{estadoCliente.titulo}</strong>
               <p>{estadoCliente.detalle}</p>
+
+              {reservaConfirmadaUsuario && (
+                <button
+                  className="btn-primary"
+                  style={{ marginTop: "1rem" }}
+                  disabled={saving}
+                  onClick={handleObtenerQR}
+                >
+                  Obtener código QR
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -925,6 +961,12 @@ export default function DetailTurn() {
         onSubmit={handleConfirmarPago}
         loading={saving}
         onPayWithCredit={handlePagarConCredito}
+      />
+
+      <QRModal
+        open={isQRModalOpen}
+        qrData={qrCodeData}
+        onClose={() => setIsQRModalOpen(false)}
       />
     </div>
   );
