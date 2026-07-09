@@ -41,11 +41,11 @@ export function findActiva(usuarioId, turnoId, fecha) {
   return listaEsperaNoAbonadoRepository.findActiva(usuarioId, turnoId, fecha);
 }
 
-export function reservarCupo(id, horas = 24) {
+export function notificar(id, horas = 1) {
   const hasta = new Date();
   hasta.setHours(hasta.getHours() + horas);
   return listaEsperaNoAbonadoRepository.updateEstado(id, {
-    estado: 'CUPO_RESERVADO',
+    estado: 'NOTIFICADO',
     cupo_reservado_hasta: hasta
   });
 }

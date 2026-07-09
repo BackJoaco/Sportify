@@ -38,11 +38,11 @@ export function findActiva(usuarioId, turnoId) {
   return listaEsperaAbonadoRepository.findActiva(usuarioId, turnoId);
 }
 
-export function reservarCupo(id, horas = 24) {
+export function notificar(id, horas = 1) {
   const hasta = new Date();
   hasta.setHours(hasta.getHours() + horas);
   return listaEsperaAbonadoRepository.updateEstado(id, {
-    estado: 'CUPO_RESERVADO',
+    estado: 'NOTIFICADO',
     cupo_reservado_hasta: hasta
   });
 }
@@ -59,6 +59,6 @@ export function deleteByUsuarioId(usuarioId, transaction) {
   return listaEsperaAbonadoRepository.deleteByUsuarioId(usuarioId, transaction);
 }
 
-export function countWaiting(turnoId){
+export function countWaiting(turnoId) {
   return listaEsperaAbonadoRepository.countWaiting(turnoId)
 }

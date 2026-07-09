@@ -3,6 +3,7 @@
 // import * as notificacionService from '../services/notificacion.service.js';
 // import * as listaEsperaNoAbonadoService from '../services/listaEsperaNoAbonado.service.js';
 // import { cancelarReserva, asignarSiguienteWaitlist } from '../flows/reserva/reserva.flow.js';
+import { processExpiredWaitlists } from '../utils/waitlistScheduler.js'
 
 // export async function simularDias1a10(req, res) {
 //   try {
@@ -109,58 +110,16 @@
 //   }
 // }
 
-// export async function simularExpiracion(req, res) {
-//   try {
-//     const expiradosAbonados = await ListaEsperaAbonado.findAll({ where: { estado: 'CUPO_RESERVADO' } });
-//     const expiradosNoAbonados = await ListaEsperaNoAbonado.findAll({ where: { estado: 'CUPO_RESERVADO' } });
-//     const todayStr = new Date().toISOString().split('T')[0];
-
-//     let abonadosProcesados = 0;
-//     let noAbonadosProcesados = 0;
-
-//     // Procesar expiración de abonados
-//     for (const entry of expiradosAbonados) {
-//       await entry.update({ estado: 'EXPIRADO' });
-
-//       // Notificar al expirado
-//       await notificacionService.create({
-//         usuario_id: entry.usuario_id,
-//         mensaje: `Tu reserva de cupo para el turno en lista de espera ha expirado tras 1 hora sin confirmación.`,
-//         leida: false,
-//         fecha_creacion: new Date()
-//       });
-
-//       // Asignar al siguiente en cola
-//       await asignarSiguienteWaitlist(entry.turno_id, todayStr);
-//       abonadosProcesados++;
-//     }
-
-//     // Procesar expiración de no abonados
-//     for (const entry of expiradosNoAbonados) {
-//       await entry.update({ estado: 'EXPIRADO' });
-
-//       // Notificar al expirado
-//       await notificacionService.create({
-//         usuario_id: entry.usuario_id,
-//         mensaje: `Tu reserva de cupo para el turno en lista de espera ha expirado tras 1 hora sin confirmación.`,
-//         leida: false,
-//         fecha_creacion: new Date()
-//       });
-
-//       // Asignar al siguiente en cola
-//       await asignarSiguienteWaitlist(entry.turno_id, entry.fecha);
-//       noAbonadosProcesados++;
-//     }
-
-//     return res.status(200).json({
-//       message: 'Simulación del paso de 1 hora (Expiraciones) completada.',
-//       abonadosExpirados: abonadosProcesados,
-//       noAbonadosExpirados: noAbonadosProcesados
-//     });
-//   } catch (error) {
-//     return res.status(400).json({ message: error.message });
-//   }
-// }
+export async function simularExpiracion(req, res) {
+  try {
+    await processExpiredWaitlists(1);
+    return res.status(200).json({
+      message: 'Simulación del paso de 1 hora (Expiraciones) completada.',
+    });
+  } catch (error) {
+    return res.status(400).json({ message: error.message });
+  }
+}
 
 // export async function simularAltaDemanda(req, res) {
 //   try {

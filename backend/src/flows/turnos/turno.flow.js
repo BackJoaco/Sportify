@@ -8,7 +8,8 @@ import * as listaEsperaNoAbonadoService from "../../services/listaEsperaNoAbonad
 export async function getOcupacionFlow(turnoId, fecha) {
   const turno = await turnoService.getTurnoById(turnoId);
   const abonados = await abonadoTurnoService.findActivosByTurno(turnoId);
-  const colaAbonados = await listaEsperaAbonadoService.findByTurno(turnoId);
+  let colaAbonados = await listaEsperaAbonadoService.findByTurno(turnoId);
+  colaAbonados = colaAbonados.filter(item => item.estado === 'EN_ESPERA');
 
   let reservasFecha = [];
   let colaNoAbonados = [];
@@ -16,7 +17,8 @@ export async function getOcupacionFlow(turnoId, fecha) {
 
   if (fecha) {
     reservasFecha = await reservaService.findByTurnoFecha(turnoId, fecha);
-    colaNoAbonados = await listaEsperaNoAbonadoService.findByTurnoFecha(turnoId, fecha);
+    let allColaNoAbonados = await listaEsperaNoAbonadoService.findByTurnoFecha(turnoId, fecha);
+    colaNoAbonados = allColaNoAbonados.filter(item => item.estado === 'EN_ESPERA');
     
     const cantidadReservas = await reservaService.countByTurnoAndFecha(turnoId, fecha);
     cuposDisponiblesFecha = turno.cupo_maximo - cantidadReservas;

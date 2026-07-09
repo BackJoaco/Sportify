@@ -18,7 +18,7 @@ export async function findActiva(usuarioId, turnoId) {
     where: {
       usuario_id: usuarioId,
       turno_id: turnoId,
-      estado: ['EN_ESPERA', 'CUPO_RESERVADO']
+      estado: ['EN_ESPERA', 'NOTIFICADO', 'CUPO_RESERVADO']
     }
   });
 }

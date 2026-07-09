@@ -4,73 +4,29 @@ import * as listaEsperaNoAbonadoService from '../../services/listaEsperaNoAbonad
 import * as reservaService from '../../services/reserva.service.js';
 import * as turnoService from '../../services/turno.service.js';
 import * as usuarioService from '../../services/usuario.service.js';
+import * as notificacionService from '../../services/notificacion.service.js';
 
 import { getRemainingClassesInSportifyMonth } from '../../utils/date.utils.js';
+import { validarPuedeAbonarse } from '../../utils/abonado.validator.js';
 
 export async function altaAbonado(usuarioId, turnoId, fechaBase = new Date()) {
-  const usuario = await usuarioService.getProfile(usuarioId);
-  const turno = await turnoService.getTurnoById(turnoId);
-
-  if (usuario.rol !== 'CLIENTE') {
-    throw new Error('Solo un cliente puede abonarse a un turno.');
-  }
-
-  // Obtener mes actual Sportify
-  const refDate = new Date(fechaBase);
-  const day = refDate.getDate();
-  const jsMonth = refDate.getMonth();
-  let currentMonthInt;
-  if (day < 11) {
-    currentMonthInt = jsMonth === 0 ? 12 : jsMonth;
-  } else {
-    currentMonthInt = jsMonth + 1;
-  }
-
-  const abonadoExistente = await abonadoTurnoService.findActivoByMes(usuarioId, turnoId, currentMonthInt);
-  if (abonadoExistente) {
-    throw new Error('El cliente ya es abonado activo de este turno.');
-  }
-
-  // Calcular las fechas restantes en este mes Sportify
-  const remainingDates = getRemainingClassesInSportifyMonth(turno.dia_semana, fechaBase);
-
-  if (remainingDates.length <= 1) {
-    throw new Error('No puedes abonarte porque es la última clase del mes o ya no quedan clases.');
-  }
-
-  // Validar si el usuario ya tiene reservas NO_ABONADO futuras en el mes
-  for (const fecha of remainingDates) {
-    const reservaExistente = await reservaService.findByUsuarioTurnoFecha(usuarioId, turnoId, fecha);
-    if (reservaExistente && reservaExistente.estado === 'CONFIRMADA' && reservaExistente.tipo_reserva === 'NO_ABONADO') {
-      throw new Error(`Ya posees una reserva como no abonado para el día ${fecha}. Si deseas abonarte, por favor cancela tus reservas primero.`);
-    }
-  }
-
-  // Validar cupos: primero la cantidad global y luego cada clase
-  const abonadosActivos = await abonadoTurnoService.countActivosByTurno(turnoId);
-  if (abonadosActivos >= turno.cupo_maximo) {
-    throw new Error('El turno no tiene cupos fijos disponibles. No es posible abonarse a este turno, por favor inscríbete a la lista de espera de abonados.');
-  }
-
-  for (const fecha of remainingDates) {
-    const count = await reservaService.countByTurnoAndFecha(turnoId, fecha);
-    if (count >= turno.cupo_maximo) {
-      throw new Error(`La clase del día ${fecha} ya alcanzó el cupo máximo. No es posible abonarse a este turno, por favor inscríbete a la lista de espera de abonados.`);
-    }
+  const validacion = await validarPuedeAbonarse(usuarioId, turnoId, fechaBase);
+  if (!validacion.puede) {
+    throw new Error(validacion.motivo);
   }
 
   // Crear el abono
   const abonado = await abonadoTurnoService.create({
     usuario_id: usuarioId,
     turno_id: turnoId,
-    mes_anio: currentMonthInt,
+    mes_anio: validacion.currentMonthInt,
     fecha_alta: new Date().toISOString().split('T')[0],
     estado: 'ACTIVO'
   });
 
   // Generar las reservas para las clases restantes
   let reservasCreadas = 0;
-  for (const fecha of remainingDates) {
+  for (const fecha of validacion.remainingDates) {
     const reservaExistente = await reservaService.findByUsuarioTurnoFecha(usuarioId, turnoId, fecha);
     if (!reservaExistente || reservaExistente.estado !== 'CONFIRMADA') {
       await reservaService.create({
@@ -83,6 +39,11 @@ export async function altaAbonado(usuarioId, turnoId, fechaBase = new Date()) {
       });
       reservasCreadas++;
     }
+  }
+
+  const espera = await listaEsperaAbonadoService.findActiva(usuarioId, turnoId);
+  if (espera) {
+    await listaEsperaAbonadoService.confirmar(espera.id);
   }
 
   return {
@@ -219,11 +180,19 @@ export async function ingresarColaAbonado(usuarioId, turnoId, fechaBase = new Da
   }
 
   const enListaEsperaNoAbonado = await listaEsperaNoAbonadoService.findActiva(usuarioId, turnoId, fechaBase);
-  if (enListaEsperaNoAbonado){
+  if (enListaEsperaNoAbonado) {
     throw new Error('Ya te encuentras en lista de espera de no abonados, no puedes unirte a ambas colas a la vez')
   }
 
   const result = await listaEsperaAbonadoService.agregar(usuarioId, turnoId);
+
+  const cantidadEncoladosAbonados = await listaEsperaAbonadoService.countWaiting(turnoId);
+  const cantidadEncoladosNoAbonados = await listaEsperaNoAbonadoService.countWaiting(turnoId, fechaBase);
+  if ((cantidadEncoladosNoAbonados + cantidadEncoladosAbonados) === 10) {
+    const fechaFormat = typeof fechaBase === 'string' ? fechaBase : fechaBase.toISOString().split('T')[0];
+    await notificacionService.notificarAltaDemanda(turnoId, fechaFormat);
+  }
+
 
   return {
     message: 'Ingresaste exitosamente a la cola de abonados.',

@@ -10,7 +10,7 @@ export async function countActivasByTurnoFecha(turnoId, fecha) {
     where: {
       turno_id: turnoId,
       fecha,
-      estado: ['EN_ESPERA', 'CUPO_RESERVADO']
+      estado: ['EN_ESPERA', 'NOTIFICADO', 'CUPO_RESERVADO']
     }
   });
 }
@@ -21,7 +21,7 @@ export async function findActiva(usuarioId, turnoId, fecha) {
       usuario_id: usuarioId,
       turno_id: turnoId,
       fecha,
-      estado: ['EN_ESPERA'],
+      estado: ['EN_ESPERA', 'NOTIFICADO', 'CUPO_RESERVADO'],
     }
   });
 }

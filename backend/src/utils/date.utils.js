@@ -13,6 +13,25 @@ const DIAS_SEMANA_MAP = {
 };
 
 /**
+ * Calcula el mes Sportify (del 1 al 12) para una fecha dada.
+ * Un mes Sportify empieza el día 11 y termina el 10 del mes siguiente.
+ * Por ejemplo: del 11/01 al 10/02 es el mes 1.
+ * @param {Date|string} fecha Fecha a evaluar
+ * @returns {number} Mes Sportify (1-12)
+ */
+export function getMesSportify(fecha = new Date()) {
+  const refDate = new Date(fecha);
+  const day = refDate.getDate();
+  const jsMonth = refDate.getMonth(); // 0 a 11
+  
+  if (day < 11) {
+    return jsMonth === 0 ? 12 : jsMonth;
+  } else {
+    return jsMonth + 1;
+  }
+}
+
+/**
  * Obtiene todas las fechas de las clases restantes para un día de la semana
  * dentro del mes Sportify actual (del 11 de un mes al 10 del siguiente).
  * @param {string} diaSemana Enum del día de la semana ('LUNES', 'MARTES'...)
