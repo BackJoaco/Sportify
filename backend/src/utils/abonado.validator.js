@@ -20,18 +20,29 @@ export async function validarPuedeAbonarse(usuarioId, turnoId, fechaBase = new D
   }
 
   // Obtener mes actual Sportify
-  const currentMonthInt = getMesSportify(fechaBase);
+  let currentMonthInt = getMesSportify(fechaBase);
+
+  // Calcular las fechas restantes en este mes Sportify
+  let remainingDates = getRemainingClassesInSportifyMonth(turno.dia_semana, fechaBase);
+
+  // Si no quedan clases en el mes actual, se abona para el mes siguiente
+  if (remainingDates.length === 0) {
+    const ref = new Date(fechaBase);
+    const day = ref.getDate();
+    let nextCycleDate = new Date(ref);
+    if (day >= 11) {
+      nextCycleDate.setMonth(nextCycleDate.getMonth() + 1);
+      nextCycleDate.setDate(15);
+    } else {
+      nextCycleDate.setDate(15);
+    }
+    remainingDates = getRemainingClassesInSportifyMonth(turno.dia_semana, nextCycleDate);
+    currentMonthInt = getMesSportify(nextCycleDate);
+  }
 
   const abonadoExistente = await abonadoTurnoService.findActivoByMes(usuarioId, turnoId, currentMonthInt);
   if (abonadoExistente) {
-    return { puede: false, motivo: 'El cliente ya es abonado activo de este turno.' };
-  }
-
-  // Calcular las fechas restantes en este mes Sportify
-  const remainingDates = getRemainingClassesInSportifyMonth(turno.dia_semana, fechaBase);
-
-  if (remainingDates.length <= 1) {
-    return { puede: false, motivo: 'No puedes abonarte porque es la última clase del mes o ya no quedan clases.' };
+    return { puede: false, motivo: 'El cliente ya es abonado activo de este turno para este mes.' };
   }
 
   // Validar si el usuario ya tiene reservas NO_ABONADO futuras en el mes

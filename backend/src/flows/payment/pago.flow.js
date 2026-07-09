@@ -112,20 +112,31 @@ async function calcularMontoAbonoMensual(turnoId, usuarioId, fechaBase = new Dat
         throw new Error('No se pudo calcular el monto del abono mensual');
     }
 
-    const allDates = getAllClassesInSportifyMonth(turno.dia_semana, fechaBase);
-    const remainingDatesRaw = getRemainingClassesInSportifyMonth(turno.dia_semana, fechaBase);
+    let allDates = getAllClassesInSportifyMonth(turno.dia_semana, fechaBase);
+    let remainingDatesRaw = getRemainingClassesInSportifyMonth(turno.dia_semana, fechaBase);
+
+    // Si no quedan clases en el mes actual, se calcula para el mes siguiente (alineado con la validación de abono)
+    if (remainingDatesRaw.length === 0) {
+        const ref = new Date(fechaBase);
+        const day = ref.getDate();
+        let nextCycleDate = new Date(ref);
+        if (day >= 11) {
+            nextCycleDate.setMonth(nextCycleDate.getMonth() + 1);
+            nextCycleDate.setDate(15);
+        } else {
+            nextCycleDate.setDate(15);
+        }
+        allDates = getAllClassesInSportifyMonth(turno.dia_semana, nextCycleDate);
+        remainingDatesRaw = getRemainingClassesInSportifyMonth(turno.dia_semana, nextCycleDate);
+    }
 
     const ahora = new Date();
     const remainingDates = remainingDatesRaw.filter(fecha => {
         const [year, month, day] = fecha.split('-');
         const [hora, min] = turno.hora_inicio.split(':');
         const fechaClase = new Date(year, month - 1, day, hora, min);
-        return fechaClase > ahora;
+        return fechaClase >= ahora;
     });
-
-    if (remainingDates.length <= 1) {
-        throw new Error('No puedes abonarte porque es la última clase del mes o ya no quedan clases.');
-    }
 
     const clasesDelMes = allDates.length;
     const clasesRestantes = remainingDates.length;
