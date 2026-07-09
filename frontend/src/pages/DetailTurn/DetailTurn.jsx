@@ -142,6 +142,16 @@ export default function DetailTurn() {
     ) || null;
   }, [ocupacion, usuario]);
 
+  const reservaPresenteUsuario = useMemo(() => {
+    if (!ocupacion || !usuario) return null;
+
+    return ocupacion.reservasFecha?.find(
+      (reserva) =>
+        String(reserva.usuario_id) === String(usuario.id) &&
+        reserva.estado === "PRESENTE"
+    ) || null;
+  }, [ocupacion, usuario]);
+
   const colaNoAbonadoUsuario = useMemo(() => {
     if (!ocupacion || !usuario) return null;
 
@@ -155,6 +165,14 @@ export default function DetailTurn() {
     const esDelUsuario = (registro) => String(registro.usuario_id) === String(usuario.id);
     const esperaNoAbonado = colaNoAbonadoUsuario;
     const esperaAbonado = ocupacion.colaAbonados?.find(esDelUsuario);
+
+    if (reservaPresenteUsuario) {
+      return {
+        tipo: "success",
+        titulo: "Asistencia confirmada",
+        detalle: "Ya estás marcado como presente para esta clase. ¡A entrenar!",
+      };
+    }
 
     if (esAbonadoActivo) {
       return {
@@ -217,7 +235,7 @@ export default function DetailTurn() {
       titulo: "No tenés inscripción activa en este turno",
       detalle: "Podés reservar una clase puntual o abonarte si hay cupo fijo disponible.",
     };
-  }, [colaAbonadoUsuario, colaNoAbonadoUsuario, esAbonadoActivo, esCliente, fechaClase, ocupacion, reservaConfirmadaUsuario, turno, usuario]);
+  }, [colaAbonadoUsuario, colaNoAbonadoUsuario, esAbonadoActivo, esCliente, fechaClase, ocupacion, reservaConfirmadaUsuario, reservaPresenteUsuario, turno, usuario]);
 
   const estadoReservaPuntual = useMemo(() => {
     if (!esCliente || !usuario || !ocupacion) return null;
