@@ -83,3 +83,28 @@ export async function cancelarMasivamentePorTurno(turno_id) {
 export async function findProximaReservaByUsuarioTurno(usuario_id, turno_id) {
   return reservaRepository.findProximaReservaByUsuarioTurno(usuario_id, turno_id);
 }
+
+export async function marcarPresentePorQR(codigo_qr) {
+  const reserva = await reservaRepository.findByQR(codigo_qr);
+  
+  if (!reserva) {
+    throw new Error("QR inválido o reserva no encontrada.");
+  }
+  
+  if (reserva.estado === 'CANCELADA') {
+    throw new Error("La reserva se encuentra cancelada.");
+  }
+  
+  if (reserva.estado === 'PRESENTE') {
+    throw new Error("El cliente ya fue marcado como presente para esta clase.");
+  }
+  
+  if (reserva.estado !== 'CONFIRMADA') {
+    throw new Error(`Estado de reserva inválido para asistir: ${reserva.estado}`);
+  }
+  
+  await reservaRepository.updateEstado(reserva.id, 'PRESENTE');
+  
+  // Refetch to return updated data
+  return reservaRepository.findById(reserva.id);
+}

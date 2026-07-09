@@ -195,3 +195,22 @@ export async function crearReservaPorEmpleado(req, res) {
     });
   }
 }
+
+export async function escanearQR(req, res) {
+  try {
+    const { codigo_qr } = req.body;
+    
+    if (!codigo_qr) {
+      return res.status(400).json({ message: "Se requiere un código QR válido" });
+    }
+
+    const reservaActualizada = await reservaService.marcarPresentePorQR(codigo_qr);
+
+    return res.status(200).json({
+      message: "Presente marcado correctamente",
+      reserva: reservaActualizada
+    });
+  } catch (error) {
+    return res.status(400).json({ message: error.message });
+  }
+}

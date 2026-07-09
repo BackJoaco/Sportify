@@ -13,5 +13,6 @@ router.patch("/:id/cancelar", authMiddleware, esCliente, reservaController.cance
 router.post('/cola-no-abonados/salir', authMiddleware, esCliente, reservaController.salirDeColaNoAbonado);
 router.post('/cola-no-abonados/ingresar', authMiddleware, esCliente, reservaController.ingresarColaNoAbonado);
 router.post('/staff',authMiddleware, esEmpleado, reservaController.crearReservaPorEmpleado); 
+router.post('/escanearQR', authMiddleware, esEmpleado, reservaController.escanearQR);
 
 export default router;

@@ -1,0 +1,92 @@
+.qr-scanner-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  padding: 1rem;
+}
+
+.qr-scanner-content {
+  background-color: var(--surface-light);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 500px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-xl);
+  display: flex;
+  flex-direction: column;
+}
+
+.qr-scanner-close-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.25rem;
+  cursor: pointer;
+  z-index: 10;
+  transition: color var(--transition-normal);
+}
+
+.qr-scanner-close-btn:hover {
+  color: var(--text-primary);
+}
+
+.qr-scanner-header {
+  padding: 1.5rem 1.5rem 1rem;
+  text-align: center;
+}
+
+.qr-scanner-header h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.25rem;
+  color: var(--text-primary);
+}
+
+.qr-scanner-header p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.qr-scanner-body {
+  position: relative;
+  width: 100%;
+  padding: 0 1.5rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.qr-scanner-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #fff;
+  font-weight: 600;
+  border-radius: inherit;
+  z-index: 5;
+}
+
+@media (max-width: 768px) {
+  .qr-scanner-content {
+    border-radius: var(--radius-md);
+  }
+}

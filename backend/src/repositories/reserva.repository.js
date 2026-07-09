@@ -1,4 +1,4 @@
-import { Actividad, Reserva, Turno } from '../models/index.model.js';
+import { Actividad, Reserva, Turno, Usuario } from '../models/index.model.js';
 import { Op } from 'sequelize';
 
 export async function findById(id) {
@@ -7,6 +7,21 @@ export async function findById(id) {
       {
         model: Turno,
         include: [Actividad]
+      }
+    ]
+  });
+}
+
+export async function findByQR(codigo_qr) {
+  return Reserva.findOne({
+    where: { codigo_qr },
+    include: [
+      {
+        model: Turno,
+        include: [Actividad]
+      },
+      {
+        model: Usuario
       }
     ]
   });
@@ -62,7 +77,7 @@ export async function countByTurnoAndFecha(turno_id, fecha, tipo_reserva = null)
   const where = {
     turno_id,
     fecha,
-    estado: 'CONFIRMADA'
+    estado: ['CONFIRMADA', 'PRESENTE']
   };
 
   if (tipo_reserva) {
