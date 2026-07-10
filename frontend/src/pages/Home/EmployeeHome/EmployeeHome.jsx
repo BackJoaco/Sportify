@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-import { FaCalendarAlt, FaMoneyBillWave } from "react-icons/fa";
+import { FaCalendarAlt, FaMoneyBillWave, FaQrcode } from "react-icons/fa";
 import { registrarSenaPresencial } from "../../../api/pago.api";
-import { getReservasClientePorDni } from "../../../api/reservas.api";
+import { getReservasClientePorDni, escanearQR } from "../../../api/reservas.api";
+import QRScannerModal from "../../../components/QRScannerModal/QRScannerModal";
 import "./EmployeeHome.css";
 
 export default function EmployeeHome() {
@@ -13,6 +14,27 @@ export default function EmployeeHome() {
   const [reservas, setReservas] = useState([]);
   const [loadingReservas, setLoadingReservas] = useState(false);
   const [registrandoId, setRegistrandoId] = useState(null);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+
+  const handleScanSuccess = async (codigo_qr) => {
+    try {
+      const response = await escanearQR({ codigo_qr });
+      Swal.fire({
+        icon: 'success',
+        title: 'Asistencia Registrada',
+        text: response.message || 'Presente marcado correctamente',
+        timer: 3000,
+        showConfirmButton: false
+      });
+      setIsScannerOpen(false);
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error al escanear',
+        text: error.message || error.mensaje || 'Hubo un error al procesar el QR',
+      });
+    }
+  };
 
   async function buscarReservasPorDni(e) {
     e?.preventDefault();
@@ -147,12 +169,17 @@ export default function EmployeeHome() {
       <section className="employee-home-header">
         <div>
           <span>Panel de empleado</span>
-          <h1>Registrar seña presencial</h1>
-          <p>Desde aca vas a poder registrar pagos presenciales de reservas.</p>
+          <h1>Panel principal</h1>
+          <p>Desde acá vas a poder registrar pagos presenciales y escanear accesos.</p>
         </div>
-        <button className="btn-primary" onClick={() => navigate("/turnos")}>
-          <FaCalendarAlt /> Calendario de Turnos
-        </button>
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <button className="btn-primary" onClick={() => setIsScannerOpen(true)}>
+            <FaQrcode /> Escanear QR
+          </button>
+          <button className="btn-primary" onClick={() => navigate("/turnos")}>
+            <FaCalendarAlt /> Calendario de Turnos
+          </button>
+        </div>
       </section>
 
       <section className="employee-action-panel">
@@ -223,6 +250,12 @@ export default function EmployeeHome() {
           )}
         </div>
       </section>
+
+      <QRScannerModal 
+        open={isScannerOpen} 
+        onClose={() => setIsScannerOpen(false)} 
+        onScanSuccess={handleScanSuccess} 
+      />
     </main>
   );
 }

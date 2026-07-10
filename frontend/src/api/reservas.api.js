@@ -155,3 +155,22 @@ export async function ingresarColaNoAbonado(datos) {
 
   return data;
 }
+
+export async function escanearQR(datos) {
+  const res = await fetch(`${API_URL}/reserva/escanearQR`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify(datos),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw data;
+  }
+
+  return data;
+}

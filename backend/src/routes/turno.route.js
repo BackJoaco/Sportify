@@ -16,5 +16,6 @@ router.post("/:id/abonados", authMiddleware, esCliente, turnoController.altaAbon
 router.post("/:id/abonados/salir-cola", authMiddleware, esCliente, turnoController.salirDeColaAbonado);
 router.post("/:id/abonados/ingresar-cola", authMiddleware, esCliente, turnoController.ingresarColaAbonado);
 router.put('/modificar/:id', authMiddleware, esAdministrador, turnoController.modificarTurno);
+router.get('/:id/obtenerQR', authMiddleware, esCliente, turnoController.obtenerQR);
 
 export default router;
