@@ -54,7 +54,7 @@ export async function seedNotificaciones(transaction) {
       usuario_id: admin.id,
       mensaje: 'Bienvenido al panel de administración. Aquí podrás gestionar actividades, turnos y usuarios.',
       leida: false,
-      fecha_creacion: new Date()
+      createdAt: new Date()
     }, { transaction });
   }
 }

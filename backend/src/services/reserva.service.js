@@ -10,6 +10,16 @@ export async function actualizarEstadoPago(id, estadoPago) {
     return reserva;
 }
 
+export async function actualizarEstadoPagoSiPendiente(id, estadoPago) {
+    const reserva = await reservaRepository.updateEstadoPagoIfPendiente(id, estadoPago);
+
+    if (!reserva) {
+        throw new Error('La reserva ya no esta pendiente de pago.');
+    }
+
+    return reserva;
+}
+
 export async function findById(id) {
     const reserva = await reservaRepository.findById(id);
     if (!reserva) {
@@ -28,6 +38,14 @@ export async function findByUsuarioId(usuarioId) {
 
 export async function create(data){
     return reservaRepository.create(data);
+}
+
+export async function findPendientesNoAbonadoBefore(fechaLimite) {
+  return reservaRepository.findPendientesNoAbonadoBefore(fechaLimite);
+}
+
+export async function cancelarPendientePorVencimiento(id) {
+  return reservaRepository.cancelarPendientePorVencimiento(id);
 }
 
 export async function deleteByUsuarioId(usuarioId, transaction) {

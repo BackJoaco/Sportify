@@ -12,7 +12,6 @@ export async function getMisCreditos(req, res) {
       data: historial
     });
   } catch (error) {
-    console.error('Error al obtener créditos:', error);
     return res.status(500).json({ 
       mensaje: 'Ocurrió un error interno al buscar el historial de créditos.' 
     });

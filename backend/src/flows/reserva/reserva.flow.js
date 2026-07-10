@@ -9,8 +9,10 @@ import * as usuarioService from '../../services/usuario.service.js';
 import * as notificacionService from '../../services/notificacion.service.js';
 import * as pagoService from '../../services/pago.service.js';
 import * as creditoService from '../../services/credito.service.js';
+import { validarPuedeAbonarse } from '../../utils/abonado.validator.js';
 
 const DIAS = ['DOMINGO', 'LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO'];
+const MINUTOS_PAGO_SENA_LISTA_ESPERA = 2;
 
 function obtenerDiaSemana(fecha) {
   const [year, month, day] = String(fecha).split('-').map(Number);
@@ -36,11 +38,28 @@ function validarFechaTurno(turno, fecha) {
 }
 
 
-export async function asignarSiguienteWaitlist(turnoId, fecha) {
-  let siguiente = await listaEsperaAbonadoService.findSiguienteEnEspera(turnoId);
-  let esAbonado = true;
+export async function asignarSiguienteWaitlist(turnoId, fecha, checkNoAbonado = true) {
+  let siguiente = null;
+  let esAbonado = false;
 
-  if (!siguiente) {
+  // 1. Verificar cola de abonados primero
+  const listaAbonados = await listaEsperaAbonadoService.findByTurno(turnoId);
+  const abonadosEnEspera = listaAbonados.filter(item => item.estado === 'EN_ESPERA');
+
+  for (const abonadoEspera of abonadosEnEspera) {
+    const validacion = await validarPuedeAbonarse(abonadoEspera.usuario_id, turnoId, fecha);
+
+    if (validacion.puede) {
+      siguiente = abonadoEspera;
+      esAbonado = true;
+      break;
+    } else if (validacion.errorGlobal) {
+      // Si el cupo está lleno de abonados fijos, nadie en la cola de abonados podrá entrar.
+      break;
+    }
+  }
+
+  if (!siguiente && checkNoAbonado) {
     siguiente = await listaEsperaNoAbonadoService.findSiguienteEnEspera(turnoId, fecha);
     esAbonado = false;
   }
@@ -49,22 +68,106 @@ export async function asignarSiguienteWaitlist(turnoId, fecha) {
     return null;
   }
 
-  //if (esAbonado) {
-  // await listaEsperaAbonadoService.reservarCupo(siguiente.id, 1);
-  //} else {
-  //  await listaEsperaNoAbonadoService.reservarCupo(siguiente.id, 1);
-  //}
+  if (esAbonado) {
+    await listaEsperaAbonadoService.notificar(siguiente.id, 1);
+  } else {
+    await listaEsperaNoAbonadoService.notificar(siguiente.id, 1);
+  }
 
   await notificacionService.create({
     usuario_id: siguiente.usuario_id,
     mensaje: 'Se liberó un cupo en el turno al que estabas inscripto en lista de espera. Tienes exactamente 1 hora para confirmar tu reserva.',
     leida: false,
-    fecha_creacion: new Date()
+    createdAt: new Date()
   });
+
 
   return {
     ...(siguiente.toJSON ? siguiente.toJSON() : siguiente),
     esAbonado
+  };
+}
+
+export async function asignarCupoASiguienteNoAbonado(turnoId, fecha) {
+  const siguiente = await listaEsperaNoAbonadoService.findSiguienteEnEspera(turnoId, fecha);
+
+  if (!siguiente) {
+    return null;
+  }
+
+  const uuid = crypto.randomUUID();
+  const nuevaReserva = await reservaService.create({
+    usuario_id: siguiente.usuario_id,
+    turno_id: turnoId,
+    fecha,
+    tipo_reserva: 'NO_ABONADO',
+    codigo_qr: `QR-U${siguiente.usuario_id}-T${turnoId}-F${fecha}-${uuid}`
+  });
+
+  await listaEsperaNoAbonadoService.confirmar(siguiente.id);
+
+  await notificacionService.create({
+    usuario_id: siguiente.usuario_id,
+    mensaje: `Se libero un cupo en la clase a la que estabas inscripto en lista de espera. El lugar fue asignado automaticamente a tu nombre. Tenes ${MINUTOS_PAGO_SENA_LISTA_ESPERA} minutos para pagar la sena.`,
+    leida: false,
+    createdAt: new Date()
+  });
+
+  return {
+    ...(siguiente.toJSON ? siguiente.toJSON() : siguiente),
+    esAbonado: false,
+    reserva: nuevaReserva
+  };
+}
+
+export async function procesarReservasAsignadasSinSenaVencidas(fechaBase = new Date()) {
+  const fechaLimite = new Date(fechaBase);
+  fechaLimite.setMinutes(fechaLimite.getMinutes() - MINUTOS_PAGO_SENA_LISTA_ESPERA);
+
+  const reservasVencidas = await reservaService.findPendientesNoAbonadoBefore(fechaLimite);
+  let reservasCanceladas = 0;
+  let cuposReasignados = 0;
+
+  for (const reserva of reservasVencidas) {
+    const esperaConfirmada = await listaEsperaNoAbonadoService.findConfirmada(
+      reserva.usuario_id,
+      reserva.turno_id,
+      reserva.fecha
+    );
+
+    if (!esperaConfirmada) {
+      continue;
+    }
+
+    const filasCanceladas = await reservaService.cancelarPendientePorVencimiento(reserva.id);
+    if (filasCanceladas === 0) {
+      continue;
+    }
+
+    await listaEsperaNoAbonadoService.expirar(esperaConfirmada.id);
+    reservasCanceladas++;
+
+    await notificacionService.create({
+      usuario_id: reserva.usuario_id,
+      mensaje: `Tu cupo asignado desde la lista de espera fue cancelado porque no registraste la sena dentro de los ${MINUTOS_PAGO_SENA_LISTA_ESPERA} minutos.`,
+      leida: false,
+      createdAt: new Date()
+    });
+
+    const turno = reserva.Turno || await turnoService.getTurnoById(reserva.turno_id);
+    if (obtenerFechaHora(reserva.fecha, turno.hora_inicio) <= fechaBase) {
+      continue;
+    }
+
+    const siguiente = await asignarCupoASiguienteNoAbonado(reserva.turno_id, reserva.fecha);
+    if (siguiente) {
+      cuposReasignados++;
+    }
+  }
+
+  return {
+    reservasCanceladas,
+    cuposReasignados
   };
 }
 
@@ -117,6 +220,11 @@ export async function create(usuario_id, turno_id, fecha) {
     tipo_reserva: 'NO_ABONADO',
     codigo_qr
   });
+
+  const espera = await listaEsperaNoAbonadoService.findActiva(usuario_id, turno_id, fecha);
+  if (espera) {
+    await listaEsperaNoAbonadoService.confirmar(espera.id);
+  }
 
   return {
     enEspera: false,
@@ -190,28 +298,8 @@ export async function createConCredito(usuario_id, turno_id, fecha) {
   };
 }
 
-export async function cancelarReserva(reservaId, usuarioId) {
-  const reserva = await reservaService.findById(reservaId);
-
-  if (String(reserva.usuario_id) !== String(usuarioId)) {
-    throw new Error('No puedes cancelar una reserva de otro cliente.');
-  }
-
-  if (reserva.estado === 'CANCELADA') {
-    throw new Error('La reserva ya se encuentra cancelada.');
-  }
-
-  const turno = await turnoService.getTurnoById(reserva.turno_id);
-  const fechaTurno = obtenerFechaHora(reserva.fecha, turno.hora_inicio);
-  const ahora = new Date();
-  const horasFaltantes = (fechaTurno - ahora) / (1000 * 60 * 60);
-
-  if (horasFaltantes <= 0) {
-    throw new Error('No se puede cancelar una clase que ya ha comenzado o finalizado.');
-  }
-
+async function _procesarCancelacionNoAbonado(reservaId, usuarioId, horasFaltantes) {
   let generaDevolucion = false;
-  let generaCredito = false;
   let mensajeExtra = '';
 
   if (reserva.tipo_reserva === 'NO_ABONADO') {
@@ -254,31 +342,61 @@ export async function cancelarReserva(reservaId, usuarioId) {
       mensajeExtra = ` (Llevas ${nuevasCancelaciones} de 3 cancelaciones permitidas en el mes).`;
     }
 
-    if (horasFaltantes > 48) {
-      const fechaVencimiento = new Date();
-      fechaVencimiento.setDate(fechaVencimiento.getDate() + 30);
-      
-      await creditoService.create({
-        usuario_id: usuarioId,
-        estado: 'DISPONIBLE',
-        fecha_vencimiento: fechaVencimiento
-      });
-      generaCredito = true;
-      mensajeExtra += ' Se generó un crédito válido por 30 días.';
-    } else {
-      mensajeExtra += ' Cancelada con menos de 48 hs de anticipación. No corresponde crédito.';
-    }
+  if (horasFaltantes > 48) {
+    const fechaVencimiento = new Date();
+    fechaVencimiento.setDate(fechaVencimiento.getDate() + 30);
+
+    await creditoService.create({
+      usuario_id: usuarioId,
+      estado: 'DISPONIBLE',
+      fecha_vencimiento: fechaVencimiento
+    });
+    generaCredito = true;
+    mensajeExtra += ' Se generó un crédito válido por 30 días.';
+  } else {
+    mensajeExtra += ' Cancelada con menos de 48 hs de anticipación. No corresponde crédito.';
+  }
+
+  return { generaCredito, mensajeExtra, generaDevolucion: false };
+}
+
+export async function cancelarReserva(reservaId, usuarioId) {
+  const reserva = await reservaService.findById(reservaId);
+
+  if (String(reserva.usuario_id) !== String(usuarioId)) {
+    throw new Error('No puedes cancelar una reserva de otro cliente.');
+  }
+
+  if (reserva.estado === 'CANCELADA') {
+    throw new Error('La reserva ya se encuentra cancelada.');
+  }
+
+  const turno = await turnoService.getTurnoById(reserva.turno_id);
+  const fechaTurno = obtenerFechaHora(reserva.fecha, turno.hora_inicio);
+  const ahora = new Date();
+  const horasFaltantes = (fechaTurno - ahora) / (1000 * 60 * 60);
+
+  if (horasFaltantes <= 0) {
+    throw new Error('No se puede cancelar una clase que ya ha comenzado o finalizado.');
+  }
+
+  let procesado = { generaDevolucion: false, generaCredito: false, mensajeExtra: '' };
+
+  if (reserva.tipo_reserva === 'NO_ABONADO') {
+    procesado = await _procesarCancelacionNoAbonado(reservaId, usuarioId, horasFaltantes);
+  } else if (reserva.tipo_reserva === 'ABONADO') {
+    procesado = await _procesarCancelacionAbonado(reserva, usuarioId, horasFaltantes);
   }
 
   await reservaService.marcarComoCancelada(reservaId);
 
-  const siguiente = await asignarSiguienteWaitlist(reserva.turno_id, reserva.fecha);
+  const siguiente = await asignarCupoASiguienteNoAbonado(reserva.turno_id, reserva.fecha);
 
   return {
-    message: `Reserva cancelada exitosamente.${mensajeExtra}${siguiente ? ' Se notificó al siguiente cliente en la lista de espera.' : ''}`,
-    generaDevolucion,
-    generaCredito,
-    siguienteNotificado: siguiente || null
+    message: `Reserva cancelada exitosamente.${procesado.mensajeExtra}${siguiente ? ' El cupo fue asignado al siguiente cliente en la lista de espera.' : ''}`,
+    generaDevolucion: procesado.generaDevolucion,
+    generaCredito: procesado.generaCredito,
+    siguienteAsignado: siguiente || null
   };
 }
 
@@ -311,20 +429,20 @@ export async function cancelarClaseAbonado(usuarioId, turnoId, fecha) {
     await reservaService.marcarComoCancelada(reserva.id);
   }
 
-  const siguiente = await asignarSiguienteWaitlist(turnoId, fecha);
+  const siguiente = await asignarCupoASiguienteNoAbonado(turnoId, fecha);
 
   return {
     message: siguiente
-      ? 'Clase cancelada. El cupo puntual fue reservado para el siguiente no abonado en cola.'
+      ? 'Clase cancelada. El cupo puntual fue asignado al siguiente no abonado en cola.'
       : 'Clase cancelada. No hay no abonados en cola para esta fecha.',
     data: reserva,
-    siguienteNotificado: siguiente
+    siguienteAsignado: siguiente
   };
 }
 
 export async function salirDeColaNoAbonado(usuarioId, turnoId, fecha) {
   const turno = await turnoService.getTurnoById(turnoId);
-  if(!turno) {
+  if (!turno) {
     throw new Error('El turno especificado no existe.');
   }
 
@@ -355,6 +473,11 @@ export async function ingresarColaNoAbonado(usuarioId, turnoId, fecha) {
     throw new Error('Ya estás en la cola de no abonados para esta clase.');
   }
 
+  const enListaEsperaAbonado = await listaEsperaAbonadoService.findActiva(usuarioId, turnoId);
+  if (enListaEsperaAbonado) {
+    throw new Error('Ya te encuentras en lista de espera de abonados, no puedes unirte a ambas colas a la vez.');
+  }
+
   const reservaExistente = await reservaService.findByUsuarioTurnoFecha(usuarioId, turnoId, fecha);
   if (reservaExistente && reservaExistente.estado === 'CONFIRMADA') {
     throw new Error('Ya posees una reserva confirmada para esta clase.');
@@ -374,16 +497,16 @@ export async function ingresarColaNoAbonado(usuarioId, turnoId, fecha) {
   if (reservasConfirmadas < turno.cupo_maximo) {
     throw new Error('Hay cupos disponibles, puedes reservar directamente.');
   }
-  console.log("hola1");
 
   const result = await listaEsperaNoAbonadoService.agregar(usuarioId, turnoId, fecha);
-  console.log("hola2");
 
-  const cantidadEncolados = await listaEsperaNoAbonadoService.countWaiting(turnoId, fecha);
-  if (cantidadEncolados === 1) {
+  const cantidadEncoladosNoAbonados = await listaEsperaNoAbonadoService.countWaiting(turnoId, fecha);
+  const cantidadEncoladosAbonados = await listaEsperaAbonadoService.countWaiting(turnoId);
+
+  if ((cantidadEncoladosNoAbonados + cantidadEncoladosAbonados) === 10) {
     await notificacionService.notificarAltaDemanda(turnoId, fecha);
   }
-  
+
   return {
     message: 'Ingresaste exitosamente a la cola de no abonados.',
     posicion: result.posicion

@@ -10,7 +10,7 @@ router.use(authMiddleware, esAdministrador);
 // router.post('/dias-1-10', demoController.simularDias1a10);
 // router.post('/dia-11', demoController.simularDia11);
 // router.post('/forzar-cancelacion', demoController.forzarCancelacion);
-// router.post('/simular-expiracion', demoController.simularExpiracion);
+router.post('/simular-expiracion', demoController.simularExpiracion);
 // router.post('/alta-demanda', demoController.simularAltaDemanda);
 
 export default router;
