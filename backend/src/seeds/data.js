@@ -49,46 +49,6 @@ export const usuariosSeed = [
     rol: 'EMPLEADO',
     estado: 'HABILITADO'
   },
-  {
-    nombre: 'Nicolas',
-    apellido: 'Romero',
-    dni: '10000006',
-    email: 'empleado2@sportify.com',
-    rol: 'EMPLEADO',
-    estado: 'HABILITADO'
-  },
-  {
-    nombre: 'Tomás',
-    apellido: 'Rios',
-    dni: '10000007',
-    email: 'creditos@sportify.com',
-    rol: 'CLIENTE',
-    estado: 'HABILITADO'
-  },
-  {
-    nombre: 'Deudor',
-    apellido: 'Prueba',
-    dni: '10000008',
-    email: 'deudor@sportify.com',
-    rol: 'CLIENTE',
-    estado: 'HABILITADO'
-  },
-  {
-    nombre: 'Acreedor',
-    apellido: 'Prueba',
-    dni: '10000009',
-    email: 'acreedor@sportify.com',
-    rol: 'CLIENTE',
-    estado: 'HABILITADO'
-  },
-  {
-    nombre: 'Historial',
-    apellido: 'Pasado',
-    dni: '10000010',
-    email: 'historial@sportify.com',
-    rol: 'CLIENTE',
-    estado: 'HABILITADO'
-  }
 ];
 
 export const actividadesSeed = [
@@ -117,30 +77,58 @@ export const actividadesSeed = [
 export const turnosSeed = [
   {
     actividadNombre: 'Futbol',
-    entrenador: 'Juan Perez',
+    entrenador: 'Lionel Messi',
     dia_semana: 'LUNES',
     hora_inicio: '08:00:00',
     cupo_maximo: 2
   },
   {
-    actividadNombre: 'Tenis',
-    entrenador: 'Marta Diaz',
-    dia_semana: 'MARTES',
-    hora_inicio: '09:00:00',
-    cupo_maximo: 2
-  },
-  {
-    actividadNombre: 'Padel',
-    entrenador: 'Lucas Medina',
+    actividadNombre: 'Futbol',
+    entrenador: 'Lionel Messi',
     dia_semana: 'MIERCOLES',
     hora_inicio: '08:00:00',
     cupo_maximo: 2
   },
   {
-    actividadNombre: 'Voley',
-    entrenador: 'Carla Torres',
+    actividadNombre: 'Tenis',
+    entrenador: 'Guillermo Vilas',
+    dia_semana: 'MARTES',
+    hora_inicio: '09:00:00',
+    cupo_maximo: 2
+  },
+  {
+    actividadNombre: 'Tenis',
+    entrenador: 'Guillermo Vilas',
     dia_semana: 'JUEVES',
     hora_inicio: '09:00:00',
+    cupo_maximo: 2
+  },
+  {
+    actividadNombre: 'Padel',
+    entrenador: 'Agustín Tapia',
+    dia_semana: 'LUNES',
+    hora_inicio: '10:00:00',
+    cupo_maximo: 2
+  },
+  {
+    actividadNombre: 'Padel',
+    entrenador: 'Agustín Tapia',
+    dia_semana: 'MIERCOLES',
+    hora_inicio: '10:00:00',
+    cupo_maximo: 2
+  },
+  {
+    actividadNombre: 'Voley',
+    entrenador: 'Luciano De Cecco',
+    dia_semana: 'MARTES',
+    hora_inicio: '11:00:00',
+    cupo_maximo: 2
+  },
+  {
+    actividadNombre: 'Voley',
+    entrenador: 'Luciano De Cecco',
+    dia_semana: 'JUEVES',
+    hora_inicio: '11:00:00',
     cupo_maximo: 2
   },
   {
