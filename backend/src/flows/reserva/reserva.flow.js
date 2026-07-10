@@ -358,6 +358,7 @@ async function _procesarCancelacionNoAbonado(reservaId, usuarioId, horasFaltante
   }
 
   return { generaCredito, mensajeExtra, generaDevolucion: false };
+  }
 }
 
 export async function cancelarReserva(reservaId, usuarioId) {
