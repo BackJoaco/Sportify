@@ -12,6 +12,7 @@ import * as creditoService from '../../services/credito.service.js';
 import { validarPuedeAbonarse } from '../../utils/abonado.validator.js';
 
 const DIAS = ['DOMINGO', 'LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO'];
+const MINUTOS_PAGO_SENA_LISTA_ESPERA = 2;
 
 function obtenerDiaSemana(fecha) {
   const [year, month, day] = String(fecha).split('-').map(Number);
@@ -84,6 +85,89 @@ export async function asignarSiguienteWaitlist(turnoId, fecha, checkNoAbonado = 
   return {
     ...(siguiente.toJSON ? siguiente.toJSON() : siguiente),
     esAbonado
+  };
+}
+
+export async function asignarCupoASiguienteNoAbonado(turnoId, fecha) {
+  const siguiente = await listaEsperaNoAbonadoService.findSiguienteEnEspera(turnoId, fecha);
+
+  if (!siguiente) {
+    return null;
+  }
+
+  const uuid = crypto.randomUUID();
+  const nuevaReserva = await reservaService.create({
+    usuario_id: siguiente.usuario_id,
+    turno_id: turnoId,
+    fecha,
+    tipo_reserva: 'NO_ABONADO',
+    codigo_qr: `QR-U${siguiente.usuario_id}-T${turnoId}-F${fecha}-${uuid}`
+  });
+
+  await listaEsperaNoAbonadoService.confirmar(siguiente.id);
+
+  await notificacionService.create({
+    usuario_id: siguiente.usuario_id,
+    mensaje: `Se libero un cupo en la clase a la que estabas inscripto en lista de espera. El lugar fue asignado automaticamente a tu nombre. Tenes ${MINUTOS_PAGO_SENA_LISTA_ESPERA} minutos para pagar la sena.`,
+    leida: false,
+    createdAt: new Date()
+  });
+
+  return {
+    ...(siguiente.toJSON ? siguiente.toJSON() : siguiente),
+    esAbonado: false,
+    reserva: nuevaReserva
+  };
+}
+
+export async function procesarReservasAsignadasSinSenaVencidas(fechaBase = new Date()) {
+  const fechaLimite = new Date(fechaBase);
+  fechaLimite.setMinutes(fechaLimite.getMinutes() - MINUTOS_PAGO_SENA_LISTA_ESPERA);
+
+  const reservasVencidas = await reservaService.findPendientesNoAbonadoBefore(fechaLimite);
+  let reservasCanceladas = 0;
+  let cuposReasignados = 0;
+
+  for (const reserva of reservasVencidas) {
+    const esperaConfirmada = await listaEsperaNoAbonadoService.findConfirmada(
+      reserva.usuario_id,
+      reserva.turno_id,
+      reserva.fecha
+    );
+
+    if (!esperaConfirmada) {
+      continue;
+    }
+
+    const filasCanceladas = await reservaService.cancelarPendientePorVencimiento(reserva.id);
+    if (filasCanceladas === 0) {
+      continue;
+    }
+
+    await listaEsperaNoAbonadoService.expirar(esperaConfirmada.id);
+    reservasCanceladas++;
+
+    await notificacionService.create({
+      usuario_id: reserva.usuario_id,
+      mensaje: `Tu cupo asignado desde la lista de espera fue cancelado porque no registraste la sena dentro de los ${MINUTOS_PAGO_SENA_LISTA_ESPERA} minutos.`,
+      leida: false,
+      createdAt: new Date()
+    });
+
+    const turno = reserva.Turno || await turnoService.getTurnoById(reserva.turno_id);
+    if (obtenerFechaHora(reserva.fecha, turno.hora_inicio) <= fechaBase) {
+      continue;
+    }
+
+    const siguiente = await asignarCupoASiguienteNoAbonado(reserva.turno_id, reserva.fecha);
+    if (siguiente) {
+      cuposReasignados++;
+    }
+  }
+
+  return {
+    reservasCanceladas,
+    cuposReasignados
   };
 }
 
@@ -312,13 +396,13 @@ export async function cancelarReserva(reservaId, usuarioId) {
 
   await reservaService.marcarComoCancelada(reservaId);
 
-  const siguiente = await asignarSiguienteWaitlist(reserva.turno_id, reserva.fecha);
+  const siguiente = await asignarCupoASiguienteNoAbonado(reserva.turno_id, reserva.fecha);
 
   return {
-    message: `Reserva cancelada exitosamente.${procesado.mensajeExtra}${siguiente ? ' Se notificó al siguiente cliente en la lista de espera.' : ''}`,
+    message: `Reserva cancelada exitosamente.${procesado.mensajeExtra}${siguiente ? ' El cupo fue asignado al siguiente cliente en la lista de espera.' : ''}`,
     generaDevolucion: procesado.generaDevolucion,
     generaCredito: procesado.generaCredito,
-    siguienteNotificado: siguiente || null
+    siguienteAsignado: siguiente || null
   };
 }
 
@@ -351,14 +435,14 @@ export async function cancelarClaseAbonado(usuarioId, turnoId, fecha) {
     await reservaService.marcarComoCancelada(reserva.id);
   }
 
-  const siguiente = await asignarSiguienteWaitlist(turnoId, fecha);
+  const siguiente = await asignarCupoASiguienteNoAbonado(turnoId, fecha);
 
   return {
     message: siguiente
-      ? 'Clase cancelada. El cupo puntual fue reservado para el siguiente no abonado en cola.'
+      ? 'Clase cancelada. El cupo puntual fue asignado al siguiente no abonado en cola.'
       : 'Clase cancelada. No hay no abonados en cola para esta fecha.',
     data: reserva,
-    siguienteNotificado: siguiente
+    siguienteAsignado: siguiente
   };
 }
 

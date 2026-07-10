@@ -1,6 +1,9 @@
 import { ListaEsperaAbonado, ListaEsperaNoAbonado } from '../models/index.model.js';
 import { Op } from 'sequelize';
-import { asignarSiguienteWaitlist } from '../flows/reserva/reserva.flow.js';
+import {
+  asignarSiguienteWaitlist,
+  procesarReservasAsignadasSinSenaVencidas
+} from '../flows/reserva/reserva.flow.js';
 import * as turnoService from '../services/turno.service.js';
 import { getRemainingClassesInSportifyMonth } from './date.utils.js';
 
@@ -10,6 +13,8 @@ export async function processExpiredWaitlists(simularHoras = 0) {
     if (simularHoras > 0) {
       now.setHours(now.getHours() + simularHoras);
     }
+
+    await procesarReservasAsignadasSinSenaVencidas(now);
 
     // 1. Procesar ListaEsperaAbonado
     const abonadosExpirados = await ListaEsperaAbonado.findAll({

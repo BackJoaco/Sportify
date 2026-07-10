@@ -26,6 +26,17 @@ export async function findActiva(usuarioId, turnoId, fecha) {
   });
 }
 
+export async function findConfirmada(usuarioId, turnoId, fecha) {
+  return ListaEsperaNoAbonado.findOne({
+    where: {
+      usuario_id: usuarioId,
+      turno_id: turnoId,
+      fecha,
+      estado: 'CONFIRMADO'
+    }
+  });
+}
+
 export async function findByUsuarioTurnoFechaConBorrados(usuarioId, turnoId, fecha) {
   return ListaEsperaNoAbonado.findOne({
     where: {

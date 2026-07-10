@@ -41,6 +41,10 @@ export function findActiva(usuarioId, turnoId, fecha) {
   return listaEsperaNoAbonadoRepository.findActiva(usuarioId, turnoId, fecha);
 }
 
+export function findConfirmada(usuarioId, turnoId, fecha) {
+  return listaEsperaNoAbonadoRepository.findConfirmada(usuarioId, turnoId, fecha);
+}
+
 export function notificar(id, horas = 1) {
   const hasta = new Date();
   hasta.setHours(hasta.getHours() + horas);
@@ -52,6 +56,10 @@ export function notificar(id, horas = 1) {
 
 export function confirmar(id) {
   return listaEsperaNoAbonadoRepository.updateEstado(id, { estado: 'CONFIRMADO' });
+}
+
+export function expirar(id) {
+  return listaEsperaNoAbonadoRepository.updateEstado(id, { estado: 'EXPIRADO' });
 }
 
 export function deleteById(id) {

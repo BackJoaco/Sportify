@@ -38,8 +38,60 @@ export async function updateEstadoPago(id, estadoPago) {
     return reserva.update({ estado_pago: estadoPago });
 }
 
+export async function updateEstadoPagoIfPendiente(id, estadoPago) {
+  const [affectedRows] = await Reserva.update(
+    { estado_pago: estadoPago },
+    {
+      where: {
+        id,
+        estado: 'CONFIRMADA',
+        estado_pago: 'PENDIENTE'
+      }
+    }
+  );
+
+  if (affectedRows === 0) {
+    return null;
+  }
+
+  return findById(id);
+}
+
 export async function create(data){
     return Reserva.create(data);
+}
+
+export async function findPendientesNoAbonadoBefore(fechaLimite) {
+  return Reserva.findAll({
+    where: {
+      tipo_reserva: 'NO_ABONADO',
+      estado: 'CONFIRMADA',
+      estado_pago: 'PENDIENTE',
+      createdAt: { [Op.lte]: fechaLimite }
+    },
+    include: [
+      {
+        model: Turno,
+        include: [Actividad]
+      }
+    ],
+    order: [['createdAt', 'ASC']]
+  });
+}
+
+export async function cancelarPendientePorVencimiento(id) {
+  const [affectedRows] = await Reserva.update(
+    { estado: 'CANCELADA' },
+    {
+      where: {
+        id,
+        estado: 'CONFIRMADA',
+        estado_pago: 'PENDIENTE'
+      }
+    }
+  );
+
+  return affectedRows;
 }
 
 export async function deleteByUsuarioId(usuarioId, transaction) {

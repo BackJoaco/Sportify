@@ -210,13 +210,13 @@ export async function pagarSenaReserva({ reservaId, tarjetaDebito }) {
         return resultadoPago;
     }
 
+    const reservaActualizada = await reservaService.actualizarEstadoPagoSiPendiente(reservaId, 'SENA_ABONADA');
+
     const pago = await pagoService.registrarSena({
         monto: montoSena,
         reservaId,
         usuarioId: reserva.usuario_id
     });
-
-    const reservaActualizada = await reservaService.actualizarEstadoPago(reservaId, 'SENA_ABONADA');
 
     return {
         ...resultadoPago,
@@ -241,6 +241,8 @@ export async function pagarSenaPresencial({ reservaId }, empleadoId) {
     validarReservaPagable(reserva);
     const montoSena = calcularMontoSena(reserva);
 
+    const reservaActualizada = await reservaService.actualizarEstadoPagoSiPendiente(reservaId, 'SENA_ABONADA');
+
     const pago = await pagoService.registrarSena({
         monto: montoSena,
         reservaId,
@@ -248,8 +250,6 @@ export async function pagarSenaPresencial({ reservaId }, empleadoId) {
         metodoPago: 'EFECTIVO',
         empleadoId
     });
-
-    const reservaActualizada = await reservaService.actualizarEstadoPago(reservaId, 'SENA_ABONADA');
 
     return {
         exitoso: true,
