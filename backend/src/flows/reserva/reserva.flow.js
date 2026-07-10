@@ -298,6 +298,54 @@ export async function createConCredito(usuario_id, turno_id, fecha) {
   };
 }
 
+async function _procesarCancelacionAbonado(reserva, usuarioId, horasFaltantes) {
+  let generaCredito = false;
+  let mensajeExtra = '';
+
+  const parts = reserva.fecha.split('-');
+  const day = parseInt(parts[2], 10);
+  const jsMonth = parseInt(parts[1], 10) - 1;
+  const currentMonthInt = day < 11 ? (jsMonth === 0 ? 12 : jsMonth) : (jsMonth + 1);
+
+  const abono = await abonadoTurnoService.findActivoByMes(usuarioId, reserva.turno_id, currentMonthInt);
+  if (!abono) {
+    throw new Error('No se encontró un abono activo para este turno y mes.');
+  }
+
+  if (abono.cancelaciones_mes >= 3) {
+    throw new Error('Llegaste al límite de 3 cancelaciones permitidas para este mes.');
+  }
+
+  const nuevasCancelaciones = abono.cancelaciones_mes + 1;
+  const nuevoEstado = nuevasCancelaciones >= 3 ? 'SUSPENDIDO' : 'ACTIVO';
+
+  await abonadoTurnoService.updateCancelaciones(abono.id, nuevasCancelaciones, nuevoEstado);
+
+  if (nuevoEstado === 'SUSPENDIDO') {
+    await reservaService.cancelarReservasFuturasAbonadoByUsuarioTurno(usuarioId, reserva.turno_id);
+    mensajeExtra = ` Llegaste al límite de 3 cancelaciones. Tu abono ha sido suspendido y todas tus clases restantes del mes fueron canceladas.`;
+  } else {
+    mensajeExtra = ` (Llevas ${nuevasCancelaciones} de 3 cancelaciones permitidas en el mes).`;
+  }
+
+  if (horasFaltantes > 48) {
+    const fechaVencimiento = new Date();
+    fechaVencimiento.setDate(fechaVencimiento.getDate() + 30);
+
+    await creditoService.create({
+      usuario_id: usuarioId,
+      estado: 'DISPONIBLE',
+      fecha_vencimiento: fechaVencimiento
+    });
+    generaCredito = true;
+    mensajeExtra += ' Se generó un crédito válido por 30 días.';
+  } else {
+    mensajeExtra += ' Cancelada con menos de 48 hs de anticipación. No corresponde crédito.';
+  }
+
+  return { generaCredito, mensajeExtra, generaDevolucion: false };
+}
+
 async function _procesarCancelacionNoAbonado(reservaId, usuarioId, horasFaltantes) {
   let generaDevolucion = false;
   let mensajeExtra = '';
