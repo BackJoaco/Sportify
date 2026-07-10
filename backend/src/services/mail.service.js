@@ -48,7 +48,6 @@ export async function sendMail({ to, subject, text, html }) {
         return null;
     }
 
-    console.log('Enviando email a:', to);
 
     const info = await mailTransporter.sendMail({
         from: process.env.MAIL_FROM || process.env.MAIL_USER,

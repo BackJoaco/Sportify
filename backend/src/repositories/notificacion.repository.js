@@ -1,9 +1,10 @@
 import { Notificacion } from '../models/index.model.js';
+import { Op } from 'sequelize';
 
 export async function findByUsuarioId(usuarioId) {
   return Notificacion.findAll({
     where: { usuario_id: usuarioId },
-    order: [['fecha_creacion', 'DESC']]
+    order: [['createdAt', 'DESC']]
   });
 }
 
@@ -58,6 +59,18 @@ export async function findRepetida(usuarioId, mensaje) {
       usuario_id: usuarioId,
       mensaje,
       leida: false
+    }
+  });
+}
+
+export async function findRepetidaByDia(usuarioId, mensaje, inicioHoy, finHoy) {
+  return await Notificacion.findOne({
+    where: {
+      usuario_id: usuarioId,
+      mensaje,
+      createdAt: {
+        [Op.between]: [inicioHoy, finHoy]
+      }
     }
   });
 }

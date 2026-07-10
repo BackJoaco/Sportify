@@ -4,6 +4,8 @@ import Swal from "sweetalert2";
 import { FaArrowLeft, FaCalendarCheck, FaHistory } from "react-icons/fa";
 // Importa la nueva función
 import { getMisReservas, cancelarReserva } from "../../api/reservas.api"; 
+import { obtenerMontoSenaReserva, pagarSenaReserva } from "../../api/pago.api";
+import PaymentModal from "../../components/PaymentModal/PaymentModal";
 import "./Reservation.css";
 
 export default function HistorialReservas() {
@@ -11,6 +13,9 @@ export default function HistorialReservas() {
     const [reservas, setReservas] = useState([]);
     const [loading, setLoading] = useState(true);
     const [vistaActual, setVistaActual] = useState("vigentes"); 
+    const [reservaAPagar, setReservaAPagar] = useState(null);
+    const [montoAPagar, setMontoAPagar] = useState(0);
+    const [pagando, setPagando] = useState(false);
 
     async function cargarHistorial() {
         try {
@@ -86,6 +91,89 @@ export default function HistorialReservas() {
                     timer: 3500
                 });
             }
+        }
+    }
+
+    async function abrirModalPago(reserva) {
+        try {
+            setPagando(true);
+            const resultado = await obtenerMontoSenaReserva({ reservaId: reserva.id });
+
+            setReservaAPagar(reserva);
+            setMontoAPagar(Number(resultado.monto) || 0);
+        } catch (err) {
+            Swal.fire({
+                toast: true,
+                position: "top-end",
+                icon: "error",
+                title: err.message || err.mensaje || "No se pudo calcular el monto de la seña",
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+            });
+            setReservaAPagar(null);
+            setMontoAPagar(0);
+        } finally {
+            setPagando(false);
+        }
+    }
+
+    function cerrarModalPago() {
+        if (!pagando) {
+            setReservaAPagar(null);
+            setMontoAPagar(0);
+        }
+    }
+
+    async function handlePagarSena(tarjetaDebito) {
+        if (!reservaAPagar) return;
+
+        if (montoAPagar <= 0) {
+            Swal.fire({
+                toast: true,
+                position: "top-end",
+                icon: "error",
+                title: "No se pudo calcular el monto de la seña",
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+            });
+            return;
+        }
+
+        setPagando(true);
+
+        try {
+            await pagarSenaReserva({
+                reservaId: reservaAPagar.id,
+                tarjetaDebito,
+            });
+
+            Swal.fire({
+                toast: true,
+                position: "top-end",
+                icon: "success",
+                title: "Seña abonada correctamente",
+                showConfirmButton: false,
+                timer: 2500,
+                timerProgressBar: true,
+            });
+
+            setReservaAPagar(null);
+            setMontoAPagar(0);
+            await cargarHistorial();
+        } catch (err) {
+            Swal.fire({
+                toast: true,
+                position: "top-end",
+                icon: "error",
+                title: err.message || err.mensaje || "Error al pagar la seña",
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+            });
+        } finally {
+            setPagando(false);
         }
     }
 
@@ -204,13 +292,24 @@ export default function HistorialReservas() {
                                         {/* Botón de cancelar solo en la pestaña de vigentes */}
                                         {vistaActual === "vigentes" && (
                                             <td>
-                                                <button 
-                                                    className="btn-secondary" 
-                                                    onClick={() => handleCancelar(reserva)}
-                                                    style={{ padding: "0.3rem 0.6rem", fontSize: "0.8rem", borderColor: "var(--gray)", color: "var(--gray)" }}
-                                                >
-                                                    Cancelar
-                                                </button>
+                                                <div className="historial-actions">
+                                                    {reserva.estado_pago === "PENDIENTE" && (
+                                                        <button
+                                                            className="btn-primary"
+                                                            onClick={() => abrirModalPago(reserva)}
+                                                            disabled={pagando}
+                                                        >
+                                                            Pagar seña
+                                                        </button>
+                                                    )}
+                                                    <button
+                                                        className="btn-secondary"
+                                                        onClick={() => handleCancelar(reserva)}
+                                                        disabled={pagando}
+                                                    >
+                                                        Cancelar
+                                                    </button>
+                                                </div>
                                             </td>
                                         )}
                                     </tr>
@@ -220,6 +319,18 @@ export default function HistorialReservas() {
                     </div>
                 )}
             </div>
+
+            <PaymentModal
+                open={Boolean(reservaAPagar)}
+                title={reservaAPagar ? `Pagar seña - ${reservaAPagar.Turno?.Actividad?.nombre || "Reserva"}` : "Pagar seña"}
+                subtitle={reservaAPagar ? `Clase del ${formatearFecha(reservaAPagar.fecha)}` : ""}
+                amount={montoAPagar}
+                amountLabel="Seña"
+                confirmLabel="Pagar seña"
+                onClose={cerrarModalPago}
+                onSubmit={handlePagarSena}
+                loading={pagando}
+            />
         </div>
     );
 }

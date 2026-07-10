@@ -7,6 +7,6 @@ const router = Router();
 router.get('/mis-notificaciones', authMiddleware, notificacionController.getMisNotificaciones);
 router.patch('/:id/leida', authMiddleware, notificacionController.marcarComoLeida);
 router.patch('/leidas/todas', authMiddleware, notificacionController.marcarTodasComoLeidas);
-router.post('/procesar-recordatorios', authMiddleware, notificacionController.procesarRecordatoriosPago);
+router.post('/procesar-recordatorios', authMiddleware, notificacionController.procesarRecordatorios);
 
 export default router;

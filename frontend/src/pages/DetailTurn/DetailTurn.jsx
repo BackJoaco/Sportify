@@ -683,8 +683,7 @@ export default function DetailTurn() {
 
   async function handleIngresarColaAbonado() {
     await ejecutarAccion(
-      () => ingresarColaAbonado(turno.id, { fecha: fechaClase }),
-      "Ingresaste a la lista de espera de abonados"
+      () => ingresarColaAbonado(turno.id, { fecha: fechaClase })
     );
   }
 

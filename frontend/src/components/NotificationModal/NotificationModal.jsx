@@ -27,7 +27,7 @@ export default function NotificationModal({ isOpen, onClose, notification }) {
 
         <div className="notif-modal-body">
           <p className="notif-modal-message">{notification.mensaje}</p>
-          <span className="notif-modal-date">{formatFecha(notification.fecha_creacion)}</span>
+          <span className="notif-modal-date">{formatFecha(notification.createdAt)}</span>
         </div>
 
         <div className="notif-modal-footer">

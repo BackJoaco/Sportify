@@ -4,6 +4,10 @@ import * as notificacionFlow from '../flows/notificacion/notificacion.flow.js';
 export async function getMisNotificaciones(req, res) {
   try {
     const usuarioId = req.usuario.id;
+    
+    // Procesar recordatorios automáticamente al consultar las notificaciones
+    await notificacionFlow.procesarRecordatorios();
+
     const notificaciones = await notificacionService.findByUsuarioId(usuarioId);
     const noLeidas = await notificacionService.countUnreadByUsuarioId(usuarioId);
 
@@ -50,9 +54,9 @@ export async function marcarTodasComoLeidas(req, res) {
   }
 }
 
-export async function procesarRecordatoriosPago(req, res) {
+export async function procesarRecordatorios(req, res) {
   try {
-    const resultado = await notificacionFlow.procesarRecordatoriosPago();
+    const resultado = await notificacionFlow.procesarRecordatorios();
     return res.status(200).json(resultado);
   } catch (error) {
     return res.status(400).json({ message: error.message });
