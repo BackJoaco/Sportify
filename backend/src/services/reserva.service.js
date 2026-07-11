@@ -36,8 +36,8 @@ export async function findByUsuarioId(usuarioId) {
   return reservaRepository.findByUsuarioId(usuarioId);
 }
 
-export async function create(data) {
-  return reservaRepository.create(data);
+export async function create(data, options = {}) {
+  return reservaRepository.create(data, options);
 }
 
 export async function findPendientesNoAbonadoBefore(fechaLimite) {

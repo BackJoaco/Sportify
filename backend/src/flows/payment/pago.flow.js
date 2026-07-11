@@ -3,6 +3,8 @@ import * as reservaService from '../../services/reserva.service.js';
 import * as turnoService from '../../services/turno.service.js';
 import * as abonadoTurnoService from '../../services/abonadoTurno.service.js';
 import { getRemainingClassesInSportifyMonth, getAllClassesInSportifyMonth } from '../../utils/date.utils.js';
+import { validarPuedeAbonarse } from '../../utils/abonado.validator.js';
+import { sequelize } from '../../config/database.js';
 
 const DIAS_SEMANA = ['DOMINGO', 'LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO'];
 
@@ -278,4 +280,123 @@ export async function pagarSuscripcionMensualCliente({ turnoId, tarjetaDebito, f
         ...resultadoPago,
         pago
     };
+}
+
+export async function pagarSuscripcionPendienteCliente({ pagoId, tarjetaDebito }, usuarioId) {
+    const pagoPendiente = await pagoService.findById(pagoId);
+
+    if (!pagoPendiente) {
+        throw new Error('Pago no encontrado');
+    }
+
+    if (String(pagoPendiente.usuario_id) !== String(usuarioId)) {
+        throw new Error('No puedes pagar una suscripción de otro cliente');
+    }
+
+    if (pagoPendiente.estado !== 'PENDIENTE' || pagoPendiente.tipo_pago !== 'SUSCRIPCION_MENSUAL') {
+        throw new Error('El pago no es una suscripción pendiente válida');
+    }
+
+    if (!pagoPendiente.abonado_turno_id) {
+        throw new Error('El pago no tiene una suscripción original asociada');
+    }
+
+    const abonoActual = await abonadoTurnoService.findById(pagoPendiente.abonado_turno_id);
+    if (!abonoActual) {
+        throw new Error('La suscripción original no existe');
+    }
+
+    // Determinar la fecha base de validación y la acción dependiendo del estado del abono original
+    const hoy = new Date();
+    let fechaBaseValidacion;
+    
+    if (abonoActual.estado === 'ACTIVO') {
+        // Renovación temprana: Se valida y paga para el mes SIGUIENTE
+        fechaBaseValidacion = new Date(hoy);
+        if (hoy.getDate() >= 11) {
+            fechaBaseValidacion.setMonth(fechaBaseValidacion.getMonth() + 1);
+            fechaBaseValidacion.setDate(11);
+        } else {
+            fechaBaseValidacion.setDate(11);
+        }
+    } else if (abonoActual.estado === 'SUSPENDIDO') {
+        // Pago tardío: Se valida y paga para el mes ACTUAL
+        fechaBaseValidacion = new Date(hoy);
+    } else {
+        throw new Error('El estado del abono no permite renovación o reactivación');
+    }
+
+    // Validar si el usuario puede abonarse para el mes evaluado
+    const validacion = await validarPuedeAbonarse(usuarioId, abonoActual.turno_id, fechaBaseValidacion);
+    if (!validacion.puede) {
+        throw new Error(validacion.motivo);
+    }
+
+    // Cobrar la tarjeta
+    const resultadoPago = await pagoService.pago(tarjetaDebito);
+
+    if (!resultadoPago.exitoso) {
+        return resultadoPago;
+    }
+
+    const transaction = await sequelize.transaction();
+
+    try {
+        let abonoIdParaPago = abonoActual.id;
+
+        if (abonoActual.estado === 'ACTIVO') {
+            const mesAnioActual = abonoActual.mes_anio;
+            const nuevoMesAnio = (mesAnioActual % 12) + 1;
+
+            // Crear la nueva suscripción para el mes siguiente
+            const nuevoAbono = await abonadoTurnoService.create({
+                usuario_id: pagoPendiente.usuario_id,
+                turno_id: abonoActual.turno_id,
+                mes_anio: nuevoMesAnio,
+                fecha_alta: new Date(),
+                estado: 'ACTIVO',
+                cancelaciones_mes: 0,
+                pierde_descuento: false
+            }, { transaction });
+            abonoIdParaPago = nuevoAbono.id;
+        } else if (abonoActual.estado === 'SUSPENDIDO') {
+            // Actualizar el abono suspendido a activo
+            await abonadoTurnoService.updateEstado(abonoActual.id, 'ACTIVO', transaction);
+        }
+
+        // Generar las reservas correspondientes
+        let reservasCreadas = 0;
+        for (const fecha of validacion.remainingDates) {
+            const reservaExistente = await reservaService.findByUsuarioTurnoFecha(usuarioId, abonoActual.turno_id, fecha);
+            if (!reservaExistente || reservaExistente.estado !== 'CONFIRMADA') {
+                await reservaService.create({
+                    usuario_id: usuarioId,
+                    turno_id: abonoActual.turno_id,
+                    fecha: fecha,
+                    tipo_reserva: 'ABONADO',
+                    estado: 'CONFIRMADA',
+                    estado_pago: 'PAGADO_COMPLETO'
+                }, { transaction });
+                reservasCreadas++;
+            }
+        }
+
+        // Actualizar el pago a COMPLETADO y reasignar el abonado_turno_id
+        await pagoService.updatePago(pagoPendiente.id, {
+            estado: 'COMPLETADO',
+            abonado_turno_id: abonoIdParaPago
+        }, { transaction });
+
+        await transaction.commit();
+
+        return {
+            ...resultadoPago,
+            mensaje: `Suscripción ${abonoActual.estado === 'ACTIVO' ? 'renovada' : 'reactivada'} y pago completado con éxito. Se crearon ${reservasCreadas} reservas.`,
+            nuevoAbonoId: abonoIdParaPago,
+            reservasCreadas
+        };
+    } catch (error) {
+        await transaction.rollback();
+        throw error;
+    }
 }

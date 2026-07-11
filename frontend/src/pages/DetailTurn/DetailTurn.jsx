@@ -122,7 +122,11 @@ export default function DetailTurn() {
   }, [fechaClaseSeleccionada]);
 
   const esAbonadoActivo = useMemo(() => {
-    return ocupacion?.abonados?.some((abonado) => String(abonado.usuario_id) === String(usuario?.id));
+    return ocupacion?.abonados?.some((abonado) => String(abonado.usuario_id) === String(usuario?.id) && abonado.estado === "ACTIVO");
+  }, [ocupacion, usuario]);
+
+  const esAbonadoSuspendido = useMemo(() => {
+    return ocupacion?.abonados?.some((abonado) => String(abonado.usuario_id) === String(usuario?.id) && abonado.estado === "SUSPENDIDO");
   }, [ocupacion, usuario]);
 
   const colaAbonadoUsuario = useMemo(() => {
@@ -179,6 +183,14 @@ export default function DetailTurn() {
         tipo: "success",
         titulo: "Estás abonado a este turno",
         detalle: `Tenés tu lugar fijo para ${turno?.Actividad?.nombre || "esta actividad"} los ${turno?.dia_semana?.toLowerCase()} a las ${turno?.hora_inicio?.substring(0, 5)} hs.`,
+      };
+    }
+
+    if (esAbonadoSuspendido) {
+      return {
+        tipo: "warning",
+        titulo: "Tu abono está suspendido",
+        detalle: "Tenés un pago pendiente. Podés saldarlo desde el Home para reactivar tu lugar fijo.",
       };
     }
 

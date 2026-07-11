@@ -7,7 +7,7 @@ import * as listaEsperaNoAbonadoService from "../../services/listaEsperaNoAbonad
 
 export async function getOcupacionFlow(turnoId, fecha) {
   const turno = await turnoService.getTurnoById(turnoId);
-  const abonados = await abonadoTurnoService.findActivosByTurno(turnoId);
+  const abonados = await abonadoTurnoService.findActivosYSuspendidosByTurno(turnoId);
   let colaAbonados = await listaEsperaAbonadoService.findByTurno(turnoId);
   colaAbonados = colaAbonados.filter(item => item.estado === 'EN_ESPERA');
 

@@ -1,8 +1,13 @@
 import * as abonadoTurnoService from '../../services/abonadoTurno.service.js';
 import * as notificacionService from '../../services/notificacion.service.js';
 import * as creditoService from '../../services/credito.service.js';
+import * as turnoService from '../../services/turno.service.js';
+import { Pago, Credito } from '../../models/index.model.js';
+import { Op } from 'sequelize';
 
 export async function procesarRecordatorios() {
+  await procesarVencimientos();
+
   const recordatoriosDePago = await procesarRecordatoriosPago();
   const recordatoriosDeCreditosPorVencer = await procesarRecordatoriosCreditoPorVenver();
 
@@ -10,6 +15,25 @@ export async function procesarRecordatorios() {
     recordatoriosDePago,
     recordatoriosDeCreditosPorVencer
   };
+}
+
+export async function procesarVencimientos() {
+  const today = new Date();
+  const startOfDay = new Date(today.setHours(0, 0, 0, 0));
+
+  const [count] = await Credito.update(
+    { estado: 'VENCIDO' },
+    {
+      where: {
+        estado: 'DISPONIBLE',
+        fecha_vencimiento: {
+          [Op.lt]: startOfDay
+        }
+      }
+    }
+  );
+
+  return count;
 }
 
 export async function procesarRecordatoriosCreditoPorVenver() {
@@ -82,6 +106,28 @@ export async function procesarRecordatoriosPago(force = false) {
           leida: false
         });
         notificacionesCreadas++;
+        
+        // Verificar si ya se le genero el pago pendiente para este abono
+        const pagoPendiente = await Pago.findOne({
+          where: {
+            abonado_turno_id: abono.id,
+            estado: 'PENDIENTE',
+            tipo_pago: 'SUSCRIPCION_MENSUAL'
+          }
+        });
+
+        if (!pagoPendiente) {
+          const turno = await turnoService.getTurnoById(abono.turno_id);
+          const montoMes = turno.Actividad?.precio_mensual || 0;
+          
+          await Pago.create({
+            usuario_id: abono.usuario_id,
+            monto: montoMes,
+            tipo_pago: 'SUSCRIPCION_MENSUAL',
+            estado: 'PENDIENTE',
+            abonado_turno_id: abono.id
+          });
+        }
       }
     }
   }

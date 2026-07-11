@@ -298,49 +298,35 @@ export async function createConCredito(usuario_id, turno_id, fecha) {
   };
 }
 
-async function _procesarCancelacionNoAbonado(reservaId, usuarioId, horasFaltantes) {
-  let generaDevolucion = false;
+async function _procesarCancelacionAbonado(reserva, usuarioId, horasFaltantes) {
+  let generaCredito = false;
   let mensajeExtra = '';
 
-  if (reserva.tipo_reserva === 'NO_ABONADO') {
-    if (horasFaltantes > 24) {
-      const sena = await pagoService.findSenaCompletadaByReserva(reservaId);
-      if (sena) {
-        await pagoService.crearDevolucionSena(reservaId, usuarioId, sena.monto);
-        generaDevolucion = true;
-        mensajeExtra = ' Se generó una devolución de tu seña.';
-      } else {
-        mensajeExtra = ' Cancelada con anticipación, pero no tenías una seña registrada.';
-      }
-    } else {
-      mensajeExtra = ' Cancelada con menos de 24 hs de anticipación. No corresponde devolución.';
-    }
-  } else if (reserva.tipo_reserva === 'ABONADO') {
-    const parts = reserva.fecha.split('-');
-    const day = parseInt(parts[2], 10);
-    const jsMonth = parseInt(parts[1], 10) - 1;
-    const currentMonthInt = day < 11 ? (jsMonth === 0 ? 12 : jsMonth) : (jsMonth + 1);
-    
-    const abono = await abonadoTurnoService.findActivoByMes(usuarioId, reserva.turno_id, currentMonthInt);
-    if (!abono) {
-      throw new Error('No se encontró un abono activo para este turno y mes.');
-    }
-    
-    if (abono.cancelaciones_mes >= 3) {
-      throw new Error('Llegaste al límite de 3 cancelaciones permitidas para este mes.');
-    }
-    
-    const nuevasCancelaciones = abono.cancelaciones_mes + 1;
-    const nuevoEstado = nuevasCancelaciones >= 3 ? 'SUSPENDIDO' : 'ACTIVO';
-    
-    await abonadoTurnoService.updateCancelaciones(abono.id, nuevasCancelaciones, nuevoEstado);
-    
-    if (nuevoEstado === 'SUSPENDIDO') {
-      await reservaService.cancelarReservasFuturasAbonadoByUsuarioTurno(usuarioId, reserva.turno_id);
-      mensajeExtra = ` Llegaste al límite de 3 cancelaciones. Tu abono ha sido suspendido y todas tus clases restantes del mes fueron canceladas.`;
-    } else {
-      mensajeExtra = ` (Llevas ${nuevasCancelaciones} de 3 cancelaciones permitidas en el mes).`;
-    }
+  const parts = reserva.fecha.split('-');
+  const day = parseInt(parts[2], 10);
+  const jsMonth = parseInt(parts[1], 10) - 1;
+  const currentMonthInt = day < 11 ? (jsMonth === 0 ? 12 : jsMonth) : (jsMonth + 1);
+
+  const abono = await abonadoTurnoService.findActivoByMes(usuarioId, reserva.turno_id, currentMonthInt);
+  if (!abono) {
+    throw new Error('No se encontró un abono activo para este turno y mes.');
+  }
+
+  if (abono.cancelaciones_mes >= 3) {
+    throw new Error('Llegaste al límite de 3 cancelaciones permitidas para este mes.');
+  }
+
+  const nuevasCancelaciones = abono.cancelaciones_mes + 1;
+  const nuevoEstado = nuevasCancelaciones >= 3 ? 'SUSPENDIDO' : 'ACTIVO';
+
+  await abonadoTurnoService.updateCancelaciones(abono.id, nuevasCancelaciones, nuevoEstado);
+
+  if (nuevoEstado === 'SUSPENDIDO') {
+    await reservaService.cancelarReservasFuturasAbonadoByUsuarioTurno(usuarioId, reserva.turno_id);
+    mensajeExtra = ` Llegaste al límite de 3 cancelaciones. Tu abono ha sido suspendido y todas tus clases restantes del mes fueron canceladas.`;
+  } else {
+    mensajeExtra = ` (Llevas ${nuevasCancelaciones} de 3 cancelaciones permitidas en el mes).`;
+  }
 
   if (horasFaltantes > 48) {
     const fechaVencimiento = new Date();
@@ -358,7 +344,26 @@ async function _procesarCancelacionNoAbonado(reservaId, usuarioId, horasFaltante
   }
 
   return { generaCredito, mensajeExtra, generaDevolucion: false };
+}
+
+async function _procesarCancelacionNoAbonado(reserva, usuarioId, horasFaltantes) {
+  let generaDevolucion = false;
+  let mensajeExtra = '';
+
+  if (horasFaltantes > 24) {
+    const sena = await pagoService.findSenaCompletadaByReserva(reserva.id);
+    if (sena) {
+      await pagoService.crearDevolucionSena(reserva.id, usuarioId, sena.monto);
+      generaDevolucion = true;
+      mensajeExtra = ' Se generó una devolución de tu seña.';
+    } else {
+      mensajeExtra = ' Cancelada con anticipación, pero no tenías una seña registrada.';
+    }
+  } else {
+    mensajeExtra = ' Cancelada con menos de 24 hs de anticipación. No corresponde devolución.';
   }
+
+  return { generaCredito: false, mensajeExtra, generaDevolucion };
 }
 
 export async function cancelarReserva(reservaId, usuarioId) {
@@ -384,7 +389,7 @@ export async function cancelarReserva(reservaId, usuarioId) {
   let procesado = { generaDevolucion: false, generaCredito: false, mensajeExtra: '' };
 
   if (reserva.tipo_reserva === 'NO_ABONADO') {
-    procesado = await _procesarCancelacionNoAbonado(reservaId, usuarioId, horasFaltantes);
+    procesado = await _procesarCancelacionNoAbonado(reserva, usuarioId, horasFaltantes);
   } else if (reserva.tipo_reserva === 'ABONADO') {
     procesado = await _procesarCancelacionAbonado(reserva, usuarioId, horasFaltantes);
   }
