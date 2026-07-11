@@ -10,6 +10,7 @@ import * as notificacionService from '../../services/notificacion.service.js';
 import * as pagoService from '../../services/pago.service.js';
 import * as creditoService from '../../services/credito.service.js';
 import { validarPuedeAbonarse } from '../../utils/abonado.validator.js';
+import { buscarSuperposicionHoraria } from '../../utils/reserva.validator.js';
 
 const DIAS = ['DOMINGO', 'LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO'];
 const MINUTOS_PAGO_SENA_LISTA_ESPERA = 2;
@@ -37,6 +38,64 @@ function validarFechaTurno(turno, fecha) {
   }
 }
 
+async function notificarRechazoPorSuperposicion(esperas) {
+  for (const espera of esperas) {
+    try {
+      await notificacionService.create({
+        usuario_id: espera.usuario_id,
+        mensaje: 'Saliste de una lista de espera porque ya tienes otra actividad reservada en la misma fecha y horario.',
+        leida: false,
+        createdAt: new Date()
+      });
+    } catch (error) {
+      console.error('No se pudo notificar el rechazo de una lista de espera superpuesta:', error);
+    }
+  }
+}
+
+async function limpiarColasNoAbonadoSuperpuestas(usuarioId, fecha, horaInicio, esperaIdExcluida = null) {
+  const rechazadas = await listaEsperaNoAbonadoService.rechazarSuperpuestasByUsuarioFechaHora(
+    usuarioId,
+    fecha,
+    horaInicio,
+    esperaIdExcluida
+  );
+
+  await notificarRechazoPorSuperposicion(rechazadas);
+  return rechazadas;
+}
+
+async function buscarSiguienteNoAbonadoElegible(turnoId, fecha) {
+  const turno = await turnoService.getTurnoById(turnoId);
+  const listaEspera = await listaEsperaNoAbonadoService.findByTurnoFecha(turnoId, fecha);
+
+  for (const candidato of listaEspera) {
+    if (candidato.estado !== 'EN_ESPERA') {
+      continue;
+    }
+
+    const superposicion = await buscarSuperposicionHoraria(
+      candidato.usuario_id,
+      turno.hora_inicio,
+      [fecha]
+    );
+
+    if (!superposicion) {
+      return candidato;
+    }
+
+    await listaEsperaNoAbonadoService.rechazar(candidato.id);
+    await listaEsperaNoAbonadoService.reordenarPosiciones(
+      turnoId,
+      fecha,
+      candidato.posicion
+    );
+    await notificarRechazoPorSuperposicion([candidato]);
+  }
+
+  return null;
+}
+
 
 export async function asignarSiguienteWaitlist(turnoId, fecha, checkNoAbonado = true) {
   let siguiente = null;
@@ -60,7 +119,7 @@ export async function asignarSiguienteWaitlist(turnoId, fecha, checkNoAbonado = 
   }
 
   if (!siguiente && checkNoAbonado) {
-    siguiente = await listaEsperaNoAbonadoService.findSiguienteEnEspera(turnoId, fecha);
+    siguiente = await buscarSiguienteNoAbonadoElegible(turnoId, fecha);
     esAbonado = false;
   }
 
@@ -89,12 +148,13 @@ export async function asignarSiguienteWaitlist(turnoId, fecha, checkNoAbonado = 
 }
 
 export async function asignarCupoASiguienteNoAbonado(turnoId, fecha) {
-  const siguiente = await listaEsperaNoAbonadoService.findSiguienteEnEspera(turnoId, fecha);
+  const siguiente = await buscarSiguienteNoAbonadoElegible(turnoId, fecha);
 
   if (!siguiente) {
     return null;
   }
 
+  const turno = await turnoService.getTurnoById(turnoId);
   const uuid = crypto.randomUUID();
   const nuevaReserva = await reservaService.create({
     usuario_id: siguiente.usuario_id,
@@ -105,6 +165,13 @@ export async function asignarCupoASiguienteNoAbonado(turnoId, fecha) {
   });
 
   await listaEsperaNoAbonadoService.confirmar(siguiente.id);
+
+  await limpiarColasNoAbonadoSuperpuestas(
+    siguiente.usuario_id,
+    fecha,
+    turno.hora_inicio,
+    siguiente.id
+  );
 
   await notificacionService.create({
     usuario_id: siguiente.usuario_id,
@@ -196,9 +263,10 @@ export async function create(usuario_id, turno_id, fecha) {
     throw new Error('Ya tienes una reserva o asistencia registrada para esta clase.');
   }
 
-  const reservasDelDia = await reservaService.findActivasByUsuarioAndFecha(usuario_id, fecha);
-  const superposicion = reservasDelDia.find(reserva =>
-    reserva.Turno.hora_inicio === turno.hora_inicio
+  const superposicion = await buscarSuperposicionHoraria(
+    usuario_id,
+    turno.hora_inicio,
+    [fecha]
   );
 
   if (superposicion) {
@@ -225,6 +293,13 @@ export async function create(usuario_id, turno_id, fecha) {
   if (espera) {
     await listaEsperaNoAbonadoService.confirmar(espera.id);
   }
+
+  await limpiarColasNoAbonadoSuperpuestas(
+    usuario_id,
+    fecha,
+    turno.hora_inicio,
+    espera?.id
+  );
 
   return {
     enEspera: false,
@@ -487,6 +562,24 @@ export async function ingresarColaNoAbonado(usuarioId, turnoId, fecha) {
   const reservaExistente = await reservaService.findByUsuarioTurnoFecha(usuarioId, turnoId, fecha);
   if (reservaExistente && reservaExistente.estado === 'CONFIRMADA') {
     throw new Error('Ya posees una reserva confirmada para esta clase.');
+  }
+
+  const superposicion = await buscarSuperposicionHoraria(
+    usuarioId,
+    turno.hora_inicio,
+    [fecha]
+  );
+  if (superposicion) {
+    throw new Error('Ya tienes otra actividad reservada en este mismo horario.');
+  }
+
+  const colasSuperpuestas = await listaEsperaNoAbonadoService.findSuperpuestasByUsuarioFechaHora(
+    usuarioId,
+    fecha,
+    turno.hora_inicio
+  );
+  if (colasSuperpuestas.length > 0) {
+    throw new Error('Ya estás en otra lista de espera para una actividad en este mismo horario.');
   }
 
   const today = new Date();

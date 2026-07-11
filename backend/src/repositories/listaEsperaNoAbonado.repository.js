@@ -1,4 +1,4 @@
-import { ListaEsperaNoAbonado, Usuario } from '../models/index.model.js';
+import { ListaEsperaNoAbonado, Turno, Usuario } from '../models/index.model.js';
 import { Op } from 'sequelize';
 
 export async function create(data) {
@@ -71,6 +71,21 @@ export async function findByTurnoFecha(turnoId, fecha) {
   });
 }
 
+export async function findActivasByUsuarioFecha(usuarioId, fecha) {
+  return ListaEsperaNoAbonado.findAll({
+    where: {
+      usuario_id: usuarioId,
+      fecha,
+      estado: ['EN_ESPERA', 'NOTIFICADO', 'CUPO_RESERVADO']
+    },
+    include: [{
+      model: Turno,
+      attributes: ['id', 'hora_inicio']
+    }],
+    order: [['posicion', 'ASC'], ['createdAt', 'ASC']]
+  });
+}
+
 export async function updateEstado(id, data) {
   return ListaEsperaNoAbonado.update(data, { where: { id } });
 }
@@ -104,6 +119,7 @@ export async function reordenarPosiciones(turnoId, fecha, posicionLiberada) {
     where: {
       turno_id: turnoId,
       fecha,
+      estado: ['EN_ESPERA', 'NOTIFICADO', 'CUPO_RESERVADO'],
       posicion: { [Op.gt]: posicionLiberada }
     }
   });

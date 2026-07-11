@@ -3,6 +3,7 @@ import * as reservaService from '../services/reserva.service.js';
 import * as turnoService from '../services/turno.service.js';
 import * as usuarioService from '../services/usuario.service.js';
 import { getRemainingClassesInSportifyMonth, getMesSportify } from './date.utils.js';
+import { buscarSuperposicionHoraria } from './reserva.validator.js';
 
 export async function validarPuedeAbonarse(usuarioId, turnoId, fechaBase = new Date()) {
   const usuario = await usuarioService.getProfile(usuarioId);
@@ -51,6 +52,18 @@ export async function validarPuedeAbonarse(usuarioId, turnoId, fechaBase = new D
     if (reservaExistente && reservaExistente.estado === 'CONFIRMADA' && reservaExistente.tipo_reserva === 'NO_ABONADO') {
       return { puede: false, motivo: `Ya posees una reserva como no abonado para el día ${fecha}. Si deseas abonarte, por favor cancela tus reservas primero.` };
     }
+  }
+
+  const superposicion = await buscarSuperposicionHoraria(
+    usuarioId,
+    turno.hora_inicio,
+    remainingDates
+  );
+  if (superposicion) {
+    return {
+      puede: false,
+      motivo: `Ya tienes otra actividad reservada el día ${superposicion.fecha} en este mismo horario.`
+    };
   }
 
   // Validar cupos: primero la cantidad global y luego cada clase

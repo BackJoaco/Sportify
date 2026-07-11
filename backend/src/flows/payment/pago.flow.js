@@ -2,6 +2,8 @@ import * as pagoService from '../../services/pago.service.js';
 import * as reservaService from '../../services/reserva.service.js';
 import * as turnoService from '../../services/turno.service.js';
 import * as abonadoTurnoService from '../../services/abonadoTurno.service.js';
+import * as listaEsperaNoAbonadoService from '../../services/listaEsperaNoAbonado.service.js';
+import * as notificacionService from '../../services/notificacion.service.js';
 import { getRemainingClassesInSportifyMonth, getAllClassesInSportifyMonth } from '../../utils/date.utils.js';
 import { validarPuedeAbonarse } from '../../utils/abonado.validator.js';
 import { sequelize } from '../../config/database.js';
@@ -195,6 +197,10 @@ export async function obtenerMontoSenaTurnoCliente({ turnoId }) {
 }
 
 export async function obtenerMontoSuscripcionMensualCliente({ turnoId, fecha }, usuarioId) {
+    const validacion = await validarPuedeAbonarse(usuarioId, turnoId, fecha);
+    if (!validacion.puede) {
+        throw new Error(validacion.motivo);
+    }
     return {
         monto: await calcularMontoAbonoMensual(turnoId, usuarioId, fecha)
     };
@@ -263,6 +269,11 @@ export async function pagarSenaPresencial({ reservaId }, empleadoId) {
 }
 
 export async function pagarSuscripcionMensualCliente({ turnoId, tarjetaDebito, fecha }, usuarioId) {
+    const validacion = await validarPuedeAbonarse(usuarioId, turnoId, fecha);
+    if (!validacion.puede) {
+        throw new Error(validacion.motivo);
+    }
+
     const montoNumerico = await calcularMontoAbonoMensual(turnoId, usuarioId, fecha);
 
     const resultadoPago = await pagoService.pago(tarjetaDebito);
@@ -331,6 +342,7 @@ export async function pagarSuscripcionPendienteCliente({ pagoId, tarjetaDebito }
     if (!validacion.puede) {
         throw new Error(validacion.motivo);
     }
+    const turnoAbono = await turnoService.getTurnoById(abonoActual.turno_id);
 
     // Cobrar la tarjeta
     const resultadoPago = await pagoService.pago(tarjetaDebito);
@@ -340,6 +352,8 @@ export async function pagarSuscripcionPendienteCliente({ pagoId, tarjetaDebito }
     }
 
     const transaction = await sequelize.transaction();
+    const colasNoAbonadoRechazadas = [];
+    const fechasAbonoConfirmadas = [];
 
     try {
         let abonoIdParaPago = abonoActual.id;
@@ -379,6 +393,8 @@ export async function pagarSuscripcionPendienteCliente({ pagoId, tarjetaDebito }
                 }, { transaction });
                 reservasCreadas++;
             }
+
+            fechasAbonoConfirmadas.push(fecha);
         }
 
         // Actualizar el pago a COMPLETADO y reasignar el abonado_turno_id
@@ -388,6 +404,28 @@ export async function pagarSuscripcionPendienteCliente({ pagoId, tarjetaDebito }
         }, { transaction });
 
         await transaction.commit();
+
+        try {
+            for (const fecha of fechasAbonoConfirmadas) {
+                const rechazadas = await listaEsperaNoAbonadoService.rechazarSuperpuestasByUsuarioFechaHora(
+                    usuarioId,
+                    fecha,
+                    turnoAbono.hora_inicio
+                );
+                colasNoAbonadoRechazadas.push(...rechazadas);
+            }
+
+            if (colasNoAbonadoRechazadas.length > 0) {
+                await notificacionService.create({
+                    usuario_id: usuarioId,
+                    mensaje: `Al confirmarse tu abono, saliste de ${colasNoAbonadoRechazadas.length} lista(s) de espera de no abonados porque correspondían a la misma fecha y horario.`,
+                    leida: false,
+                    createdAt: new Date()
+                });
+            }
+        } catch (error) {
+            console.error('No se pudieron limpiar o notificar las colas superpuestas al abono:', error);
+        }
 
         return {
             ...resultadoPago,

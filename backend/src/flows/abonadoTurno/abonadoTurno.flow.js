@@ -8,12 +8,14 @@ import * as notificacionService from '../../services/notificacion.service.js';
 
 import { getRemainingClassesInSportifyMonth } from '../../utils/date.utils.js';
 import { validarPuedeAbonarse } from '../../utils/abonado.validator.js';
+import { buscarSuperposicionHoraria } from '../../utils/reserva.validator.js';
 
 export async function altaAbonado(usuarioId, turnoId, fechaBase = new Date()) {
   const validacion = await validarPuedeAbonarse(usuarioId, turnoId, fechaBase);
   if (!validacion.puede) {
     throw new Error(validacion.motivo);
   }
+  const turno = await turnoService.getTurnoById(turnoId);
 
   // Crear el abono
   const abonado = await abonadoTurnoService.create({
@@ -26,6 +28,7 @@ export async function altaAbonado(usuarioId, turnoId, fechaBase = new Date()) {
 
   // Generar las reservas para las clases restantes
   let reservasCreadas = 0;
+  const colasNoAbonadoRechazadas = [];
   for (const fecha of validacion.remainingDates) {
     const reservaExistente = await reservaService.findByUsuarioTurnoFecha(usuarioId, turnoId, fecha);
     if (!reservaExistente || reservaExistente.estado !== 'CONFIRMADA') {
@@ -38,6 +41,26 @@ export async function altaAbonado(usuarioId, turnoId, fechaBase = new Date()) {
         estado_pago: 'PAGADO_COMPLETO'
       });
       reservasCreadas++;
+    }
+
+    const rechazadas = await listaEsperaNoAbonadoService.rechazarSuperpuestasByUsuarioFechaHora(
+      usuarioId,
+      fecha,
+      turno.hora_inicio
+    );
+    colasNoAbonadoRechazadas.push(...rechazadas);
+  }
+
+  if (colasNoAbonadoRechazadas.length > 0) {
+    try {
+      await notificacionService.create({
+        usuario_id: usuarioId,
+        mensaje: `Al confirmarse tu abono, saliste de ${colasNoAbonadoRechazadas.length} lista(s) de espera de no abonados porque correspondían a la misma fecha y horario.`,
+        leida: false,
+        createdAt: new Date()
+      });
+    } catch (error) {
+      console.error('No se pudo notificar la baja de colas superpuestas al abono:', error);
     }
   }
 
@@ -154,6 +177,17 @@ export async function ingresarColaAbonado(usuarioId, turnoId, fechaBase = new Da
     if (reservaExistente && reservaExistente.estado === 'CONFIRMADA' && reservaExistente.tipo_reserva === 'NO_ABONADO') {
       throw new Error(`Ya posees una reserva como no abonado para el día ${fecha}. Si deseas ingresar a la lista de espera de abonados, por favor cancela tus reservas puntuales primero.`);
     }
+  }
+
+  const superposicion = await buscarSuperposicionHoraria(
+    usuarioId,
+    turno.hora_inicio,
+    remainingDates
+  );
+  if (superposicion) {
+    throw new Error(
+      `Ya tienes otra actividad reservada el día ${superposicion.fecha} en este mismo horario.`
+    );
   }
 
   const abonoActivo = await abonadoTurnoService.findActivoOSuspendidoByMes(usuarioId, turnoId, currentMonthInt);
