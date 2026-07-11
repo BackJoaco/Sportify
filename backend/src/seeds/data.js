@@ -90,6 +90,20 @@ export const turnosSeed = [
     cupo_maximo: 2
   },
   {
+    actividadNombre: 'Futbol',
+    entrenador: 'Lionel Messi',
+    dia_semana: 'VIERNES',
+    hora_inicio: '08:00:00',
+    cupo_maximo: 2
+  },
+  {
+    actividadNombre: 'Futbol',
+    entrenador: 'Lionel Messi',
+    dia_semana: 'DOMINGO',
+    hora_inicio: '08:00:00',
+    cupo_maximo: 2
+  },
+  {
     actividadNombre: 'Tenis',
     entrenador: 'Guillermo Vilas',
     dia_semana: 'MARTES',
@@ -100,6 +114,13 @@ export const turnosSeed = [
     actividadNombre: 'Tenis',
     entrenador: 'Guillermo Vilas',
     dia_semana: 'JUEVES',
+    hora_inicio: '09:00:00',
+    cupo_maximo: 2
+  },
+  {
+    actividadNombre: 'Tenis',
+    entrenador: 'Guillermo Vilas',
+    dia_semana: 'SABADO',
     hora_inicio: '09:00:00',
     cupo_maximo: 2
   },
@@ -118,6 +139,20 @@ export const turnosSeed = [
     cupo_maximo: 2
   },
   {
+    actividadNombre: 'Padel',
+    entrenador: 'Agustín Tapia',
+    dia_semana: 'VIERNES',
+    hora_inicio: '10:00:00',
+    cupo_maximo: 2
+  },
+  {
+    actividadNombre: 'Padel',
+    entrenador: 'Agustín Tapia',
+    dia_semana: 'DOMINGO',
+    hora_inicio: '10:00:00',
+    cupo_maximo: 2
+  },
+  {
     actividadNombre: 'Voley',
     entrenador: 'Luciano De Cecco',
     dia_semana: 'MARTES',
@@ -128,6 +163,13 @@ export const turnosSeed = [
     actividadNombre: 'Voley',
     entrenador: 'Luciano De Cecco',
     dia_semana: 'JUEVES',
+    hora_inicio: '11:00:00',
+    cupo_maximo: 2
+  },
+  {
+    actividadNombre: 'Voley',
+    entrenador: 'Luciano De Cecco',
+    dia_semana: 'SABADO',
     hora_inicio: '11:00:00',
     cupo_maximo: 2
   },

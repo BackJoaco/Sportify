@@ -182,3 +182,22 @@ export async function getMovimientos() {
 
   return data;
 }
+
+export async function pagarSuscripcionPendiente(datos) {
+  const res = await fetch(`${API_URL}/pago/suscripcion-pendiente`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify(datos),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw data;
+  }
+
+  return data;
+}

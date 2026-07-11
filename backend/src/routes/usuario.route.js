@@ -9,6 +9,7 @@ import { authMiddleware, esEmpleado, esAdministrador } from '../middleware/auth.
 const router = Router();
 
 router.get('/perfil', authMiddleware, usuarioController.getProfile);
+router.get('/mis-abonos', authMiddleware, usuarioController.getMisAbonos);
 router.put('/perfil', authMiddleware, usuarioController.updateProfile);
 router.get('/clientes', authMiddleware, esEmpleado, usuarioController.obtenerClientes);
 router.get('/', authMiddleware, esAdministrador, usuarioController.getUsersExceptAdmins);

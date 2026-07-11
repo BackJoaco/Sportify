@@ -1,7 +1,11 @@
 import * as abonadoTurnoRepository from '../repositories/abonadoTurno.repository.js';
 
-export function create(data) {
-  return abonadoTurnoRepository.create(data);
+export function create(data, options = {}) {
+  return abonadoTurnoRepository.create(data, options);
+}
+
+export function findById(id) {
+  return abonadoTurnoRepository.findById(id);
 }
 
 export function findActivo(usuarioId, turnoId) {

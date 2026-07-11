@@ -1,5 +1,6 @@
-import * as usuarioService
-    from '../services/usuario.service.js';
+import * as usuarioService from '../services/usuario.service.js';
+import * as abonadoTurnoService from '../services/abonadoTurno.service.js';
+import { getMesSportify } from '../utils/date.utils.js';
 
 export async function getProfile(req, res) {
     try {
@@ -8,6 +9,20 @@ export async function getProfile(req, res) {
         return res.status(200).json(usuario);
     } catch (error) {
         return res.status(404).json({ message: error.message });
+    }
+}
+
+export async function getMisAbonos(req, res) {
+    try {
+        const { id } = req.usuario;
+        const abonos = await abonadoTurnoService.findByUsuarioId(id);
+        const mesActual = getMesSportify(new Date());
+        
+        const abonosDelMes = abonos.filter(abono => abono.mes_anio === mesActual);
+
+        return res.status(200).json(abonosDelMes);
+    } catch (error) {
+        return res.status(400).json({ message: error.message });
     }
 }
 

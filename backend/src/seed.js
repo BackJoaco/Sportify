@@ -11,7 +11,10 @@ import {
   seedUsuarioConCreditos,
   seedDeudores,
   seedHistorialPasado,
-  seedTurnosMasivos
+  seedTurnosMasivos,
+  seedReservasEspecificas,
+  seedAbonadosEspecificos,
+  seedCreditosCliente1
 } from './seeds/seeders.js';
 
 async function runSeed() {
@@ -47,6 +50,9 @@ async function runSeed() {
     await seedDeudores(transaction);
     await seedHistorialPasado(transaction);
     await seedTurnosMasivos(hashedPassword, transaction);
+    await seedReservasEspecificas(transaction);
+    await seedAbonadosEspecificos(transaction);
+    await seedCreditosCliente1(transaction);
   });
 
   console.log('Seed ejecutado correctamente.');

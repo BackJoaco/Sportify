@@ -11,6 +11,7 @@ router.post('/sena-reserva/monto', authMiddleware, esCliente, pagoController.obt
 router.post('/sena-turno/monto', authMiddleware, esCliente, pagoController.obtenerMontoSenaTurno); //cambie de get a post
 router.post('/suscripcion-mensual/monto', authMiddleware, esCliente, pagoController.obtenerMontoSuscripcionMensual);
 router.post('/suscripcion-mensual', authMiddleware, esCliente, pagoController.pagarSuscripcionMensual);
+router.post('/suscripcion-pendiente', authMiddleware, esCliente, pagoController.pagarSuscripcionPendiente);
 router.post('/sena-presencial', authMiddleware, esEmpleado, pagoController.registrarSenaPresencial);
 router.get('/pendientes', authMiddleware, esAdministrador, pagoController.getDeudores);
 router.post('/aplicar-credito', authMiddleware, pagoController.aplicarCreditoUsuario);

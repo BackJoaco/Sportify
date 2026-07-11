@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import { getMisReservas } from "../../../api/reservas.api";
-import { getMisPagos, obtenerMontoSenaReserva, pagarSenaReserva } from "../../../api/pago.api";
+import { getMisPagos, obtenerMontoSenaReserva, pagarSenaReserva, pagarSuscripcionPendiente } from "../../../api/pago.api";
 import {
   FaCalendarAlt,
   FaCalendarCheck,
@@ -15,6 +15,7 @@ import Swal from "sweetalert2";
 import PaymentModal from "../../../components/PaymentModal/PaymentModal";
 import "./ClientHome.css";
 import { getMisCreditos } from "../../../api/credito.api";
+import { getMisAbonos } from "../../../api/usuario.api";
 
 export default function ClientHome() {
   const { usuario } = useAuth();
@@ -28,12 +29,20 @@ export default function ClientHome() {
   const [reservaAPagar, setReservaAPagar] = useState(null);
   const [montoAPagar, setMontoAPagar] = useState(0);
   const [pagando, setPagando] = useState(false);
+
+  // Estados para Abonos
+  const [abonoAPagar, setAbonoAPagar] = useState(null);
+  const [pagoPendienteId, setPagoPendienteId] = useState(null);
+  const [montoAbono, setMontoAbono] = useState(0);
+
 // Estados para Créditos (NUEVO)
   const [creditos, setCreditos] = useState([]);
   const [loadingCreditos, setLoadingCreditos] = useState(true);
   const [creditosError, setCreditosError] = useState("");
 
-
+  const [abonos, setAbonos] = useState([]);
+  const [loadingAbonos, setLoadingAbonos] = useState(true);
+  const [abonosError, setAbonosError] = useState("");
   async function cargarReservas() {
     try {
       setLoadingReservas(true);
@@ -82,9 +91,24 @@ export default function ClientHome() {
     Promise.resolve().then(() => {
       cargarReservas();
       cargarPagos();
-      cargarCreditos(); // Sumamos la llamada a la carga inicial
+      cargarCreditos(); 
+      cargarAbonos();
     });
   }, []);
+
+  async function cargarAbonos() {
+    try {
+      setLoadingAbonos(true);
+      const data = await getMisAbonos();
+      setAbonos(data || []);
+      setAbonosError("");
+    } catch (err) {
+      setAbonos([]);
+      setAbonosError(err.message || "No se pudieron cargar los abonos");
+    } finally {
+      setLoadingAbonos(false);
+    }
+  }
 
   if (!usuario) return null;
 
@@ -102,6 +126,9 @@ export default function ClientHome() {
   // NUEVO: Filtros de Créditos
   const creditosDisponibles = creditos.filter((credito) => credito.estado === "DISPONIBLE");
   const creditosRecientes = creditos.slice(0, 3); // Mostramos solo los últimos 3 en el panel
+  
+  const abonosActivos = abonos.filter((abono) => abono.estado === "ACTIVO");
+  const abonosRecientes = abonosActivos.slice(0, 3);
 
   function formatearFecha(fecha) {
     if (!fecha) return "Sin fecha";
@@ -241,6 +268,59 @@ export default function ClientHome() {
         position: "top-end",
         icon: "error",
         title: err.message || err.mensaje || "Error al pagar la seña",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+      });
+    } finally {
+      setPagando(false);
+    }
+  }
+
+  function abrirModalAbono(abono, pago) {
+    setAbonoAPagar(abono);
+    setPagoPendienteId(pago.id);
+    setMontoAbono(Number(pago.monto) || 0);
+  }
+
+  function cerrarModalAbono() {
+    if (!pagando) {
+      setAbonoAPagar(null);
+      setPagoPendienteId(null);
+      setMontoAbono(0);
+    }
+  }
+
+  async function handlePagarAbono(tarjetaDebito) {
+    if (!pagoPendienteId) return;
+
+    setPagando(true);
+
+    try {
+      await pagarSuscripcionPendiente({
+        pagoId: pagoPendienteId,
+        tarjetaDebito,
+      });
+
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "success",
+        title: "Renovación pagada correctamente",
+        showConfirmButton: false,
+        timer: 2500,
+        timerProgressBar: true,
+      });
+
+      cerrarModalAbono();
+      await cargarAbonos();
+      await cargarPagos();
+    } catch (err) {
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "error",
+        title: err.message || err.mensaje || "Error al pagar la renovación",
         showConfirmButton: false,
         timer: 3000,
         timerProgressBar: true,
@@ -439,6 +519,61 @@ export default function ClientHome() {
           )}
         </article>
 
+        <article className="home-panel">
+          <div className="panel-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <FaCalendarCheck />
+              <h2>Abonos activos</h2>
+            </div>
+          </div>
+
+          {loadingAbonos ? (
+            <div className="empty-panel"><p>Cargando abonos...</p></div>
+          ) : abonosError ? (
+            <div className="empty-panel"><p>{abonosError}</p></div>
+          ) : abonosRecientes.length === 0 ? (
+            <div className="empty-panel"><p>No tenés abonos activos en este momento.</p></div>
+          ) : (
+            <div className="payment-history-list">
+              {abonosRecientes.map((abono) => (
+                <div className="payment-history-item" key={abono.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <strong style={{ display: 'block' }}>{abono.Turno?.Actividad?.nombre || "Actividad"}</strong>
+                    <span style={{ fontSize: '0.85rem', color: 'var(--gray)' }}>
+                      {abono.Turno?.dia_semana} - {formatearHora(abono.Turno?.hora_inicio)}
+                    </span>
+                  </div>
+                  
+                  <div className="payment-history-meta">
+                    <span 
+                      style={{
+                        padding: "0.3rem 0.8rem",
+                        borderRadius: "20px",
+                        fontSize: "0.8rem",
+                        fontWeight: "bold",
+                        backgroundColor: "#e8f5e9",
+                        color: "#2e7d32",
+                      }}
+                    >
+                      ACTIVO
+                    </span>
+                    {abono.Pagos && abono.Pagos.length > 0 && (
+                      <button
+                        className="btn-pay-reservation"
+                        style={{ marginLeft: "10px" }}
+                        onClick={() => abrirModalAbono(abono, abono.Pagos[0])}
+                      >
+                        Pagar próximo mes
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </article>
+
+
         
         <article className="home-panel">
           <div className="panel-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
@@ -500,6 +635,18 @@ export default function ClientHome() {
         confirmLabel="Pagar y reservar"
         onClose={cerrarModalPago}
         onSubmit={handlePagarSena}
+        loading={pagando}
+      />
+
+      <PaymentModal
+        open={Boolean(abonoAPagar)}
+        title={abonoAPagar ? `Pagar renovación - ${abonoAPagar.Turno?.Actividad?.nombre || "Abono"}` : "Pagar renovación"}
+        subtitle={abonoAPagar ? `Días ${abonoAPagar.Turno?.dia_semana} - ${formatearHora(abonoAPagar.Turno?.hora_inicio)}` : ""}
+        amount={montoAbono}
+        amountLabel="Abono"
+        confirmLabel="Pagar renovación"
+        onClose={cerrarModalAbono}
+        onSubmit={handlePagarAbono}
         loading={pagando}
       />
     </main>

@@ -72,8 +72,8 @@ export async function updateEstadoPagoIfPendiente(id, estadoPago) {
   return findById(id);
 }
 
-export async function create(data){
-    return Reserva.create(data);
+export async function create(data, options = {}){
+    return Reserva.create(data, options);
 }
 
 export async function findPendientesNoAbonadoBefore(fechaLimite) {

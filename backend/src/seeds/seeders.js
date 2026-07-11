@@ -22,7 +22,7 @@ export async function upsertTurno(turnoData, actividadesPorNombre, transaction) 
   }
 
   const turnoExistente = await Turno.findOne({
-    where: { 
+    where: {
       actividad_id: actividad.id,
       dia_semana: turnoData.dia_semana,
       hora_inicio: turnoData.hora_inicio
@@ -60,215 +60,218 @@ export async function seedNotificaciones(transaction) {
 }
 
 export async function seedUsuarioConCreditos(transaction) {
-  const usuarioConCreditos = await Usuario.findOne({
-    where: { email: 'creditos@sportify.com' },
-    transaction
-  });
+  console.log("seed usuarios con creditos apagado");
+  // const usuarioConCreditos = await Usuario.findOne({
+  //   where: { email: 'creditos@sportify.com' },
+  //   transaction
+  // });
 
-  const unTurno = await Turno.findOne({ transaction });
+  // const unTurno = await Turno.findOne({ transaction });
 
-  if (usuarioConCreditos && unTurno) {
+  // if (usuarioConCreditos && unTurno) {
 
-    await AbonadoTurno.findOrCreate({
-      where: {
-        usuario_id: usuarioConCreditos.id,
-        turno_id: unTurno.id,
-        mes_anio: 7 // Suponiendo julio, ajustalo si es necesario
-      },
-      defaults: {
-        fecha_alta: new Date(),
-        cancelaciones_mes: 1, // Le sumamos 1 cancelación por la que generó el crédito
-        pierde_descuento: false // Todavía no llegó a las 3 cancelaciones de la Regla 3
-      },
-      transaction
-    });
+  //   await AbonadoTurno.findOrCreate({
+  //     where: {
+  //       usuario_id: usuarioConCreditos.id,
+  //       turno_id: unTurno.id,
+  //       mes_anio: 7 // Suponiendo julio, ajustalo si es necesario
+  //     },
+  //     defaults: {
+  //       fecha_alta: new Date(),
+  //       cancelaciones_mes: 1, // Le sumamos 1 cancelación por la que generó el crédito
+  //       pierde_descuento: false // Todavía no llegó a las 3 cancelaciones de la Regla 3
+  //     },
+  //     transaction
+  //   });
 
-    // 1. Creamos una reserva base (necesaria por la FK de la tabla creditos)
-    const [reservaOrigen] = await Reserva.findOrCreate({
-      where: {
-        usuario_id: usuarioConCreditos.id,
-        turno_id: unTurno.id,
-        fecha: '2026-06-15'
-      },
-      defaults: {
-        tipo_reserva: 'ABONADO',
-        estado: 'CANCELADA',
-        estado_pago: 'PAGADO_COMPLETO',
-        codigo_qr: 'QR-SEED-PROBANDO-CREDITOS'
-      },
-      transaction
-    });
+  //   // 1. Creamos una reserva base (necesaria por la FK de la tabla creditos)
+  //   const [reservaOrigen] = await Reserva.findOrCreate({
+  //     where: {
+  //       usuario_id: usuarioConCreditos.id,
+  //       turno_id: unTurno.id,
+  //       fecha: '2026-06-15'
+  //     },
+  //     defaults: {
+  //       tipo_reserva: 'ABONADO',
+  //       estado: 'CANCELADA',
+  //       estado_pago: 'PAGADO_COMPLETO',
+  //       codigo_qr: 'QR-SEED-PROBANDO-CREDITOS'
+  //     },
+  //     transaction
+  //   });
 
-    // Calcular fechas de vencimiento
-    const fechaVencimientoFutura = new Date();
-    fechaVencimientoFutura.setDate(fechaVencimientoFutura.getDate() + 15); // Vence en 15 días
+  //   // Calcular fechas de vencimiento
+  //   const fechaVencimientoFutura = new Date();
+  //   fechaVencimientoFutura.setDate(fechaVencimientoFutura.getDate() + 15); // Vence en 15 días
 
-    const fechaVencimientoPasada = new Date();
-    fechaVencimientoPasada.setDate(fechaVencimientoPasada.getDate() - 5); // Venció hace 5 días
+  //   const fechaVencimientoPasada = new Date();
+  //   fechaVencimientoPasada.setDate(fechaVencimientoPasada.getDate() - 5); // Venció hace 5 días
 
-    // 2. Insertamos un crédito DISPONIBLE si no existe
-    await Credito.findOrCreate({
-      where: {
-        usuario_id: usuarioConCreditos.id,
-        estado: 'DISPONIBLE'
-      },
-      defaults: {
-        fecha_vencimiento: fechaVencimientoFutura
-      },
-      transaction
-    });
+  //   // 2. Insertamos un crédito DISPONIBLE si no existe
+  //   await Credito.findOrCreate({
+  //     where: {
+  //       usuario_id: usuarioConCreditos.id,
+  //       estado: 'DISPONIBLE'
+  //     },
+  //     defaults: {
+  //       fecha_vencimiento: fechaVencimientoFutura
+  //     },
+  //     transaction
+  //   });
 
-    // 3. Insertamos un crédito ya VENCIDO para probar filtros del historial
-    await Credito.findOrCreate({
-      where: {
-        usuario_id: usuarioConCreditos.id,
-        estado: 'VENCIDO'
-      },
-      defaults: {
-        fecha_vencimiento: fechaVencimientoPasada
-      },
-      transaction
-    });
-  }
+  //   // 3. Insertamos un crédito ya VENCIDO para probar filtros del historial
+  //   await Credito.findOrCreate({
+  //     where: {
+  //       usuario_id: usuarioConCreditos.id,
+  //       estado: 'VENCIDO'
+  //     },
+  //     defaults: {
+  //       fecha_vencimiento: fechaVencimientoPasada
+  //     },
+  //     transaction
+  //   });
+  // }
 }
 
 export async function seedDeudores(transaction) {
-  // CASO 1: El deudor real (Debería aparecer en la lista)
-  const deudorPrueba = await Usuario.findOne({ where: { email: 'deudor@sportify.com' }, transaction });
-  if (deudorPrueba) {
-    await Pago.findOrCreate({
-      where: {
-        usuario_id: deudorPrueba.id,
-        tipo_pago: 'SENA',
-        estado: 'PENDIENTE'
-      },
-      defaults: {
-        monto: 12000,
-        metodo_pago: null
-      },
-      transaction
-    });
-  }
+  console.log("Seed deudores apagado");
+  // // CASO 1: El deudor real (Debería aparecer en la lista)
+  // const deudorPrueba = await Usuario.findOne({ where: { email: 'deudor@sportify.com' }, transaction });
+  // if (deudorPrueba) {
+  //   await Pago.findOrCreate({
+  //     where: {
+  //       usuario_id: deudorPrueba.id,
+  //       tipo_pago: 'SENA',
+  //       estado: 'PENDIENTE'
+  //     },
+  //     defaults: {
+  //       monto: 12000,
+  //       metodo_pago: null
+  //     },
+  //     transaction
+  //   });
+  // }
 
-  // CASO 2: El usuario al que le debemos plata (NO debería aparecer en la lista)
-  const acreedorPrueba = await Usuario.findOne({ where: { email: 'acreedor@sportify.com' }, transaction });
-  if (acreedorPrueba) {
-    await Pago.findOrCreate({
-      where: {
-        usuario_id: acreedorPrueba.id,
-        tipo_pago: 'DEVOLUCION_SENA',
-        estado: 'PENDIENTE'
-      },
-      defaults: {
-        monto: 15000,
-        metodo_pago: null
-      },
-      transaction
-    });
-  }
+  // // CASO 2: El usuario al que le debemos plata (NO debería aparecer en la lista)
+  // const acreedorPrueba = await Usuario.findOne({ where: { email: 'acreedor@sportify.com' }, transaction });
+  // if (acreedorPrueba) {
+  //   await Pago.findOrCreate({
+  //     where: {
+  //       usuario_id: acreedorPrueba.id,
+  //       tipo_pago: 'DEVOLUCION_SENA',
+  //       estado: 'PENDIENTE'
+  //     },
+  //     defaults: {
+  //       monto: 15000,
+  //       metodo_pago: null
+  //     },
+  //     transaction
+  //   });
+  // }
 }
 
 export async function seedHistorialPasado(transaction) {
-  // --- NUEVO REQUERIMIENTO: Usuario con historial en el pasado ---
-  const usuarioHistorial = await Usuario.findOne({ where: { email: 'historial@sportify.com' }, transaction });
-  const unTurno = await Turno.findOne({ transaction });
+  console.log("Seed historial pasado apagado");
+  // // --- NUEVO REQUERIMIENTO: Usuario con historial en el pasado ---
+  // const usuarioHistorial = await Usuario.findOne({ where: { email: 'historial@sportify.com' }, transaction });
+  // const unTurno = await Turno.findOne({ transaction });
 
-  if (usuarioHistorial && unTurno) {
+  // if (usuarioHistorial && unTurno) {
 
-    // Buscar 2 fechas pasadas (últimos 30 días) que coincidan con el día de la semana del turno
-    const DIAS_SEMANA = ['DOMINGO', 'LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO'];
-    const targetDay = DIAS_SEMANA.indexOf(unTurno.dia_semana.toUpperCase());
-    const pastDates = [];
-    const today = new Date();
+  //   // Buscar 2 fechas pasadas (últimos 30 días) que coincidan con el día de la semana del turno
+  //   const DIAS_SEMANA = ['DOMINGO', 'LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO'];
+  //   const targetDay = DIAS_SEMANA.indexOf(unTurno.dia_semana.toUpperCase());
+  //   const pastDates = [];
+  //   const today = new Date();
 
-    for (let i = 1; i <= 35; i++) { // buscamos hasta 35 días atrás para asegurar encontrar 2 fechas
-      const d = new Date(today);
-      d.setDate(d.getDate() - i);
-      if (d.getDay() === targetDay) {
-        pastDates.push(d.toISOString().split('T')[0]);
-        if (pastDates.length === 2) break;
-      }
-    }
+  //   for (let i = 1; i <= 35; i++) { // buscamos hasta 35 días atrás para asegurar encontrar 2 fechas
+  //     const d = new Date(today);
+  //     d.setDate(d.getDate() - i);
+  //     if (d.getDay() === targetDay) {
+  //       pastDates.push(d.toISOString().split('T')[0]);
+  //       if (pastDates.length === 2) break;
+  //     }
+  //   }
 
-    const fechaReservaAbonado = pastDates[0] || '2026-06-20';
-    const fechaReservaIndividual = pastDates[1] || '2026-06-10';
+  //   const fechaReservaAbonado = pastDates[0] || '2026-06-20';
+  //   const fechaReservaIndividual = pastDates[1] || '2026-06-10';
 
-    // Calculamos a qué mes_anio pertenece la fechaReservaAbonado (según lógica Sportify)
-    const refDate = new Date(`${fechaReservaAbonado}T12:00:00Z`);
-    const day = refDate.getDate();
-    const jsMonth = refDate.getMonth();
-    const mesAbono = day < 11 ? (jsMonth === 0 ? 12 : jsMonth) : (jsMonth + 1);
+  //   // Calculamos a qué mes_anio pertenece la fechaReservaAbonado (según lógica Sportify)
+  //   const refDate = new Date(`${fechaReservaAbonado}T12:00:00Z`);
+  //   const day = refDate.getDate();
+  //   const jsMonth = refDate.getMonth();
+  //   const mesAbono = day < 11 ? (jsMonth === 0 ? 12 : jsMonth) : (jsMonth + 1);
 
-    // 1. Abonado en un período anterior coincidente con la fecha
-    await AbonadoTurno.findOrCreate({
-      where: {
-        usuario_id: usuarioHistorial.id,
-        turno_id: unTurno.id,
-        mes_anio: mesAbono
-      },
-      defaults: {
-        fecha_alta: new Date(`${fechaReservaAbonado}T12:00:00Z`),
-        cancelaciones_mes: 0,
-        pierde_descuento: false,
-        estado: 'ACTIVO'
-      },
-      transaction
-    });
+  //   // 1. Abonado en un período anterior coincidente con la fecha
+  //   await AbonadoTurno.findOrCreate({
+  //     where: {
+  //       usuario_id: usuarioHistorial.id,
+  //       turno_id: unTurno.id,
+  //       mes_anio: mesAbono
+  //     },
+  //     defaults: {
+  //       fecha_alta: new Date(`${fechaReservaAbonado}T12:00:00Z`),
+  //       cancelaciones_mes: 0,
+  //       pierde_descuento: false,
+  //       estado: 'ACTIVO'
+  //     },
+  //     transaction
+  //   });
 
-    // 2. Reservas de ese abono en el pasado
-    await Reserva.findOrCreate({
-      where: {
-        usuario_id: usuarioHistorial.id,
-        turno_id: unTurno.id,
-        fecha: fechaReservaAbonado
-      },
-      defaults: {
-        tipo_reserva: 'ABONADO',
-        estado: 'PRESENTE',
-        estado_pago: 'PAGADO_COMPLETO',
-        codigo_qr: `QR-HISTORIAL-ABONADO-${fechaReservaAbonado}`
-      },
-      transaction
-    });
+  //   // 2. Reservas de ese abono en el pasado
+  //   await Reserva.findOrCreate({
+  //     where: {
+  //       usuario_id: usuarioHistorial.id,
+  //       turno_id: unTurno.id,
+  //       fecha: fechaReservaAbonado
+  //     },
+  //     defaults: {
+  //       tipo_reserva: 'ABONADO',
+  //       estado: 'PRESENTE',
+  //       estado_pago: 'PAGADO_COMPLETO',
+  //       codigo_qr: `QR-HISTORIAL-ABONADO-${fechaReservaAbonado}`
+  //     },
+  //     transaction
+  //   });
 
-    // 3. Reservas individuales (NO_ABONADO) en el pasado
-    await Reserva.findOrCreate({
-      where: {
-        usuario_id: usuarioHistorial.id,
-        turno_id: unTurno.id,
-        fecha: fechaReservaIndividual
-      },
-      defaults: {
-        tipo_reserva: 'NO_ABONADO',
-        estado: 'PRESENTE',
-        estado_pago: 'PAGADO_COMPLETO',
-        codigo_qr: `QR-HISTORIAL-INDIVIDUAL-${fechaReservaIndividual}`
-      },
-      transaction
-    });
+  //   // 3. Reservas individuales (NO_ABONADO) en el pasado
+  //   await Reserva.findOrCreate({
+  //     where: {
+  //       usuario_id: usuarioHistorial.id,
+  //       turno_id: unTurno.id,
+  //       fecha: fechaReservaIndividual
+  //     },
+  //     defaults: {
+  //       tipo_reserva: 'NO_ABONADO',
+  //       estado: 'PRESENTE',
+  //       estado_pago: 'PAGADO_COMPLETO',
+  //       codigo_qr: `QR-HISTORIAL-INDIVIDUAL-${fechaReservaIndividual}`
+  //     },
+  //     transaction
+  //   });
 
-    // Creamos su respectivo pago de seña para la reserva individual
-    const reservaNoAbonado = await Reserva.findOne({
-      where: { usuario_id: usuarioHistorial.id, fecha: fechaReservaIndividual },
-      transaction
-    });
+  //   // Creamos su respectivo pago de seña para la reserva individual
+  //   const reservaNoAbonado = await Reserva.findOne({
+  //     where: { usuario_id: usuarioHistorial.id, fecha: fechaReservaIndividual },
+  //     transaction
+  //   });
 
-    if (reservaNoAbonado) {
-      await Pago.findOrCreate({
-        where: {
-          reserva_id: reservaNoAbonado.id,
-          tipo_pago: 'SENA',
-        },
-        defaults: {
-          usuario_id: usuarioHistorial.id,
-          monto: 6000,
-          estado: 'COMPLETADO',
-          metodo_pago: 'MERCADO_PAGO'
-        },
-        transaction
-      });
-    }
-  }
+  //   if (reservaNoAbonado) {
+  //     await Pago.findOrCreate({
+  //       where: {
+  //         reserva_id: reservaNoAbonado.id,
+  //         tipo_pago: 'SENA',
+  //       },
+  //       defaults: {
+  //         usuario_id: usuarioHistorial.id,
+  //         monto: 6000,
+  //         estado: 'COMPLETADO',
+  //         metodo_pago: 'MERCADO_PAGO'
+  //       },
+  //       transaction
+  //     });
+  //   }
+  // }
 }
 
 export async function seedTurnosMasivos(hashedPassword, transaction) {
@@ -302,7 +305,7 @@ export async function seedTurnosMasivos(hashedPassword, transaction) {
     const targetDay = DIAS_SEMANA.indexOf(turno.dia_semana.toUpperCase());
     const pastDates = [];
     const today = new Date();
-    
+
     for (let i = 1; i <= 35; i++) {
       const d = new Date(today);
       d.setDate(d.getDate() - i);
@@ -335,7 +338,7 @@ export async function seedTurnosMasivos(hashedPassword, transaction) {
               fecha_alta: new Date(`${fecha}T12:00:00Z`),
               cancelaciones_mes: 0,
               pierde_descuento: false,
-              estado: 'ACTIVO' 
+              estado: 'ACTIVO'
             },
             transaction
           });
@@ -375,5 +378,273 @@ export async function seedTurnosMasivos(hashedPassword, transaction) {
         }
       }
     }
+  }
+}
+
+export async function seedReservasEspecificas(transaction) {
+  // Buscar usuarios
+  const cliente2 = await Usuario.findOne({ where: { email: 'cliente2@sportify.com' }, transaction });
+  const cliente3 = await Usuario.findOne({ where: { email: 'cliente3@sportify.com' }, transaction });
+
+  // Buscar turno Futbol Miercoles
+  const turnoFutbolMiercoles = await Turno.findOne({
+    where: { dia_semana: 'MIERCOLES' },
+    include: [{
+      model: Actividad,
+      where: { nombre: 'Futbol' }
+    }],
+    transaction
+  });
+
+  if (cliente2 && cliente3 && turnoFutbolMiercoles) {
+    const fechaReserva = '2026-07-22';
+    const monto = (turnoFutbolMiercoles.Actividad?.precio_clase || 12000) * 0.5;
+
+    // Reserva Cliente 2
+    const [reserva2] = await Reserva.findOrCreate({
+      where: { usuario_id: cliente2.id, turno_id: turnoFutbolMiercoles.id, fecha: fechaReserva },
+      defaults: {
+        tipo_reserva: 'NO_ABONADO',
+        estado: 'CONFIRMADA',
+        estado_pago: 'SENA_ABONADA',
+        codigo_qr: `QR-SEED-${turnoFutbolMiercoles.id}-${cliente2.id}-${fechaReserva}`
+      },
+      transaction
+    });
+
+    await Pago.findOrCreate({
+      where: { reserva_id: reserva2.id, tipo_pago: 'SENA' },
+      defaults: {
+        usuario_id: cliente2.id,
+        monto: monto,
+        estado: 'COMPLETADO',
+        metodo_pago: 'MERCADO_PAGO'
+      },
+      transaction
+    });
+
+    // Reserva Cliente 3
+    const [reserva3] = await Reserva.findOrCreate({
+      where: { usuario_id: cliente3.id, turno_id: turnoFutbolMiercoles.id, fecha: fechaReserva },
+      defaults: {
+        tipo_reserva: 'NO_ABONADO',
+        estado: 'CONFIRMADA',
+        estado_pago: 'SENA_ABONADA',
+        codigo_qr: `QR-SEED-${turnoFutbolMiercoles.id}-${cliente3.id}-${fechaReserva}`
+      },
+      transaction
+    });
+
+    await Pago.findOrCreate({
+      where: { reserva_id: reserva3.id, tipo_pago: 'SENA' },
+      defaults: {
+        usuario_id: cliente3.id,
+        monto: monto,
+        estado: 'COMPLETADO',
+        metodo_pago: 'MERCADO_PAGO'
+      },
+      transaction
+    });
+  }
+}
+
+export async function seedAbonadosEspecificos(transaction) {
+  const cliente2 = await Usuario.findOne({ where: { email: 'cliente2@sportify.com' }, transaction });
+  const cliente3 = await Usuario.findOne({ where: { email: 'cliente3@sportify.com' }, transaction });
+
+  const turnoFutbolViernes = await Turno.findOne({ 
+    where: { dia_semana: 'VIERNES', hora_inicio: '08:00:00' }, 
+    include: [{
+      model: Actividad,
+      where: { nombre: 'Futbol' }
+    }],
+    transaction 
+  });
+
+  if (cliente2 && cliente3 && turnoFutbolViernes) {
+    const mesAnio = 7;
+    const fechas = ['2026-07-03', '2026-07-10', '2026-07-17', '2026-07-24'];
+    const montoAbono = turnoFutbolViernes.Actividad?.precio_mensual * 0.8;
+    
+    const clientes = [cliente2, cliente3];
+
+    for (const cliente of clientes) {
+      // 1. Crear el abono
+      await AbonadoTurno.findOrCreate({
+        where: {
+          usuario_id: cliente.id,
+          turno_id: turnoFutbolViernes.id,
+          mes_anio: mesAnio
+        },
+        defaults: {
+          fecha_alta: new Date('2026-07-11T10:00:00Z'),
+          cancelaciones_mes: 0,
+          pierde_descuento: false,
+          estado: 'ACTIVO'
+        },
+        transaction
+      });
+
+      // 2. Crear el pago del abono
+      await Pago.findOrCreate({
+        where: { 
+          usuario_id: cliente.id, 
+          tipo_pago: 'SUSCRIPCION_MENSUAL',
+          estado: 'COMPLETADO' // suponiendo que ya lo pagaron
+        },
+        defaults: {
+          monto: montoAbono,
+          metodo_pago: 'MERCADO_PAGO'
+        },
+        transaction
+      });
+
+      // 3. Crear las reservas (4 fechas)
+      for (const fecha of fechas) {
+        await Reserva.findOrCreate({
+          where: { usuario_id: cliente.id, turno_id: turnoFutbolViernes.id, fecha },
+          defaults: {
+            tipo_reserva: 'ABONADO',
+            estado: 'CONFIRMADA',
+            estado_pago: 'PAGADO_COMPLETO',
+            codigo_qr: `QR-SEED-ABONO-${turnoFutbolViernes.id}-${cliente.id}-${fecha}`
+          },
+          transaction
+        });
+      }
+    }
+  }
+}
+
+export async function seedCreditosCliente1(transaction) {
+  const cliente1 = await Usuario.findOne({ where: { email: 'cliente1@sportify.com' }, transaction });
+  
+  const turnoTenis = await Turno.findOne({ 
+    where: { dia_semana: 'MARTES', hora_inicio: '09:00:00' }, 
+    include: [{ model: Actividad, where: { nombre: 'Tenis' } }],
+    transaction 
+  });
+  
+  const turnoPadel = await Turno.findOne({ 
+    where: { dia_semana: 'MIERCOLES', hora_inicio: '10:00:00' }, // Padel is at 10:00 in data.js
+    include: [{ model: Actividad, where: { nombre: 'Padel' } }],
+    transaction 
+  });
+
+  if (cliente1 && turnoTenis && turnoPadel) {
+    const montoTenis = turnoTenis.Actividad?.precio_mensual || 50000;
+    const montoPadel = turnoPadel.Actividad?.precio_clase || 14000;
+
+    // ==========================================
+    // 1. Mes 5: Crédito Vencido
+    // ==========================================
+    await AbonadoTurno.findOrCreate({
+      where: { usuario_id: cliente1.id, turno_id: turnoTenis.id, mes_anio: 5 },
+      defaults: {
+        fecha_alta: new Date('2026-05-11T10:00:00Z'),
+        cancelaciones_mes: 1,
+        pierde_descuento: false,
+        estado: 'ACTIVO'
+      },
+      transaction
+    });
+
+    await Pago.findOrCreate({
+      where: { usuario_id: cliente1.id, tipo_pago: 'SUSCRIPCION_MENSUAL', estado: 'COMPLETADO', monto: montoTenis },
+      defaults: { metodo_pago: 'MERCADO_PAGO', createdAt: new Date('2026-05-11T10:00:00Z') },
+      transaction
+    });
+
+    // Reserva cancelada en Mes 5
+    await Reserva.findOrCreate({
+      where: { usuario_id: cliente1.id, turno_id: turnoTenis.id, fecha: '2026-05-19' },
+      defaults: {
+        tipo_reserva: 'ABONADO',
+        estado: 'CANCELADA',
+        estado_pago: 'PAGADO_COMPLETO',
+        codigo_qr: `QR-SEED-CLI1-MES5-T${turnoTenis.id}`
+      },
+      transaction
+    });
+
+    // Crédito generado por la cancelación del Mes 5 (Vencido en Junio)
+    await Credito.findOrCreate({
+      where: { usuario_id: cliente1.id, estado: 'VENCIDO' },
+      defaults: {
+        fecha_vencimiento: new Date('2026-06-14T10:00:00Z'),
+        createdAt: new Date('2026-05-15T10:00:00Z')
+      },
+      transaction
+    });
+
+    // ==========================================
+    // 2. Mes 6: Crédito Usado
+    // ==========================================
+    await AbonadoTurno.findOrCreate({
+      where: { usuario_id: cliente1.id, turno_id: turnoTenis.id, mes_anio: 6 },
+      defaults: {
+        fecha_alta: new Date('2026-06-11T10:00:00Z'),
+        cancelaciones_mes: 1,
+        pierde_descuento: false,
+        estado: 'ACTIVO'
+      },
+      transaction
+    });
+
+    await Pago.findOrCreate({
+      where: { usuario_id: cliente1.id, tipo_pago: 'SUSCRIPCION_MENSUAL', estado: 'COMPLETADO', createdAt: new Date('2026-06-11T10:00:00Z') },
+      defaults: { monto: montoTenis, metodo_pago: 'MERCADO_PAGO' },
+      transaction
+    });
+
+    // Reserva cancelada en Mes 6
+    await Reserva.findOrCreate({
+      where: { usuario_id: cliente1.id, turno_id: turnoTenis.id, fecha: '2026-06-23' },
+      defaults: {
+        tipo_reserva: 'ABONADO',
+        estado: 'CANCELADA',
+        estado_pago: 'PAGADO_COMPLETO',
+        codigo_qr: `QR-SEED-CLI1-MES6-T${turnoTenis.id}`
+      },
+      transaction
+    });
+
+    // Crédito generado por la cancelación del Mes 6 (Usado en Julio)
+    await Credito.findOrCreate({
+      where: { usuario_id: cliente1.id, estado: 'USADO' },
+      defaults: {
+        fecha_vencimiento: new Date('2026-07-20T10:00:00Z'),
+        createdAt: new Date('2026-06-20T10:00:00Z')
+      },
+      transaction
+    });
+
+    // ==========================================
+    // 3. Mes 7: Uso del Crédito
+    // ==========================================
+    // Reserva individual pagada con el crédito
+    const [reservaUsoCredito] = await Reserva.findOrCreate({
+      where: { usuario_id: cliente1.id, turno_id: turnoPadel.id, fecha: '2026-07-08' },
+      defaults: {
+        tipo_reserva: 'NO_ABONADO',
+        estado: 'CONFIRMADA', // Ya pasó, podría ser PRESENTE pero está bien CONFIRMADA
+        estado_pago: 'PAGADO_COMPLETO',
+        codigo_qr: `QR-SEED-CLI1-MES7-PADEL`
+      },
+      transaction
+    });
+
+    // Pago con Crédito
+    await Pago.findOrCreate({
+      where: { reserva_id: reservaUsoCredito.id, tipo_pago: 'CLASE_COMPLETA' },
+      defaults: {
+        usuario_id: cliente1.id,
+        monto: montoPadel,
+        estado: 'COMPLETADO',
+        metodo_pago: 'CREDITO',
+        createdAt: new Date('2026-07-05T10:00:00Z')
+      },
+      transaction
+    });
   }
 }
