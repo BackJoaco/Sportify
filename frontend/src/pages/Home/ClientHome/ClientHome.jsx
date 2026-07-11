@@ -127,8 +127,8 @@ export default function ClientHome() {
   const creditosDisponibles = creditos.filter((credito) => credito.estado === "DISPONIBLE");
   const creditosRecientes = creditos.slice(0, 3); // Mostramos solo los últimos 3 en el panel
   
-  const abonosActivos = abonos.filter((abono) => abono.estado === "ACTIVO");
-  const abonosRecientes = abonosActivos.slice(0, 3);
+  const abonosActivosOSuspendidos = abonos.filter((abono) => abono.estado === "ACTIVO" || abono.estado === "SUSPENDIDO");
+  const abonosRecientes = abonosActivosOSuspendidos.slice(0, 3);
 
   function formatearFecha(fecha) {
     if (!fecha) return "Sin fecha";
@@ -551,11 +551,11 @@ export default function ClientHome() {
                         borderRadius: "20px",
                         fontSize: "0.8rem",
                         fontWeight: "bold",
-                        backgroundColor: "#e8f5e9",
-                        color: "#2e7d32",
+                        backgroundColor: abono.estado === "ACTIVO" ? "#e8f5e9" : "#fff3e0",
+                        color: abono.estado === "ACTIVO" ? "#2e7d32" : "#e65100",
                       }}
                     >
-                      ACTIVO
+                      {abono.estado}
                     </span>
                     {abono.Pagos && abono.Pagos.length > 0 && (
                       <button
@@ -563,7 +563,7 @@ export default function ClientHome() {
                         style={{ marginLeft: "10px" }}
                         onClick={() => abrirModalAbono(abono, abono.Pagos[0])}
                       >
-                        Pagar próximo mes
+                        {abono.estado === "SUSPENDIDO" ? "Pagar mes actual" : "Pagar próximo mes"}
                       </button>
                     )}
                   </div>

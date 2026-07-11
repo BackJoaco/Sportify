@@ -4,7 +4,7 @@ export default (sequelize) => {
   return sequelize.define('AbonadoTurno', {
     id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
     estado: {
-      type: DataTypes.ENUM('ACTIVO', 'BAJA', 'SUSPENDIDO'),
+      type: DataTypes.ENUM('ACTIVO', 'BAJA', 'SUSPENDIDO', 'ANTIGUO'),
       defaultValue: 'ACTIVO'
     },
     mes_anio: { 

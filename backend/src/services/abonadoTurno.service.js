@@ -20,12 +20,20 @@ export function findActivosByTurno(turnoId) {
   return abonadoTurnoRepository.findActivosByTurno(turnoId);
 }
 
+export function findActivosYSuspendidosByTurno(turnoId) {
+  return abonadoTurnoRepository.findActivosYSuspendidosByTurno(turnoId);
+}
+
 export function countActivosByTurno(turnoId) {
   return abonadoTurnoRepository.countActivosByTurno(turnoId);
 }
 
 export function updateCancelaciones(id, cancelaciones, estado) {
   return abonadoTurnoRepository.updateCancelaciones(id, cancelaciones, estado);
+}
+
+export function updateEstado(id, estado, transaction) {
+  return abonadoTurnoRepository.updateEstado(id, estado, transaction);
 }
 
 export function darDeBaja(id) {

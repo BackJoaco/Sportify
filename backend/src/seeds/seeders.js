@@ -544,7 +544,7 @@ export async function seedCreditosCliente1(transaction) {
         fecha_alta: new Date('2026-05-11T10:00:00Z'),
         cancelaciones_mes: 1,
         pierde_descuento: false,
-        estado: 'ACTIVO'
+        estado: 'ANTIGUO'
       },
       transaction
     });
@@ -586,7 +586,7 @@ export async function seedCreditosCliente1(transaction) {
         fecha_alta: new Date('2026-06-11T10:00:00Z'),
         cancelaciones_mes: 1,
         pierde_descuento: false,
-        estado: 'ACTIVO'
+        estado: 'ANTIGUO'
       },
       transaction
     });
@@ -643,6 +643,30 @@ export async function seedCreditosCliente1(transaction) {
         estado: 'COMPLETADO',
         metodo_pago: 'CREDITO',
         createdAt: new Date('2026-07-05T10:00:00Z')
+      },
+      transaction
+    });
+
+    // ==========================================
+    // 4. Mes 7: Abono Suspendido y Pago Pendiente
+    // ==========================================
+    const [abonoSuspendido] = await AbonadoTurno.findOrCreate({
+      where: { usuario_id: cliente1.id, turno_id: turnoTenis.id, mes_anio: 7 },
+      defaults: {
+        fecha_alta: new Date('2026-07-11T10:00:00Z'),
+        cancelaciones_mes: 0,
+        pierde_descuento: true,
+        estado: 'SUSPENDIDO'
+      },
+      transaction
+    });
+
+    await Pago.findOrCreate({
+      where: { usuario_id: cliente1.id, tipo_pago: 'SUSCRIPCION_MENSUAL', estado: 'PENDIENTE', abonado_turno_id: abonoSuspendido.id },
+      defaults: {
+        monto: montoTenis,
+        metodo_pago: 'MERCADO_PAGO',
+        createdAt: new Date('2026-07-01T10:00:00Z')
       },
       transaction
     });

@@ -43,6 +43,20 @@ export async function findActivosByTurno(turnoId) {
   });
 }
 
+export async function findActivosYSuspendidosByTurno(turnoId) {
+  return AbonadoTurno.findAll({
+    where: {
+      turno_id: turnoId,
+      [Op.or]: [{ estado: 'ACTIVO' }, { estado: 'SUSPENDIDO' }]
+    },
+    include: [{
+      model: Usuario,
+      attributes: { exclude: ['contrasena', 'token_activacion', 'token_expiracion'] }
+    }],
+    order: [['createdAt', 'ASC']]
+  });
+}
+
 export async function countActivosByTurno(turnoId) {
   return AbonadoTurno.count({
     where: {
@@ -56,6 +70,13 @@ export async function updateCancelaciones(id, cancelaciones, estado) {
   return AbonadoTurno.update(
     { cancelaciones_mes: cancelaciones, estado },
     { where: { id } }
+  );
+}
+
+export async function updateEstado(id, estado, transaction) {
+  return AbonadoTurno.update(
+    { estado },
+    { where: { id }, transaction }
   );
 }
 
