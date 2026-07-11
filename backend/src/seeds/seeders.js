@@ -1,4 +1,5 @@
-import { Actividad, Turno, Usuario, Reserva, Credito, Notificacion, AbonadoTurno, Pago } from '../models/index.model.js';
+import { Actividad, Turno, Usuario, Reserva, Credito, Notificacion, AbonadoTurno, Pago, ListaEsperaAbonado, ListaEsperaNoAbonado } from '../models/index.model.js';
+import { Op } from 'sequelize';
 
 export async function upsertUsuario(usuarioData, hashedPassword, transaction) {
   await Usuario.upsert(
@@ -380,7 +381,8 @@ export async function seedTurnosMasivos(hashedPassword, transaction) {
     }
   }
 }
-
+// les genera reservas a clientes 2 y 3 para futbol de los miercoles en el dia 22 con sus correpondientes pagos 
+// para demostrar con el cliente 1 que cuando hay una clase ocupada no se puede abonar
 export async function seedReservasEspecificas(transaction) {
   // Buscar usuarios
   const cliente2 = await Usuario.findOne({ where: { email: 'cliente2@sportify.com' }, transaction });
@@ -389,6 +391,15 @@ export async function seedReservasEspecificas(transaction) {
   // Buscar turno Futbol Miercoles
   const turnoFutbolMiercoles = await Turno.findOne({
     where: { dia_semana: 'MIERCOLES' },
+    include: [{
+      model: Actividad,
+      where: { nombre: 'Futbol' }
+    }],
+    transaction
+  });
+
+  const turnoFutbolDomingo = await Turno.findOne({
+    where: { dia_semana: 'DOMINGO' },
     include: [{
       model: Actividad,
       where: { nombre: 'Futbol' }
@@ -446,8 +457,59 @@ export async function seedReservasEspecificas(transaction) {
       transaction
     });
   }
-}
 
+  if (cliente2 && cliente3 && turnoFutbolDomingo) {
+    const fechaReserva = '2026-07-19';
+    const monto = (turnoFutbolDomingo.Actividad?.precio_clase || 12000) * 0.5;
+
+    // Reserva Cliente 2
+    const [reserva2] = await Reserva.findOrCreate({
+      where: { usuario_id: cliente2.id, turno_id: turnoFutbolDomingo.id, fecha: fechaReserva },
+      defaults: {
+        tipo_reserva: 'NO_ABONADO',
+        estado: 'CONFIRMADA',
+        estado_pago: 'SENA_ABONADA',
+        codigo_qr: `QR-SEED-${turnoFutbolDomingo.id}-${cliente2.id}-${fechaReserva}`
+      },
+      transaction
+    });
+
+    await Pago.findOrCreate({
+      where: { reserva_id: reserva2.id, tipo_pago: 'SENA' },
+      defaults: {
+        usuario_id: cliente2.id,
+        monto: monto,
+        estado: 'COMPLETADO',
+        metodo_pago: 'MERCADO_PAGO'
+      },
+      transaction
+    });
+
+    // Reserva Cliente 3
+    const [reserva3] = await Reserva.findOrCreate({
+      where: { usuario_id: cliente3.id, turno_id: turnoFutbolDomingo.id, fecha: fechaReserva },
+      defaults: {
+        tipo_reserva: 'NO_ABONADO',
+        estado: 'CONFIRMADA',
+        estado_pago: 'SENA_ABONADA',
+        codigo_qr: `QR-SEED-${turnoFutbolDomingo.id}-${cliente3.id}-${fechaReserva}`
+      },
+      transaction
+    });
+
+    await Pago.findOrCreate({
+      where: { reserva_id: reserva3.id, tipo_pago: 'SENA' },
+      defaults: {
+        usuario_id: cliente3.id,
+        monto: monto,
+        estado: 'COMPLETADO',
+        metodo_pago: 'MERCADO_PAGO'
+      },
+      transaction
+    });
+  }
+}
+// Abonado a cliente2 y a cliente3 a futbol de los viernes y le crea los pagos correspondientes
 export async function seedAbonadosEspecificos(transaction) {
   const cliente2 = await Usuario.findOne({ where: { email: 'cliente2@sportify.com' }, transaction });
   const cliente3 = await Usuario.findOne({ where: { email: 'cliente3@sportify.com' }, transaction });
@@ -516,6 +578,8 @@ export async function seedAbonadosEspecificos(transaction) {
   }
 }
 
+// Le crea al cliente1 un abono del mes 5, un abono del mes 6, y un abono del mes 7 suspendido, 
+// ademas un credito vencido y otro usado
 export async function seedCreditosCliente1(transaction) {
   const cliente1 = await Usuario.findOne({ where: { email: 'cliente1@sportify.com' }, transaction });
   
@@ -667,6 +731,61 @@ export async function seedCreditosCliente1(transaction) {
         monto: montoTenis,
         metodo_pago: 'MERCADO_PAGO',
         createdAt: new Date('2026-07-01T10:00:00Z')
+      },
+      transaction
+    });
+  }
+}
+
+
+export async function seedColaAbonadosFutbol(transaction) {
+  const turnoFutbolViernes = await Turno.findOne({
+    where: { dia_semana: 'VIERNES', hora_inicio: '08:00:00' },
+    include: [{ model: Actividad, where: { nombre: 'Futbol' } }],
+    transaction
+  });
+
+  if (!turnoFutbolViernes) return;
+
+  const dummies = await Usuario.findAll({
+    where: {
+      email: {
+        [Op.like]: 'dummy%@sportify.com'
+      }
+    },
+    limit: 9,
+    transaction
+  });
+
+  for (let i = 0; i < dummies.length; i++) {
+    await ListaEsperaAbonado.findOrCreate({
+      where: { usuario_id: dummies[i].id, turno_id: turnoFutbolViernes.id },
+      defaults: {
+        estado: 'EN_ESPERA',
+        posicion: i + 1
+      },
+      transaction
+    });
+  }
+
+  // --- Adición: cliente4 en lista espera no abonado Fútbol Domingo ---
+  const cliente4 = await Usuario.findOne({ where: { email: 'cliente4@sportify.com' }, transaction });
+  const turnoFutbolDomingo = await Turno.findOne({
+    where: { dia_semana: 'DOMINGO', hora_inicio: '08:00:00' }, // asumiendo 08:00:00 por los otros turnos, vamos a asegurarnos que es el correcto si no se puede usar include model Actividad
+    include: [{ model: Actividad, where: { nombre: 'Futbol' } }],
+    transaction
+  });
+
+  if (cliente4 && turnoFutbolDomingo) {
+    await ListaEsperaNoAbonado.findOrCreate({
+      where: {
+        usuario_id: cliente4.id,
+        turno_id: turnoFutbolDomingo.id,
+        fecha: '2026-07-19'
+      },
+      defaults: {
+        estado: 'EN_ESPERA',
+        posicion: 1
       },
       transaction
     });

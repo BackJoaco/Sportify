@@ -14,7 +14,8 @@ import {
   seedTurnosMasivos,
   seedReservasEspecificas,
   seedAbonadosEspecificos,
-  seedCreditosCliente1
+  seedCreditosCliente1,
+  seedColaAbonadosFutbol
 } from './seeds/seeders.js';
 
 async function runSeed() {
@@ -53,6 +54,7 @@ async function runSeed() {
     await seedReservasEspecificas(transaction);
     await seedAbonadosEspecificos(transaction);
     await seedCreditosCliente1(transaction);
+    await seedColaAbonadosFutbol(transaction);
   });
 
   console.log('Seed ejecutado correctamente.');
