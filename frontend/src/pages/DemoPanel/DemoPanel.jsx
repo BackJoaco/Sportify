@@ -3,11 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { FaArrowLeft, FaCalendarDay, FaUserSlash, FaBan, FaHourglassEnd, FaFireAlt } from "react-icons/fa";
 import Swal from "sweetalert2";
 import {
-  simularDias1a10,
-  simularDia11,
   forzarCancelacion,
-  simularExpiracion,
-  simularAltaDemanda
+  generarCreditoAVencer,
+  expirarCreditoDemo
 } from "../../api/demo.api";
 import "./DemoPanel.css";
 
@@ -15,59 +13,13 @@ export default function DemoPanel() {
   const navigate = useNavigate();
   const [turnoId, setTurnoId] = useState("");
   const [loading, setLoading] = useState({
-    dias1a10: false,
-    dia11: false,
     cancelacion: false,
-    expiracion: false,
-    demanda: false,
+    credito: false,
+    expirar: false,
   });
 
   function handleLoading(key, value) {
     setLoading((prev) => ({ ...prev, [key]: value }));
-  }
-
-  async function handleSimularDias1a10() {
-    handleLoading("dias1a10", true);
-    try {
-      const res = await simularDias1a10();
-      Swal.fire({
-        icon: "success",
-        title: "Días 1 al 10 Simulado",
-        text: `Proceso completado. Suscripciones procesadas: ${res.resultado.suscripcionesProcesadas || 0}, Notificaciones de pago creadas: ${res.resultado.notificacionesCreadas || 0}`,
-        confirmButtonColor: "var(--blue)",
-      });
-    } catch (err) {
-      Swal.fire({
-        icon: "error",
-        title: "Error en Simulación",
-        text: err.message || "No se pudo simular recordatorios de pago.",
-        confirmButtonColor: "var(--blue)",
-      });
-    } finally {
-      handleLoading("dias1a10", false);
-    }
-  }
-
-  async function handleSimularDia11() {
-    handleLoading("dia11", true);
-    try {
-      const res = await simularDia11();
-      Swal.fire({
-        icon: "success",
-        title: "Día 11 Simulado",
-        text: `Suspensión de deudores completada. Suscripciones procesadas: ${res.suscripcionesProcesadas || 0}. Usuarios suspendidos: ${res.suspendidasCount || 0}. Se crearon las notificaciones correspondientes.`,
-        confirmButtonColor: "var(--blue)",
-      });
-    } catch (err) {
-      Swal.fire({
-        icon: "error",
-        title: "Error en Simulación",
-        text: err.message || "No se pudo simular las suspensiones.",
-        confirmButtonColor: "var(--blue)",
-      });
-    } finally {
-      handleLoading("dia11", false);
-    }
   }
 
   async function handleForzarCancelacion() {
@@ -102,57 +54,47 @@ export default function DemoPanel() {
     }
   }
 
-  async function handleSimularExpiracion() {
-    handleLoading("expiracion", true);
+  async function handleGenerarCredito() {
+    handleLoading("credito", true);
     try {
-      const res = await simularExpiracion();
+      const res = await generarCreditoAVencer();
       Swal.fire({
         icon: "success",
-        title: "Paso de 1 Hora Simulado",
-        text: `Se vencieron los cupos reservados sin confirmar. Abonados expirados: ${res.abonadosExpirados}. No abonados expirados: ${res.noAbonadosExpirados}. Se asignaron cupos a los siguientes en cola de espera.`,
+        title: "Crédito Generado",
+        text: `Se generó el crédito con fecha de vencimiento: ${new Date(res.fecha_vencimiento).toLocaleString()}`,
         confirmButtonColor: "var(--blue)",
       });
     } catch (err) {
       Swal.fire({
         icon: "error",
-        title: "Error en Simulación",
-        text: err.message || "No se pudo simular la expiración de la lista.",
+        title: "Error al generar crédito",
+        text: err.message || "No se pudo generar el crédito.",
         confirmButtonColor: "var(--blue)",
       });
     } finally {
-      handleLoading("expiracion", false);
+      handleLoading("credito", false);
     }
   }
 
-  async function handleSimularAltaDemanda() {
-    if (!turnoId.trim()) {
-      Swal.fire({
-        icon: "warning",
-        title: "Turno ID requerido",
-        text: "Por favor ingresa un ID de turno para inyectar demanda ficticia.",
-        confirmButtonColor: "var(--blue)",
-      });
-      return;
-    }
-
-    handleLoading("demanda", true);
+  async function handleExpirarCredito() {
+    handleLoading("expirar", true);
     try {
-      await simularAltaDemanda(Number(turnoId));
+      const res = await expirarCreditoDemo();
       Swal.fire({
         icon: "success",
-        title: "Alta Demanda Inyectada",
-        text: `Se agregaron 10 usuarios ficticios a la lista de espera para el turno ID: ${turnoId}. Esto supera el límite de 10 personas en espera y disparó la alerta para los Administradores.`,
+        title: "Crédito Expirado (Pasado)",
+        text: `El crédito ahora tiene fecha de vencimiento: ${new Date(res.credito.fecha_vencimiento).toLocaleString()}`,
         confirmButtonColor: "var(--blue)",
       });
     } catch (err) {
       Swal.fire({
         icon: "error",
-        title: "Error en Simulación",
-        text: err.message || "No se pudo simular el alta demanda.",
+        title: "Error al expirar crédito",
+        text: err.message || "No se pudo expirar el crédito.",
         confirmButtonColor: "var(--blue)",
       });
     } finally {
-      handleLoading("demanda", false);
+      handleLoading("expirar", false);
     }
   }
 
@@ -183,43 +125,7 @@ export default function DemoPanel() {
         </div>
 
         <div className="demo-actions-grid">
-          {/* Acción 1 */}
-          <div className="demo-action-item">
-            <div className="demo-action-info">
-              <FaCalendarDay className="demo-icon" />
-              <div>
-                <h3>Simular Días 1 al 10</h3>
-                <p>Envía notificaciones de recordatorio de pago a abonados con cuotas pendientes en el mes actual.</p>
-              </div>
-            </div>
-            <button
-              className="btn-primary"
-              onClick={handleSimularDias1a10}
-              disabled={loading.dias1a10}
-            >
-              {loading.dias1a10 ? "Procesando..." : "Simular Recordatorios"}
-            </button>
-          </div>
-
-          {/* Acción 2 */}
-          <div className="demo-action-item">
-            <div className="demo-action-info">
-              <FaUserSlash className="demo-icon" />
-              <div>
-                <h3>Simular Día 11</h3>
-                <p>Suspende la cuenta de abonados morosos, da de baja sus turnos fijos y los notifica automáticamente.</p>
-              </div>
-            </div>
-            <button
-              className="btn-primary"
-              onClick={handleSimularDia11}
-              disabled={loading.dia11}
-            >
-              {loading.dia11 ? "Procesando..." : "Suspender deudores"}
-            </button>
-          </div>
-
-          {/* Acción 3 */}
+          {/* Acción 1: Liberar Cupo */}
           <div className="demo-action-item">
             <div className="demo-action-info">
               <FaBan className="demo-icon" />
@@ -237,39 +143,39 @@ export default function DemoPanel() {
             </button>
           </div>
 
-          {/* Acción 4 */}
+          {/* Acción 2: Generar Crédito a Vencer */}
           <div className="demo-action-item">
             <div className="demo-action-info">
               <FaHourglassEnd className="demo-icon" />
               <div>
-                <h3>Simular Paso de 1 Hora</h3>
-                <p>Expira las reservas temporales de lista de espera que cumplieron 1 hora y reasigna el cupo al siguiente en cola.</p>
+                <h3>Generar Crédito a Vencer</h3>
+                <p>Crea un crédito disponible con fecha de vencimiento configurada para el día de hoy.</p>
               </div>
             </div>
             <button
               className="btn-primary"
-              onClick={handleSimularExpiracion}
-              disabled={loading.expiracion}
+              onClick={handleGenerarCredito}
+              disabled={loading.credito}
             >
-              {loading.expiracion ? "Procesando..." : "Simular paso de 1 hora"}
+              {loading.credito ? "Procesando..." : "Generar Crédito"}
             </button>
           </div>
 
-          {/* Acción 5 */}
+          {/* Acción 3: Expirar Crédito */}
           <div className="demo-action-item">
             <div className="demo-action-info">
-              <FaFireAlt className="demo-icon text-danger" />
+              <FaCalendarDay className="demo-icon" />
               <div>
-                <h3>Inyectar Alta Demanda</h3>
-                <p>Inscribe a 10 usuarios ficticios en la lista de espera del Turno de Referencia, disparando la alerta a los administradores.</p>
+                <h3>Expirar Crédito (Simular paso de 1 día)</h3>
+                <p>Busca el crédito disponible del usuario 2 y cambia su fecha de vencimiento al día de ayer.</p>
               </div>
             </div>
             <button
               className="btn-primary"
-              onClick={handleSimularAltaDemanda}
-              disabled={loading.demanda}
+              onClick={handleExpirarCredito}
+              disabled={loading.expirar}
             >
-              {loading.demanda ? "Procesando..." : "Inyectar demanda"}
+              {loading.expirar ? "Procesando..." : "Expirar Crédito"}
             </button>
           </div>
         </div>
