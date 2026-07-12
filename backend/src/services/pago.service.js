@@ -286,3 +286,7 @@ export async function registrarRestoTurno({
         usuario_id: usuarioId
     });
 }
+
+export async function asociarPagoConAbono(usuarioId, abonadoTurnoId, options = {}) {
+    return pagoRepository.asociarPagoConAbono(usuarioId, abonadoTurnoId, options);
+}

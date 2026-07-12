@@ -130,3 +130,21 @@ export async function getTodosLosMovimientos() {
     order: [['createdAt', 'DESC']] // Los más recientes primero
   });
 }
+
+export async function asociarPagoConAbono(usuarioId, abonadoTurnoId, options = {}) {
+    const ultimoPago = await Pago.findOne({
+        where: {
+            usuario_id: usuarioId,
+            tipo_pago: 'SUSCRIPCION_MENSUAL',
+            estado: 'COMPLETADO',
+            abonado_turno_id: null
+        },
+        order: [['createdAt', 'DESC']],
+        ...options
+    });
+
+    if (ultimoPago) {
+        return ultimoPago.update({ abonado_turno_id: abonadoTurnoId }, options);
+    }
+    return null;
+}
