@@ -4,7 +4,8 @@ import {
     obtenerMontoSuscripcionMensualCliente,
     pagarSenaPresencial,
     pagarSenaReservaCliente,
-    pagarSuscripcionMensualCliente
+    pagarSuscripcionMensualCliente,
+    pagarSuscripcionPendienteCliente
 } from '../flows/payment/pago.flow.js';
 import * as pagoService from '../services/pago.service.js';
 
@@ -83,6 +84,21 @@ export async function pagarSuscripcionMensual(req, res) {
         return res.status(400).json({ message: error.message });
     }
 }
+
+export async function pagarSuscripcionPendiente(req, res) {
+    try {
+        const resultado = await pagarSuscripcionPendienteCliente(req.body, req.usuario.id);
+
+        if (!resultado.exitoso) {
+            return res.status(400).json(resultado);
+        }
+
+        return res.status(200).json(resultado);
+    } catch (error) {
+        return res.status(400).json({ message: error.message });
+    }
+}
+
 
 export async function getDeudores(req, res) {
   try {

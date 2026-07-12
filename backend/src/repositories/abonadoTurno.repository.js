@@ -1,8 +1,12 @@
 import { Op } from 'sequelize';
-import { AbonadoTurno, Turno, Usuario } from '../models/index.model.js';
+import { AbonadoTurno, Turno, Usuario, Actividad, Pago } from '../models/index.model.js';
 
-export async function create(data) {
-  return AbonadoTurno.create(data);
+export async function create(data, options = {}) {
+  return AbonadoTurno.create(data, options);
+}
+
+export async function findById(id) {
+  return AbonadoTurno.findByPk(id);
 }
 
 export async function findActivo(usuarioId, turnoId) {
@@ -39,6 +43,20 @@ export async function findActivosByTurno(turnoId) {
   });
 }
 
+export async function findActivosYSuspendidosByTurno(turnoId) {
+  return AbonadoTurno.findAll({
+    where: {
+      turno_id: turnoId,
+      [Op.or]: [{ estado: 'ACTIVO' }, { estado: 'SUSPENDIDO' }]
+    },
+    include: [{
+      model: Usuario,
+      attributes: { exclude: ['contrasena', 'token_activacion', 'token_expiracion'] }
+    }],
+    order: [['createdAt', 'ASC']]
+  });
+}
+
 export async function countActivosByTurno(turnoId) {
   return AbonadoTurno.count({
     where: {
@@ -55,6 +73,13 @@ export async function updateCancelaciones(id, cancelaciones, estado) {
   );
 }
 
+export async function updateEstado(id, estado, transaction) {
+  return AbonadoTurno.update(
+    { estado },
+    { where: { id }, transaction }
+  );
+}
+
 export async function darDeBaja(id) {
   return AbonadoTurno.update(
     {
@@ -68,7 +93,17 @@ export async function darDeBaja(id) {
 export async function findByUsuarioId(usuarioId) {
   return AbonadoTurno.findAll({
     where: { usuario_id: usuarioId },
-    include: [Turno]
+    include: [
+      {
+        model: Turno,
+        include: [Actividad]
+      },
+      {
+        model: Pago,
+        where: { estado: 'PENDIENTE', tipo_pago: 'SUSCRIPCION_MENSUAL' },
+        required: false
+      }
+    ]
   });
 }
 

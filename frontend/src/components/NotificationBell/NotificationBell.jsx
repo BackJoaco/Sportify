@@ -131,7 +131,7 @@ export default function NotificationBell() {
                 >
                   <div className="notif-content">
                     <p className="notif-message">{notif.mensaje}</p>
-                    <span className="notif-date">{formatFecha(notif.fecha_creacion)}</span>
+                    <span className="notif-date">{formatFecha(notif.createdAt)}</span>
                   </div>
                   {!notif.leida && (
                     <button

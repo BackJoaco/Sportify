@@ -1,8 +1,19 @@
 import { Actividad, Pago, Reserva, Turno, Usuario, AbonadoTurno } from '../models/index.model.js';
 import { Op } from 'sequelize'; 
 
-export async function create(data) {
-    return Pago.create(data);
+export async function create(data, options = {}) {
+    return Pago.create(data, options);
+}
+
+export async function findById(id) {
+    return Pago.findByPk(id);
+}
+
+export async function updatePago(id, data, options = {}) {
+    return Pago.update(data, {
+        where: { id },
+        ...options
+    });
 }
 
 export async function findByUsuarioId(usuarioId) {

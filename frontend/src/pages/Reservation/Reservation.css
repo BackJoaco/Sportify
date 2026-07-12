@@ -142,6 +142,25 @@
     color: var(--gray);
 }
 
+.historial-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.historial-actions .btn-primary,
+.historial-actions .btn-secondary {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.8rem;
+    white-space: nowrap;
+}
+
+.historial-actions .btn-secondary {
+    border-color: var(--gray);
+    color: var(--gray);
+}
+
 /* Badges de estado */
 .badge-pago, .badge-estado {
     padding: 0.4rem 0.8rem;

@@ -111,6 +111,14 @@ export async function deleteByUsuarioId(usuarioId, transaction) {
     return pagoRepository.deleteByUsuarioId(usuarioId, transaction);
 }
 
+export async function findById(id) {
+    return pagoRepository.findById(id);
+}
+
+export async function updatePago(id, data, options = {}) {
+    return pagoRepository.updatePago(id, data, options);
+}
+
 export async function findSenaCompletadaByReserva(reservaId) {
     return pagoRepository.findSenaCompletadaByReserva(reservaId);
 }

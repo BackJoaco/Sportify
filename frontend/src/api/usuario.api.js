@@ -111,3 +111,17 @@ export async function getClientes() {
 
   return data;
 }
+
+export async function getMisAbonos() {
+  const res = await fetch(`${API_URL}/usuario/mis-abonos`, {
+    credentials: "include",
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw data;
+  }
+
+  return data;
+}
