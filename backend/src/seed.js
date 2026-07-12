@@ -1,3 +1,5 @@
+import { fileURLToPath } from 'url';
+import path from 'path';
 import { sequelize } from './config/database.js';
 import { Actividad } from './models/index.model.js';
 import { hashPassword } from './utils/bcrypt.js';
@@ -18,9 +20,9 @@ import {
   seedColaAbonadosFutbol
 } from './seeds/seeders.js';
 
-async function runSeed() {
+export async function runSeed(options = { force: false }) {
   await sequelize.authenticate();
-  await sequelize.sync();
+  await sequelize.sync({ force: options.force });
 
   const hashedPassword = await hashPassword(DEFAULT_PASSWORD);
 
@@ -61,12 +63,16 @@ async function runSeed() {
   console.log(`Contraseña temporal para todos los usuarios: ${DEFAULT_PASSWORD}`);
 }
 
-runSeed()
-  .catch((error) => {
-    console.error('Error ejecutando el seed:');
-    console.error(error);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await sequelize.close();
-  });
+const isMain = process.argv[1] && (path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url)));
+
+if (isMain) {
+  runSeed({ force: false })
+    .catch((error) => {
+      console.error('Error ejecutando el seed:');
+      console.error(error);
+      process.exit(1);
+    })
+    .finally(async () => {
+      await sequelize.close();
+    });
+}
