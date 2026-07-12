@@ -144,6 +144,17 @@ export async function findActivoByMes(usuarioId, turnoId, mes) {
   });
 }
 
+export async function findSuspendidoByMes(usuarioId, turnoId, mes) {
+  return AbonadoTurno.findOne({
+    where: {
+      usuario_id: usuarioId,
+      turno_id: turnoId,
+      mes_anio: mes,
+      estado: 'SUSPENDIDO'
+    }
+  });
+}
+
 export async function findActivoOSuspendidoByMes(usuarioId, turnoId, mes) {
   return AbonadoTurno.findOne({
     where: {

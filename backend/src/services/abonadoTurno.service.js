@@ -60,6 +60,10 @@ export function findActivoByMes(usuarioId, turnoId, mes) {
   return abonadoTurnoRepository.findActivoByMes(usuarioId, turnoId, mes);
 }
 
+export function findSuspendidoByMes(usuarioId, turnoId, mes) {
+  return abonadoTurnoRepository.findSuspendidoByMes(usuarioId, turnoId, mes);
+}
+
 export function findActivoOSuspendidoByMes(usuarioId, turnoId, mes) {
   return abonadoTurnoRepository.findActivoOSuspendidoByMes(usuarioId, turnoId, mes);
 }

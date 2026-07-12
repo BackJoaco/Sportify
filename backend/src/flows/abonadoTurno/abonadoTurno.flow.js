@@ -23,7 +23,6 @@ export async function altaAbonado(usuarioId, turnoId, fechaBase = new Date()) {
     fecha_alta: new Date().toISOString().split('T')[0],
     estado: 'ACTIVO'
   });
-
   // Generar las reservas para las clases restantes
   let reservasCreadas = 0;
   for (const fecha of validacion.remainingDates) {

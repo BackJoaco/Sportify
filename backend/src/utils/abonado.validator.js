@@ -45,6 +45,11 @@ export async function validarPuedeAbonarse(usuarioId, turnoId, fechaBase = new D
     return { puede: false, motivo: 'El cliente ya es abonado activo de este turno para este mes.' };
   }
 
+  const abonadoSuspendido = await abonadoTurnoService.findSuspendidoByMes(usuarioId, turnoId, currentMonthInt);
+  if (abonadoSuspendido) {
+    return { puede: false, motivo: 'El cliente se encuentra suspendido del abono, para regularizar su situacion pague en el home' };
+  }
+
   // Validar si el usuario ya tiene reservas NO_ABONADO futuras en el mes
   for (const fecha of remainingDates) {
     const reservaExistente = await reservaService.findByUsuarioTurnoFecha(usuarioId, turnoId, fecha);
