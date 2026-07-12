@@ -264,3 +264,25 @@ export async function listarMovimientos() {
     };
   });
 }
+
+export async function registrarRestoTurno({
+    monto,
+    reservaId,
+    usuarioId,
+    metodoPago = 'EFECTIVO'
+}) {
+    const montoNumerico = Number(monto);
+
+    if (!monto || Number.isNaN(montoNumerico) || montoNumerico <= 0) {
+        throw new Error('Debe ingresar un monto valido para el resto del turno');
+    }
+
+    return pagoRepository.create({
+        monto,
+        tipo_pago: 'RESTO_TURNO',
+        metodo_pago: metodoPago,
+        estado: 'COMPLETADO',
+        reserva_id: reservaId,
+        usuario_id: usuarioId
+    });
+}

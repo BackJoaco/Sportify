@@ -518,3 +518,29 @@ export async function ingresarColaNoAbonado(usuarioId, turnoId, fecha) {
     posicion: result.posicion
   };
 }
+
+export async function escanearQRFlow(codigo_qr) {
+  // 1. Registrar el presente de la reserva del cliente
+  const reservaActualizada = await reservaService.marcarPresentePorQR(codigo_qr);
+
+  // 2. Si la reserva tiene el pago de la seña (SENA_ABONADA), cobrar el resto
+  if (reservaActualizada.estado_pago === 'SENA_ABONADA') {
+    const senaPago = await pagoService.findSenaCompletadaByReserva(reservaActualizada.id);
+    
+    if (senaPago) {
+      // Registrar el resto del turno con efectivo y estado completado
+      await pagoService.registrarRestoTurno({
+        monto: senaPago.monto,
+        reservaId: reservaActualizada.id,
+        usuarioId: reservaActualizada.usuario_id,
+        metodoPago: 'EFECTIVO'
+      });
+
+      // Actualizar el estado de pago de la reserva a PAGADO_COMPLETO
+      await reservaService.actualizarEstadoPago(reservaActualizada.id, 'PAGADO_COMPLETO');
+    }
+  }
+
+  // Retornar la reserva con el estado de pago y asistencia más reciente
+  return reservaService.findById(reservaActualizada.id);
+}
