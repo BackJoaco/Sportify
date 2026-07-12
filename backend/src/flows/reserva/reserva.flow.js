@@ -12,7 +12,7 @@ import * as creditoService from '../../services/credito.service.js';
 import { validarPuedeAbonarse } from '../../utils/abonado.validator.js';
 
 const DIAS = ['DOMINGO', 'LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO'];
-const MINUTOS_PAGO_SENA_LISTA_ESPERA = 2;
+const MINUTOS_PAGO_SENA_LISTA_ESPERA = 1;
 
 function obtenerDiaSemana(fecha) {
   const [year, month, day] = String(fecha).split('-').map(Number);
