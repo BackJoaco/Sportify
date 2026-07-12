@@ -204,7 +204,7 @@ export async function escanearQR(req, res) {
       return res.status(400).json({ message: "Se requiere un código QR válido" });
     }
 
-    const reservaActualizada = await reservaService.marcarPresentePorQR(codigo_qr);
+    const reservaActualizada = await reservaFlow.escanearQRFlow(codigo_qr);
 
     return res.status(200).json({
       message: "Presente marcado correctamente",

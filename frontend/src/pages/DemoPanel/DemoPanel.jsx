@@ -5,7 +5,8 @@ import Swal from "sweetalert2";
 import {
   forzarCancelacion,
   generarCreditoAVencer,
-  expirarCreditoDemo
+  expirarCreditoDemo,
+  resetDatabase
 } from "../../api/demo.api";
 import "./DemoPanel.css";
 
@@ -16,6 +17,7 @@ export default function DemoPanel() {
     cancelacion: false,
     credito: false,
     expirar: false,
+    resetDb: false,
   });
 
   function handleLoading(key, value) {
@@ -98,6 +100,41 @@ export default function DemoPanel() {
     }
   }
 
+  async function handleResetDatabase() {
+    const confirm = await Swal.fire({
+      title: "¿Estás seguro?",
+      text: "Esto eliminará todas las tablas, recreará la base de datos y ejecutará el seed inicial. ¡Esta acción es destructiva!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#ff4757",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Sí, reiniciar y seedear",
+      cancelButtonText: "Cancelar"
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    handleLoading("resetDb", true);
+    try {
+      const res = await resetDatabase();
+      Swal.fire({
+        icon: "success",
+        title: "Base de Datos Reiniciada",
+        text: res.message || "Se recreó la estructura de la base de datos y se aplicaron las semillas correctamente.",
+        confirmButtonColor: "var(--blue)",
+      });
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        title: "Error al reiniciar",
+        text: err.message || "Hubo un problema al procesar la solicitud.",
+        confirmButtonColor: "var(--blue)",
+      });
+    } finally {
+      handleLoading("resetDb", false);
+    }
+  }
+
   return (
     <div className="demo-panel-container">
       <div className="demo-panel-card">
@@ -176,6 +213,24 @@ export default function DemoPanel() {
               disabled={loading.expirar}
             >
               {loading.expirar ? "Procesando..." : "Expirar Crédito"}
+            </button>
+          </div>
+
+          {/* Acción 4: Reiniciar Base de Datos */}
+          <div className="demo-action-item">
+            <div className="demo-action-info">
+              <FaFireAlt className="demo-icon text-danger" />
+              <div>
+                <h3>Restablecer Base de Datos (Limpiar y Seedear)</h3>
+                <p>Borra todas las tablas de la base de datos, las vuelve a crear e inyecta los datos iniciales de prueba (seed).</p>
+              </div>
+            </div>
+            <button
+              className="btn-danger"
+              onClick={handleResetDatabase}
+              disabled={loading.resetDb}
+            >
+              {loading.resetDb ? "Restableciendo..." : "Restablecer Base de Datos"}
             </button>
           </div>
         </div>

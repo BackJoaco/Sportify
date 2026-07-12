@@ -12,7 +12,7 @@ import * as creditoService from '../../services/credito.service.js';
 import { validarPuedeAbonarse } from '../../utils/abonado.validator.js';
 
 const DIAS = ['DOMINGO', 'LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO'];
-const MINUTOS_PAGO_SENA_LISTA_ESPERA = 2;
+const MINUTOS_PAGO_SENA_LISTA_ESPERA = 1;
 
 function obtenerDiaSemana(fecha) {
   const [year, month, day] = String(fecha).split('-').map(Number);
@@ -323,6 +323,20 @@ async function _procesarCancelacionAbonado(reserva, usuarioId, horasFaltantes) {
 
   if (nuevoEstado === 'SUSPENDIDO') {
     await reservaService.cancelarReservasFuturasAbonadoByUsuarioTurno(usuarioId, reserva.turno_id);
+    await abonadoTurnoService.quitarDescuento(abono.id);
+    
+    // Obtener precio mensual
+    const turno = await turnoService.getTurnoById(reserva.turno_id);
+    const precioMensual = Number(turno?.Actividad?.precio_mensual || 0);
+
+    // Generar pago de suscripción mensual pendiente
+    await pagoService.registrarSuscripcionMensualPendiente({
+      monto: precioMensual,
+      usuarioId,
+      abonadoTurnoId: abono.id,
+      metodoPago: 'MERCADO_PAGO'
+    });
+
     mensajeExtra = ` Llegaste al límite de 3 cancelaciones. Tu abono ha sido suspendido y todas tus clases restantes del mes fueron canceladas.`;
   } else {
     mensajeExtra = ` (Llevas ${nuevasCancelaciones} de 3 cancelaciones permitidas en el mes).`;
@@ -517,4 +531,30 @@ export async function ingresarColaNoAbonado(usuarioId, turnoId, fecha) {
     message: 'Ingresaste exitosamente a la cola de no abonados.',
     posicion: result.posicion
   };
+}
+
+export async function escanearQRFlow(codigo_qr) {
+  // 1. Registrar el presente de la reserva del cliente
+  const reservaActualizada = await reservaService.marcarPresentePorQR(codigo_qr);
+
+  // 2. Si la reserva tiene el pago de la seña (SENA_ABONADA), cobrar el resto
+  if (reservaActualizada.estado_pago === 'SENA_ABONADA') {
+    const senaPago = await pagoService.findSenaCompletadaByReserva(reservaActualizada.id);
+    
+    if (senaPago) {
+      // Registrar el resto del turno con efectivo y estado completado
+      await pagoService.registrarRestoTurno({
+        monto: senaPago.monto,
+        reservaId: reservaActualizada.id,
+        usuarioId: reservaActualizada.usuario_id,
+        metodoPago: 'EFECTIVO'
+      });
+
+      // Actualizar el estado de pago de la reserva a PAGADO_COMPLETO
+      await reservaService.actualizarEstadoPago(reservaActualizada.id, 'PAGADO_COMPLETO');
+    }
+  }
+
+  // Retornar la reserva con el estado de pago y asistencia más reciente
+  return reservaService.findById(reservaActualizada.id);
 }

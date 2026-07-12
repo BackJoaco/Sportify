@@ -5,6 +5,7 @@ import * as reservaService from '../../services/reserva.service.js';
 import * as turnoService from '../../services/turno.service.js';
 import * as usuarioService from '../../services/usuario.service.js';
 import * as notificacionService from '../../services/notificacion.service.js';
+import * as pagoService from '../../services/pago.service.js';
 
 import { getRemainingClassesInSportifyMonth } from '../../utils/date.utils.js';
 import { validarPuedeAbonarse } from '../../utils/abonado.validator.js';
@@ -23,7 +24,6 @@ export async function altaAbonado(usuarioId, turnoId, fechaBase = new Date()) {
     fecha_alta: new Date().toISOString().split('T')[0],
     estado: 'ACTIVO'
   });
-
   // Generar las reservas para las clases restantes
   let reservasCreadas = 0;
   for (const fecha of validacion.remainingDates) {
@@ -35,7 +35,8 @@ export async function altaAbonado(usuarioId, turnoId, fechaBase = new Date()) {
         fecha: fecha,
         tipo_reserva: 'ABONADO',
         estado: 'CONFIRMADA',
-        estado_pago: 'PAGADO_COMPLETO'
+        estado_pago: 'PAGADO_COMPLETO',
+        codigo_qr: `QR-${turnoId}-${usuarioId}-${fecha}`
       });
       reservasCreadas++;
     }
@@ -45,6 +46,9 @@ export async function altaAbonado(usuarioId, turnoId, fechaBase = new Date()) {
   if (espera) {
     await listaEsperaAbonadoService.confirmar(espera.id);
   }
+
+  // Asociar el pago con el abono recién creado
+  await pagoService.asociarPagoConAbono(usuarioId, abonado.id);
 
   return {
     status: 'ACTIVO',

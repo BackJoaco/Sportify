@@ -2,6 +2,7 @@ import { cancelarReserva, asignarSiguienteWaitlist } from '../flows/reserva/rese
 import { processExpiredWaitlists } from '../utils/waitlistScheduler.js'
 import { Reserva, Credito } from '../models/index.model.js';
 import { Op } from 'sequelize';
+import { runSeed } from '../seed.js';
 
 
 export async function forzarCancelacion(req, res) {
@@ -118,5 +119,20 @@ export async function expirarCreditoDemo(req, res) {
     });
   } catch (error) {
     return res.status(400).json({ message: error.message });
+  }
+}
+
+export async function resetDatabase(req, res) {
+  try {
+    await runSeed({ force: true });
+    return res.status(200).json({
+      message: 'Base de datos reseteada y seed ejecutado correctamente.',
+    });
+  } catch (error) {
+    console.error('Error al resetear la base de datos y correr el seed:', error);
+    return res.status(500).json({
+      message: 'Error al resetear la base de datos.',
+      error: error.message
+    });
   }
 }

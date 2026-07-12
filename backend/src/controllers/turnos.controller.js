@@ -113,7 +113,6 @@ export async function getOcupacion(req, res) {
     const { id } = req.params;
     const { fecha } = req.query;
     const ocupacion = await turnoFlow.getOcupacionFlow(id, fecha);
-    console.log(ocupacion);
     return res.status(200).json(ocupacion);
   } catch (error) {
     return res.status(400).json({ message: error.message });

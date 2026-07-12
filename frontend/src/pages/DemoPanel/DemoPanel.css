@@ -140,6 +140,23 @@
   min-width: 170px;
 }
 
+.btn-danger {
+  background-color: #ff4757;
+  border: 1px solid #ff4757;
+  color: #fff;
+  transition: background-color 0.2s ease;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background-color: #e84118;
+  border-color: #e84118;
+}
+
+.btn-danger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 @media (max-width: 768px) {
   .demo-action-item {
     flex-direction: column;

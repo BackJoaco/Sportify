@@ -36,6 +36,10 @@ export function updateEstado(id, estado, transaction) {
   return abonadoTurnoRepository.updateEstado(id, estado, transaction);
 }
 
+export function quitarDescuento(id) {
+  return abonadoTurnoRepository.quitarDescuento(id);
+}
+
 export function darDeBaja(id) {
   return abonadoTurnoRepository.darDeBaja(id);
 }
@@ -58,6 +62,10 @@ export function findActivosByMes(mes) {
 
 export function findActivoByMes(usuarioId, turnoId, mes) {
   return abonadoTurnoRepository.findActivoByMes(usuarioId, turnoId, mes);
+}
+
+export function findSuspendidoByMes(usuarioId, turnoId, mes) {
+  return abonadoTurnoRepository.findSuspendidoByMes(usuarioId, turnoId, mes);
 }
 
 export function findActivoOSuspendidoByMes(usuarioId, turnoId, mes) {

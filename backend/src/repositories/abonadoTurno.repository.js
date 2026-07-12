@@ -80,6 +80,13 @@ export async function updateEstado(id, estado, transaction) {
   );
 }
 
+export async function quitarDescuento(id) {
+  return AbonadoTurno.update(
+    { pierde_descuento: 1 },
+    { where: { id } }
+  );
+}
+
 export async function darDeBaja(id) {
   return AbonadoTurno.update(
     {
@@ -140,6 +147,17 @@ export async function findActivoByMes(usuarioId, turnoId, mes) {
       turno_id: turnoId,
       mes_anio: mes,
       estado: 'ACTIVO'
+    }
+  });
+}
+
+export async function findSuspendidoByMes(usuarioId, turnoId, mes) {
+  return AbonadoTurno.findOne({
+    where: {
+      usuario_id: usuarioId,
+      turno_id: turnoId,
+      mes_anio: mes,
+      estado: 'SUSPENDIDO'
     }
   });
 }

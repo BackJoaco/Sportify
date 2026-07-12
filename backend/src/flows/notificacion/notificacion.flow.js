@@ -39,7 +39,7 @@ export async function procesarVencimientos() {
 export async function procesarRecordatoriosCreditoPorVenver() {
   const usuariosId = await creditoService.obtenerUsuariosConCreditosPorVencer();
 
-  if (!usuariosId){
+  if (!usuariosId) {
     return
   }
 
@@ -96,7 +96,7 @@ export async function procesarRecordatoriosPago(force = false) {
 
     if (!abonoNuevo) {
       const mensaje = `Recordatorio de Pago: Tienes tiempo hasta el día 10 de este mes para regularizar el pago de tu cuota de abonado.`;
-      
+
       // Evitar duplicados en el mismo dia
       const yaNotificado = await notificacionService.findRepetidaByDia(abono.usuario_id, mensaje);
       if (!yaNotificado) {
@@ -106,7 +106,7 @@ export async function procesarRecordatoriosPago(force = false) {
           leida: false
         });
         notificacionesCreadas++;
-        
+
         // Verificar si ya se le genero el pago pendiente para este abono
         const pagoPendiente = await Pago.findOne({
           where: {
@@ -118,8 +118,8 @@ export async function procesarRecordatoriosPago(force = false) {
 
         if (!pagoPendiente) {
           const turno = await turnoService.getTurnoById(abono.turno_id);
-          const montoMes = turno.Actividad?.precio_mensual || 0;
-          
+          const montoMes = turno.Actividad?.precio_mensual * 0.8;
+
           await Pago.create({
             usuario_id: abono.usuario_id,
             monto: montoMes,

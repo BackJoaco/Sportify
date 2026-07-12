@@ -32,3 +32,13 @@ export async function expirarCreditoDemo() {
   if (!res.ok) throw data;
   return data;
 }
+
+export async function resetDatabase() {
+  const res = await fetch(`${API_URL}/reset-db`, {
+    method: "POST",
+    credentials: "include",
+  });
+  const data = await res.json();
+  if (!res.ok) throw data;
+  return data;
+}
