@@ -148,3 +148,13 @@ export async function asociarPagoConAbono(usuarioId, abonadoTurnoId, options = {
     }
     return null;
 }
+
+export async function findRestoTurnoPendienteByReserva(reservaId) {
+    return Pago.findOne({
+        where: {
+            reserva_id: reservaId,
+            tipo_pago: 'RESTO_TURNO',
+            estado: 'PENDIENTE'
+        }
+    });
+}

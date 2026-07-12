@@ -537,20 +537,33 @@ export async function escanearQRFlow(codigo_qr) {
   // 1. Registrar el presente de la reserva del cliente
   const reservaActualizada = await reservaService.marcarPresentePorQR(codigo_qr);
 
-  // 2. Si existe un pago de seña completada para esta reserva, cobrar el resto
-  const senaPago = await pagoService.findSenaCompletadaByReserva(reservaActualizada.id);
-  
-  if (senaPago) {
-    // Registrar el resto del turno con efectivo y estado completado
-    await pagoService.registrarRestoTurno({
-      monto: senaPago.monto,
-      reservaId: reservaActualizada.id,
-      usuarioId: reservaActualizada.usuario_id,
-      metodoPago: 'EFECTIVO'
-    });
-
-    // Actualizar el estado de pago de la reserva a PAGADO_COMPLETO
-    await reservaService.actualizarEstadoPago(reservaActualizada.id, 'PAGADO_COMPLETO');
+  // 2. Si la reserva es de tipo NO_ABONADO, gestionar el cobro del resto
+  if (reservaActualizada.tipo_reserva === 'NO_ABONADO') {
+    // Buscar si existe un pago de resto de turno pendiente para esta reserva
+    const pagoRestoPendiente = await pagoService.findRestoTurnoPendienteByReserva(reservaActualizada.id);
+    
+    if (pagoRestoPendiente) {
+      // Actualizar el pago existente a COMPLETADO
+      await pagoService.updatePago(pagoRestoPendiente.id, { estado: 'COMPLETADO' });
+      
+      // Actualizar el estado de pago de la reserva a PAGADO_COMPLETO
+      await reservaService.actualizarEstadoPago(reservaActualizada.id, 'PAGADO_COMPLETO');
+    } else {
+      // Fallback seguro: Si no se generó el pago pendiente anteriormente (ej. seeds viejos),
+      // buscar el pago de seña completada y registrar el resto del turno
+      const senaPago = await pagoService.findSenaCompletadaByReserva(reservaActualizada.id);
+      
+      if (senaPago) {
+        await pagoService.registrarRestoTurno({
+          monto: senaPago.monto,
+          reservaId: reservaActualizada.id,
+          usuarioId: reservaActualizada.usuario_id,
+          metodoPago: 'EFECTIVO',
+          estado: 'COMPLETADO'
+        });
+        await reservaService.actualizarEstadoPago(reservaActualizada.id, 'PAGADO_COMPLETO');
+      }
+    }
   }
 
   // Retornar la reserva con el estado de pago y asistencia más reciente
