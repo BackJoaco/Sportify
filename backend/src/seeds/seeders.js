@@ -798,3 +798,72 @@ export async function seedColaAbonadosFutbol(transaction) {
     });
   }
 }
+
+export async function seedDeudorAbono(transaction) {
+  const cliente = await Usuario.findOne({ where: { email: 'cliente2@sportify.com' }, transaction });
+  const actividadTenis = await Actividad.findOne({ where: { nombre: 'Tenis' }, transaction });
+
+  if (!cliente || !actividadTenis) return;
+
+  const [turnoTenis] = await Turno.findOrCreate({
+    where: {
+      actividad_id: actividadTenis.id,
+      dia_semana: 'SABADO',
+      hora_inicio: '19:00:00'
+    },
+    defaults: {
+      entrenador: 'Entrenador Ficticio',
+      cupo_maximo: 10
+    },
+    transaction
+  });
+
+  // Mes 6 (Activo con pago y reservas presentes)
+  const abonadoMes6 = await AbonadoTurno.create({
+    usuario_id: cliente.id,
+    turno_id: turnoTenis.id,
+    estado: 'ACTIVO',
+    mes_anio: 6,
+    fecha_alta: '2026-06-11' // fecha ficticia dentro del rango
+  }, { transaction });
+
+  await Pago.create({
+    usuario_id: cliente.id,
+    monto: 5000,
+    tipo_pago: 'SUSCRIPCION_MENSUAL',
+    metodo_pago: 'MERCADO_PAGO',
+    estado: 'COMPLETADO',
+    abonado_turno_id: abonadoMes6.id
+  }, { transaction });
+
+  const fechasMes6 = ['2026-06-13', '2026-06-20', '2026-06-27', '2026-07-04'];
+  for (const fecha of fechasMes6) {
+    await Reserva.create({
+      usuario_id: cliente.id,
+      turno_id: turnoTenis.id,
+      tipo_reserva: 'ABONADO',
+      estado: 'PRESENTE',
+      fecha: fecha,
+      abonado_turno_id: abonadoMes6.id,
+      codigo_qr: `QR-${turnoTenis.id}-${cliente.id}-${fecha}`
+    }, { transaction });
+  }
+
+  // Mes 7 (Suspendido y pendiente de pago)
+  const abonadoMes7 = await AbonadoTurno.create({
+    usuario_id: cliente.id,
+    turno_id: turnoTenis.id,
+    estado: 'SUSPENDIDO',
+    mes_anio: 7,
+    fecha_alta: '2026-07-11' 
+  }, { transaction });
+
+  await Pago.create({
+    usuario_id: cliente.id,
+    monto: 5000,
+    tipo_pago: 'SUSCRIPCION_MENSUAL',
+    metodo_pago: 'MERCADO_PAGO',
+    estado: 'PENDIENTE',
+    abonado_turno_id: abonadoMes7.id
+  }, { transaction });
+}

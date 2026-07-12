@@ -17,7 +17,8 @@ import {
   seedReservasEspecificas,
   seedAbonadosEspecificos,
   seedCreditosCliente1,
-  seedColaAbonadosFutbol
+  seedColaAbonadosFutbol,
+  seedDeudorAbono
 } from './seeds/seeders.js';
 
 export async function runSeed(options = { force: false }) {
@@ -57,6 +58,7 @@ export async function runSeed(options = { force: false }) {
     await seedAbonadosEspecificos(transaction);
     await seedCreditosCliente1(transaction);
     await seedColaAbonadosFutbol(transaction);
+    await seedDeudorAbono(transaction);
   });
 
   console.log('Seed ejecutado correctamente.');
