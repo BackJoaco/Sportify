@@ -18,6 +18,11 @@ import SetPassword from "../pages/SetPassword/SetPassword";
 import UserManagement from "../pages/UserManagement/UserManagement";
 import ModifyActivity from "../pages/ModifyActivity/ModifyActivity";
 import Payments from "../pages/Payments/Payments";
+import DemoPanel from "../pages/DemoPanel/DemoPanel";
+import DemandaActividades from "../pages/Statistics/Statistics"; 
+import HistorialCreditos from "../pages/SeeCredits/SeeCredits";
+import PagosPendientes from "../pages/ListDebtors/ListDebtors";
+import HistorialMovimientos from "../pages/ListTransaction/ListTransaction";
 
 export default function AppRoutes() {
   return (
@@ -160,6 +165,59 @@ export default function AppRoutes() {
         element={
           <PrivateRoute>
             <UserManagement />
+          </PrivateRoute>
+        }
+      />
+
+      <Route
+        path="/demo-panel"
+        element={
+          <PrivateRoute>
+            <ProtectedRoute allowedRoles={["ADMINISTRADOR"]}>
+              <DemoPanel />
+            </ProtectedRoute>
+          </PrivateRoute>
+        }
+      />
+
+      <Route
+        path="/estadisticas/demanda"
+        element={
+          <PrivateRoute>
+            <ProtectedRoute allowedRoles={["ADMINISTRADOR"]}>
+              <DemandaActividades />
+            </ProtectedRoute>
+          </PrivateRoute>
+        }
+      />
+
+      <Route
+        path="/mis-creditos"
+        element={
+          <PrivateRoute>
+            <HistorialCreditos />
+          </PrivateRoute>
+        }
+      />
+
+      <Route
+        path="/administracion/movimientos"
+        element={
+          <PrivateRoute>
+            <ProtectedRoute allowedRoles={["ADMINISTRADOR"]}>
+              <HistorialMovimientos />
+            </ProtectedRoute>
+          </PrivateRoute>
+        }
+      />
+
+      <Route
+        path="/administracion/pagos-pendientes"
+        element={
+          <PrivateRoute>
+            <ProtectedRoute allowedRoles={["ADMINISTRADOR"]}>
+              <PagosPendientes />
+            </ProtectedRoute>
           </PrivateRoute>
         }
       />

@@ -1,0 +1,81 @@
+import { ListaEsperaAbonado, Usuario } from '../models/index.model.js';
+
+export async function create(data) {
+  return ListaEsperaAbonado.create(data);
+}
+
+export async function countActivasByTurno(turnoId) {
+  return ListaEsperaAbonado.count({
+    where: {
+      turno_id: turnoId,
+      estado: ['EN_ESPERA']
+    }
+  });
+}
+
+export async function findActiva(usuarioId, turnoId) {
+  return ListaEsperaAbonado.findOne({
+    where: {
+      usuario_id: usuarioId,
+      turno_id: turnoId,
+      estado: ['EN_ESPERA', 'NOTIFICADO', 'CUPO_RESERVADO']
+    }
+  });
+}
+
+export async function findByUsuarioTurnoConBorrados(usuarioId, turnoId) {
+  return ListaEsperaAbonado.findOne({
+    where: {
+      usuario_id: usuarioId,
+      turno_id: turnoId
+    },
+    paranoid: false // Trae también registros que tengan deletedAt
+  });
+}
+
+export async function findSiguienteEnEspera(turnoId) {
+  return ListaEsperaAbonado.findOne({
+    where: {
+      turno_id: turnoId,
+      estado: 'EN_ESPERA'
+    },
+    order: [['posicion', 'ASC'], ['createdAt', 'ASC']]
+  });
+}
+
+export async function findByTurno(turnoId) {
+  return ListaEsperaAbonado.findAll({
+    where: { turno_id: turnoId },
+    include: [{
+      model: Usuario,
+      attributes: { exclude: ['contrasena', 'token_activacion', 'token_expiracion'] }
+    }],
+    order: [['posicion', 'ASC'], ['createdAt', 'ASC']]
+  });
+}
+
+export async function updateEstado(id, data) {
+  return ListaEsperaAbonado.update(data, { where: { id } });
+}
+
+export async function deleteById(id) {
+  return ListaEsperaAbonado.destroy({
+    where: { id }
+  });
+}
+
+export async function deleteByUsuarioId(usuarioId, transaction) {
+  return ListaEsperaAbonado.destroy({
+    where: { usuario_id: usuarioId },
+    transaction
+  });
+}
+
+export async function countWaiting(turnoId) {
+  return ListaEsperaAbonado.count({
+    where: {
+      turno_id: turnoId,
+      estado: 'EN_ESPERA'
+    }
+  });
+}

@@ -9,6 +9,10 @@ import actividadRoutes from './routes/actividad.route.js';
 import turnoRoutes from './routes/turno.route.js';
 import pagoRoutes from './routes/pago.route.js';
 import reservaRoutes from './routes/reserva.route.js';
+import notificacionRoutes from './routes/notificacion.route.js';
+import demoRoutes from './routes/demo.route.js';
+import estadisticaRoutes from './routes/estadistica.route.js';
+import creditoRoutes from './routes/credito.route.js';
 
 const app = express();
 
@@ -35,6 +39,10 @@ app.use('/api/actividad', actividadRoutes);
 app.use('/api/turno', turnoRoutes);
 app.use('/api/pago', pagoRoutes);
 app.use('/api/reserva', reservaRoutes);
+app.use('/api/estadisticas', estadisticaRoutes);
+app.use('/api/creditos', creditoRoutes);
+app.use('/api/notificacion', notificacionRoutes);
+app.use('/api/demo', demoRoutes);
 app.use((req, res) => {
     res.status(404).json({ ok: false, message: 'Ruta no encontrada' });
 });

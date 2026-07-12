@@ -61,6 +61,25 @@ export async function crearReserva(datos) {
   return data;
 }
 
+export async function crearReservaConCredito(datos) {
+  const res = await fetch(`${API_URL}/reserva/crear-con-credito`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify(datos),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw data;
+  }
+
+  return data;
+}
+
 export async function cancelarReserva(id) {
   const res = await fetch(`${API_URL}/reserva/${id}/cancelar`, {
     method: "PATCH",
@@ -79,9 +98,66 @@ export async function cancelarReserva(id) {
   return data;
 }
 
+export async function salirDeColaNoAbonado(datos) {
+  const res = await fetch(`${API_URL}/reserva/cola-no-abonados/salir`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify(datos),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw data;
+  }
+
+  return data;
+}
+
 
 export async function crearReservaStaff(datos) {
   const res = await fetch(`${API_URL}/reserva/staff`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify(datos),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw data;
+  }
+
+  return data;
+}
+
+export async function ingresarColaNoAbonado(datos) {
+  const res = await fetch(`${API_URL}/reserva/cola-no-abonados/ingresar`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify(datos),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw data;
+  }
+
+  return data;
+}
+
+export async function escanearQR(datos) {
+  const res = await fetch(`${API_URL}/reserva/escanearQR`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

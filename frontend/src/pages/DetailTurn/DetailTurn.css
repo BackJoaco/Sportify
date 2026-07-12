@@ -196,6 +196,88 @@
   color: var(--blue) !important;
 }
 
+.client-turn-status {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(30, 91, 240, 0.16);
+  border-left: 5px solid var(--blue);
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(30, 91, 240, 0.08), rgba(255, 255, 255, 0.95));
+  margin-top: 1rem;
+  padding: 1.1rem 1.15rem;
+  box-shadow: 0 8px 20px rgba(30, 91, 240, 0.08);
+}
+
+.client-turn-status span {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  border-radius: 999px;
+  background: rgba(30, 91, 240, 0.1);
+  color: var(--blue);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.65rem;
+  padding: 0.3rem 0.55rem;
+  text-transform: uppercase;
+}
+
+.client-turn-status strong {
+  display: block;
+  color: var(--dark-blue);
+  font-size: 1.08rem;
+  line-height: 1.25;
+  margin-bottom: 0.45rem;
+}
+
+.client-turn-status p {
+  color: #4f5f70;
+  font-weight: 600;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.client-turn-status-success {
+  border-left-color: #27ae60;
+  background: linear-gradient(135deg, rgba(39, 174, 96, 0.11), rgba(255, 255, 255, 0.95));
+}
+
+.client-turn-status-warning {
+  border-left-color: #f39c12;
+  background: linear-gradient(135deg, rgba(243, 156, 18, 0.14), rgba(255, 255, 255, 0.95));
+}
+
+.client-turn-status-info {
+  border-left-color: var(--cyan);
+  background: linear-gradient(135deg, rgba(46, 204, 250, 0.12), rgba(255, 255, 255, 0.95));
+}
+
+.client-turn-status-neutral {
+  border-left-color: var(--gray);
+  background: linear-gradient(135deg, rgba(127, 140, 141, 0.1), rgba(255, 255, 255, 0.95));
+}
+
+.client-turn-status-success span {
+  background: rgba(39, 174, 96, 0.12);
+  color: #1e8449;
+}
+
+.client-turn-status-warning span {
+  background: rgba(243, 156, 18, 0.16);
+  color: #b9770e;
+}
+
+.client-turn-status-info span {
+  background: rgba(46, 204, 250, 0.14);
+  color: #117a8b;
+}
+
+.client-turn-status-neutral span {
+  background: rgba(127, 140, 141, 0.12);
+  color: var(--gray);
+}
+
 .empty-panel {
   min-height: 92px;
   display: flex;

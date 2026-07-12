@@ -1,0 +1,81 @@
+.creditos-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.credito-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--silver);
+  background-color: #fff;
+  transition: all 0.2s ease-in-out;
+}
+
+/* Efecto visual suave según el estado */
+.credito-card.vencido {
+  opacity: 0.7;
+  background-color: #fafafa;
+}
+
+.credito-card.usado {
+  background-color: var(--off-white);
+}
+
+.credito-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.credito-info strong {
+  color: var(--dark-blue);
+  font-size: 1.1rem;
+}
+
+.credito-fechas {
+  font-size: 0.85rem;
+  color: var(--gray);
+}
+
+.credito-status {
+  display: flex;
+  align-items: center;
+}
+
+.status-badge {
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  text-transform: capitalize;
+}
+
+/* Colores para cada estado de crédito */
+.badge-disponible {
+  background-color: #e8f5e9;
+  color: #2e7d32; /* Verde */
+}
+
+.badge-usado {
+  background-color: #e3f2fd;
+  color: #1565c0; /* Azul */
+}
+
+.badge-vencido {
+  background-color: #ffebee;
+  color: #c62828; /* Rojo */
+}
+
+/* Responsividad para móviles */
+@media (max-width: 600px) {
+  .credito-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+}

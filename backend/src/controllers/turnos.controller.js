@@ -1,23 +1,24 @@
 import * as turnosService from '../services/turno.service.js';
 import * as turnoFlow from "../flows/turnos/turno.flow.js";
+import * as abonadoTurnoFlow from "../flows/abonadoTurno/abonadoTurno.flow.js";
 
 export async function getTurnos(req, res) {
-    try {
-        const turnos = await turnosService.getTurnos();
-        return res.status(200).json(turnos);
-    } catch (error) {
-        return res.status(404).json({ message : error.message });
-    }
+  try {
+    const turnos = await turnosService.getTurnos();
+    return res.status(200).json(turnos);
+  } catch (error) {
+    return res.status(404).json({ message: error.message });
+  }
 }
 
 export async function create(req, res) {
   try {
     // Le pasamos el body completo al flow
     const nuevoTurno = await turnoFlow.crearTurnoFlow(req.body);
-    
-    return res.status(201).json({ 
-      message: "Turno creado exitosamente.", 
-      turno: nuevoTurno 
+
+    return res.status(201).json({
+      message: "Turno creado exitosamente.",
+      turno: nuevoTurno
     });
   } catch (error) {
     return res.status(400).json({ message: error.message });
@@ -28,7 +29,7 @@ export async function deleteTurno(req, res) {
   try {
     const { id } = req.params;
     await turnosService.deleteTurno(id);
-    
+
     return res.status(200).json({ message: "Turno eliminado exitosamente." });
   } catch (error) {
     // Si el error es por nuestras validaciones, mandamos un 400 (Bad Request)
@@ -40,7 +41,7 @@ export async function getTurnoById(req, res) {
   try {
     const { id } = req.params;
     const turno = await turnosService.getTurnoById(id);
-    
+
     return res.status(200).json(turno);
   } catch (error) {
     return res.status(404).json({ message: error.message });
@@ -50,11 +51,71 @@ export async function getTurnoById(req, res) {
 export async function getReservasCount(req, res) {
   try {
     const { id } = req.params;
-    const count = await turnoFlow.getReservasCount(id);
-    
+    const { fecha } = req.query;
+    const count = await turnoFlow.getReservasCount(id, fecha);
+
     return res.status(200).json({ count });
   } catch (error) {
     return res.status(404).json({ message: error.message });
+  }
+}
+
+export async function altaAbonado(req, res) {
+  try {
+    const { id } = req.params;
+    const usuarioId = req.body.usuario_id || req.usuario.id;
+    const fechaBase = req.body.fecha;
+    const resultado = await abonadoTurnoFlow.altaAbonado(usuarioId, id, fechaBase);
+
+    return res.status(200).json(resultado);
+  } catch (error) {
+    return res.status(400).json({ message: error.message });
+  }
+}
+
+export async function bajaAbonado(req, res) {
+  try {
+    const { id } = req.params;
+    const usuarioId = req.body.usuario_id || req.usuario.id;
+    const resultado = await abonadoTurnoFlow.bajaAbonado(usuarioId, id);
+
+    return res.status(200).json(resultado);
+  } catch (error) {
+    return res.status(400).json({ message: error.message });
+  }
+}
+
+export async function salirDeColaAbonado(req, res) {
+  try {
+    const { id } = req.params;
+
+    const resultado = await abonadoTurnoFlow.salirDeColaAbonado(req.usuario.id, id);
+    return res.status(200).json(resultado);
+  } catch (error) {
+    return res.status(400).json({ message: error.message });
+  }
+}
+
+export async function ingresarColaAbonado(req, res) {
+  try {
+    const { id } = req.params;
+    const fechaBase = req.body.fecha;
+
+    const resultado = await abonadoTurnoFlow.ingresarColaAbonado(req.usuario.id, id, fechaBase);
+    return res.status(201).json(resultado);
+  } catch (error) {
+    return res.status(400).json({ message: error.message });
+  }
+}
+
+export async function getOcupacion(req, res) {
+  try {
+    const { id } = req.params;
+    const { fecha } = req.query;
+    const ocupacion = await turnoFlow.getOcupacionFlow(id, fecha);
+    return res.status(200).json(ocupacion);
+  } catch (error) {
+    return res.status(400).json({ message: error.message });
   }
 }
 
@@ -83,6 +144,21 @@ export async function modificarTurno(req, res) {
 
   } catch (error) {
     // Si tira error de "no existe", mandamos un 404, sino un 400 (Bad Request)
+    const statusCode = error.message.includes('no existe') ? 404 : 400;
+    return res.status(statusCode).json({ mensaje: error.message });
+  }
+}
+
+export async function obtenerQR(req, res) {
+  try {
+    const { id } = req.params;
+    const usuarioId = req.usuario.id;
+
+    // El flow se encarga de validar que el turno exista, que la reserva sea del usuario, y que el turno no haya transcurrido
+    const qr = await turnoFlow.obtenerQRFlow(usuarioId, id);
+
+    return res.status(200).json({ codigo_qr: qr });
+  } catch (error) {
     const statusCode = error.message.includes('no existe') ? 404 : 400;
     return res.status(statusCode).json({ mensaje: error.message });
   }

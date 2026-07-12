@@ -14,7 +14,7 @@ export default (sequelize) => {
       defaultValue: 'CLIENTE' 
     },
     estado: { 
-      type: DataTypes.ENUM('HABILITADO', 'SUSPENDIDO'), 
+      type: DataTypes.ENUM('HABILITADO', 'INACTIVO'), 
       defaultValue: 'HABILITADO' 
     },
     token_activacion: { type: DataTypes.STRING(255), allowNull: true },

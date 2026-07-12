@@ -17,6 +17,10 @@ export function create(data) {
     return usuarioRepository.create(data);
 }
 
+export function findByIdIncludingDeleted(id, options) {
+    return usuarioRepository.findByIdIncludingDeleted(id, options);
+}
+
 export async function deleteEmployee(id) {
     const usuario = await usuarioRepository.findById(id);
 
@@ -29,6 +33,10 @@ export async function deleteEmployee(id) {
     }
 
     return usuarioRepository.deleteUsuario(id);
+}
+
+export async function deleteUsuarioInstance(usuario, transaction) {
+    return usuarioRepository.deleteUsuarioInstance(usuario, transaction);
 }
 
 export async function getProfile(id) {
@@ -149,4 +157,17 @@ export async function getEmployee(id) {
         dni: empleado.dni,
         estado: empleado.estado
     };
+}
+
+export async function findParanoidByEmailOrDni(email, dni) {
+    return usuarioRepository.findParanoidByEmailOrDni(email, dni);
+}
+
+export async function reactivateAndUpdate(id, data) {
+    await usuarioRepository.restore(id);
+    return usuarioRepository.update(id, data);
+}
+
+export async function findAllAdmins() {
+    return usuarioRepository.findAllAdmins();
 }

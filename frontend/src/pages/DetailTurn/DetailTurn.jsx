@@ -1,383 +1,817 @@
-import { useState, useEffect, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import Swal from "sweetalert2";
-import { getTurnoById, deleteTurno, getReservasCount, updateTurno } from "../../api/turno.api"; 
-import { useAuth } from "../../context/AuthContext"; 
-import { crearReserva, crearReservaStaff } from "../../api/reservas.api";
+import {
+  altaAbonadoTurno,
+  deleteTurno,
+  getOcupacionTurno,
+  getTurnoById,
+  salirDeColaAbonadoTurno,
+  updateTurno,
+  ingresarColaAbonado,
+  getQRbyId,
+} from "../../api/turno.api";
+import { cancelarReserva, crearReserva, crearReservaStaff, salirDeColaNoAbonado, ingresarColaNoAbonado, crearReservaConCredito } from "../../api/reservas.api";
+import {
+  obtenerMontoSenaTurno,
+  obtenerMontoSuscripcionMensual,
+  pagarSuscripcionMensual,
+  aplicarCreditoClase
+} from "../../api/pago.api";
 import { getClientes } from "../../api/usuario.api";
+import { useAuth } from "../../context/AuthContext";
+import PaymentModal from "../../components/PaymentModal/PaymentModal";
+import QRModal from "../../components/QRModal/QRModal";
+import "./DetailTurn.css";
 
 const HORAS_TURNO = Array.from({ length: 13 }, (_, i) => {
   const hora = String(i + 8).padStart(2, "0");
   return `${hora}:00`;
 });
 
+const DIAS = [
+  { value: "LUNES", label: "Lunes" },
+  { value: "MARTES", label: "Martes" },
+  { value: "MIERCOLES", label: "Miercoles" },
+  { value: "JUEVES", label: "Jueves" },
+  { value: "VIERNES", label: "Viernes" },
+  { value: "SABADO", label: "Sabado" },
+  { value: "DOMINGO", label: "Domingo" },
+];
+
+const DIA_INDEX = {
+  DOMINGO: 0,
+  LUNES: 1,
+  MARTES: 2,
+  MIERCOLES: 3,
+  JUEVES: 4,
+  VIERNES: 5,
+  SABADO: 6,
+};
+
+function fechaInput(fecha) {
+  const year = fecha.getFullYear();
+  const month = String(fecha.getMonth() + 1).padStart(2, "0");
+  const day = String(fecha.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function normalizarFechaHora(fecha, hora) {
+  if (!fecha || !hora) {
+    return null;
+  }
+
+  const fechaHora = new Date(`${fecha}T${hora}`);
+  return Number.isNaN(fechaHora.getTime()) ? null : fechaHora;
+}
+
+function proximaFechaParaDia(diaSemana) {
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+  const objetivo = DIA_INDEX[diaSemana] ?? hoy.getDay();
+  const diff = (objetivo - hoy.getDay() + 7) % 7;
+  const fecha = new Date(hoy);
+  fecha.setDate(hoy.getDate() + diff);
+  return fechaInput(fecha);
+}
+
+function formatearFecha(fecha) {
+  if (!fecha) return "Sin fecha";
+  const [year, month, day] = fecha.split("-");
+  return `${day}/${month}/${year}`;
+}
+
 export default function DetailTurn() {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { usuario } = useAuth(); 
-  
-  const [turno, setTurno] = useState(null);
-  const [cantidadInscriptos, setCantidadInscriptos] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [isReserving, setIsReserving] = useState(false);
+  const { usuario } = useAuth();
 
-  // NUEVOS ESTADOS PARA EDICIÓN
+  const [turno, setTurno] = useState(null);
+  const [ocupacion, setOcupacion] = useState(null);
+  const [fechaClase, setFechaClase] = useState(searchParams.get("fecha") || "");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [pagoModal, setPagoModal] = useState({
+    open: false,
+    mode: null,
+    amount: 0,
+    title: "",
+    subtitle: "",
+  });
+  const [isQRModalOpen, setIsQRModalOpen] = useState(false);
+  const [qrCodeData, setQrCodeData] = useState("");
   const [formData, setFormData] = useState({
     entrenador: "",
-    fecha: "",
+    dia_semana: "",
     hora_inicio: "",
-    cupo_maximo: ""
+    cupo_maximo: "",
   });
-  
-  const fetchTurnoData = useCallback(async () => {
-  try {
-    const [turnoData, countData] = await Promise.all([
-      getTurnoById(id),
-      getReservasCount(id)
-    ]);
 
-    setTurno(turnoData);
-    setCantidadInscriptos(countData.count);
-  } catch (err) {
-    Swal.fire({
-      toast: true,
-      position: "top-end",
-      icon: "error",
-      title: "Error al cargar el turno",
-      showConfirmButton: false,
-      timer: 3000,
-      text: err.message || "Error inesperado",
-    });
-    navigate("/turnos");
-  } finally {
-    setLoading(false);
-  }
-}, [id, navigate]); 
-  
-  useEffect(() => {
-  Promise.resolve().then(() => {
-    fetchTurnoData();
-  });
-}, [fetchTurnoData]);
+  const esAdmin = usuario?.rol === "ADMINISTRADOR";
+  const esEmpleado = usuario?.rol === "EMPLEADO";
+  const esCliente = usuario?.rol === "CLIENTE";
+  const fechaClaseSeleccionada = useMemo(
+    () => normalizarFechaHora(fechaClase, turno?.hora_inicio),
+    [fechaClase, turno]
+  );
+  const claseYaPaso = useMemo(() => {
+    if (!fechaClaseSeleccionada) return false;
+    return fechaClaseSeleccionada <= new Date();
+  }, [fechaClaseSeleccionada]);
 
-  
+  const esAbonadoActivo = useMemo(() => {
+    return ocupacion?.abonados?.some((abonado) => String(abonado.usuario_id) === String(usuario?.id) && abonado.estado === "ACTIVO");
+  }, [ocupacion, usuario]);
 
-  // --- FUNCIONES DE EDICIÓN ---
-  function handleEditToggle() {
-    // Cargamos los datos actuales en el formulario antes de mostrarlo
-    setFormData({
-      entrenador: turno.entrenador,
-      fecha: turno.fecha,
-      hora_inicio: turno.hora_inicio?.substring(0, 5),
-      cupo_maximo: turno.cupo_maximo
-    });
-    setIsEditing(true);
-  }
+  const esAbonadoSuspendido = useMemo(() => {
+    return ocupacion?.abonados?.some((abonado) => String(abonado.usuario_id) === String(usuario?.id) && abonado.estado === "SUSPENDIDO");
+  }, [ocupacion, usuario]);
 
-  function handleCancelEdit() {
-    setIsEditing(false);
-  }
+  const colaAbonadoUsuario = useMemo(() => {
+    if (!ocupacion || !usuario) return null;
 
-  function handleFormChange(e) {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  }
+    const esDelUsuario = (registro) => String(registro.usuario_id) === String(usuario.id);
+    return ocupacion.colaAbonados?.find(esDelUsuario) || null;
+  }, [ocupacion, usuario]);
 
-  async function handleSaveChanges() {
-    if (!formData.entrenador.trim()) {
-      return Swal.fire({
-        toast: true,
-        position: "top-end",
-        icon: "warning",
-        title: "El nombre del entrenador es obligatorio",
-        showConfirmButton: false,
-        timer: 3000
-      });
+  const reservaConfirmadaUsuario = useMemo(() => {
+    if (!ocupacion || !usuario) return null;
+
+    return ocupacion.reservasFecha?.find(
+      (reserva) =>
+        String(reserva.usuario_id) === String(usuario.id) &&
+        reserva.estado === "CONFIRMADA"
+    ) || null;
+  }, [ocupacion, usuario]);
+
+  const reservaPresenteUsuario = useMemo(() => {
+    if (!ocupacion || !usuario) return null;
+
+    return ocupacion.reservasFecha?.find(
+      (reserva) =>
+        String(reserva.usuario_id) === String(usuario.id) &&
+        reserva.estado === "PRESENTE"
+    ) || null;
+  }, [ocupacion, usuario]);
+
+  const colaNoAbonadoUsuario = useMemo(() => {
+    if (!ocupacion || !usuario) return null;
+
+    const esDelUsuario = (registro) => String(registro.usuario_id) === String(usuario.id);
+    return ocupacion.colaNoAbonados?.find(esDelUsuario) || null;
+  }, [ocupacion, usuario]);
+
+  const estadoCliente = useMemo(() => {
+    if (!esCliente || !usuario || !ocupacion) return null;
+
+    const esDelUsuario = (registro) => String(registro.usuario_id) === String(usuario.id);
+    const esperaNoAbonado = colaNoAbonadoUsuario;
+    const esperaAbonado = ocupacion.colaAbonados?.find(esDelUsuario);
+
+    if (reservaPresenteUsuario) {
+      return {
+        tipo: "success",
+        titulo: "Asistencia confirmada",
+        detalle: "Ya estás marcado como presente para esta clase. ¡A entrenar!",
+      };
     }
 
-    // Advertencia de regla de negocio
-    const result = await Swal.fire({
-      title: "¿Guardar cambios?",
-      text: "¡Atención! Si modificaste datos del turno, todos los usuarios actualmente inscriptos serán dados de baja automáticamente.",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "var(--blue)",
-      cancelButtonColor: "var(--gray)",
-      confirmButtonText: "Sí, modificar",
-      cancelButtonText: "Cancelar"
-    });
-
-    if (result.isConfirmed) {
-      try {
-        setLoading(true);
-        const respuesta = await updateTurno(id, formData);
-        
-        Swal.fire({
-          toast: true,
-          position: "top-end",
-          icon: "success",
-          title: respuesta.mensaje || "Turno actualizado",
-          showConfirmButton: false,
-          timer: 4000
-        });
-
-        // Apagamos modo edición y recargamos los datos frescos desde el backend
-        setIsEditing(false);
-        await fetchTurnoData();
-        
-      } catch (err) {
-        console.log("🔴 RESPUESTA DEL BACKEND:", err);
-        Swal.fire({
-          toast: true,
-          position: "top-end",
-          icon: "error",
-          title: err.message || err.mensaje || "Ocurrió un problema",
-          showConfirmButton: false,
-          timer: 3500
-        });
-        setLoading(false);
-      }
-    }
-  }
-
-  // --- FUNCIONES DE BORRADO E INSCRIPCIÓN (Se mantienen iguales) ---
-  async function handleDelete() {
-    // ... tu lógica de borrar ... (sin cambios)
-    const result = await Swal.fire({
-      title: "¿Eliminar este turno?",
-      text: "No podrás revertir esto. Solo se eliminará si no tiene reservas.",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "var(--blue)",
-      cancelButtonColor: "var(--gray)",
-      confirmButtonText: "Sí, eliminar",
-      cancelButtonText: "Cancelar"
-    });
-
-    if (result.isConfirmed) {
-      try {
-        await deleteTurno(id);
-        Swal.fire({
-          toast: true, position: "top-end", icon: "success", title: "Turno eliminado exitosamente", showConfirmButton: false, timer: 2500
-        });
-        navigate("/turnos");
-      } catch (err) {
-        Swal.fire({
-          toast: true, position: "top-end", icon: "error", title: err.message || "Error al eliminar", showConfirmButton: false, timer: 3500
-        });
-      }
-    }
-  }
-
-  async function handleInscripcionCliente() {
-    if (cantidadInscriptos >= turno.cupo_maximo) {
-        return Swal.fire({
-            toast: true,
-            position: "top-end",
-            icon: "warning",
-            title: "El turno ya no tiene cupos disponibles",
-            showConfirmButton: false,
-            timer: 3000
-        });
+    if (esAbonadoActivo) {
+      return {
+        tipo: "success",
+        titulo: "Estás abonado a este turno",
+        detalle: `Tenés tu lugar fijo para ${turno?.Actividad?.nombre || "esta actividad"} los ${turno?.dia_semana?.toLowerCase()} a las ${turno?.hora_inicio?.substring(0, 5)} hs.`,
+      };
     }
 
-    const confirmacion = await Swal.fire({
-      title: "¿Confirmar reserva?",
-      text: `Vas a reservar un lugar para ${turno.Actividad?.nombre} el ${turno.fecha} a las ${turno.hora_inicio}.`,
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonColor: "var(--blue)",
-      cancelButtonColor: "var(--gray)",
-      confirmButtonText: "Sí, reservar",
-      cancelButtonText: "Cancelar"
-    });
-
-    if (confirmacion.isConfirmed) {
-      setIsReserving(true);
-      try {
-        await crearReserva({
-            usuario_id: usuario.id,
-            turno_id: turno.id
-        });
-
-        setCantidadInscriptos(prev => prev + 1);
-
-        Swal.fire({
-          toast: true,
-          position: "top-end",
-          icon: "success",
-          title: "Reserva confirmada exitosamente",
-          showConfirmButton: false,
-          timer: 2500
-        });
-      } catch (err) {
-        Swal.fire({
-          toast: true,
-          position: "top-end",
-          icon: "error",
-          title: err.message || err.mensaje || "Error al procesar la reserva",
-          showConfirmButton: false,
-          timer: 3500
-        });
-      } finally {
-        setIsReserving(false);
-      }
-    }
-  }
-
-  // NUEVA LÓGICA: Inscripción de un tercero (Flujo del Empleado)
-  async function handleInscripcionTercero() {
-    if (cantidadInscriptos >= turno.cupo_maximo) {
-      return Swal.fire({
-          toast: true,
-          position: "top-end",
-          icon: "warning",
-          title: "No hay cupos disponibles en este turno",
-          showConfirmButton: false,
-          timer: 3000
-      });
+    if (esAbonadoSuspendido) {
+      return {
+        tipo: "warning",
+        titulo: "Tu abono está suspendido",
+        detalle: "Tenés un pago pendiente. Podés saldarlo desde el Home para reactivar tu lugar fijo.",
+      };
     }
 
+    if (colaAbonadoUsuario?.estado === "CUPO_RESERVADO") {
+      return {
+        tipo: "warning",
+        titulo: "Tenés un cupo de abonado reservado",
+        detalle: "Si salís de la cola, ese lugar puede reasignarse al siguiente cliente en espera.",
+      };
+    }
+
+    if (colaAbonadoUsuario) {
+      return {
+        tipo: "info",
+        titulo: "Estás en cola de abonados",
+        detalle: "Podés salir de esta cola cuando quieras.",
+      };
+    }
+
+    if (reservaConfirmadaUsuario) {
+      return {
+        tipo: "success",
+        titulo: "Reservaste esta clase puntual",
+        detalle: `Tu reserva es solo para el ${formatearFecha(fechaClase)}. No te deja un lugar fijo para las próximas semanas.`,
+      };
+    }
+
+    if (esperaNoAbonado?.estado === "CUPO_RESERVADO") {
+      return {
+        tipo: "warning",
+        titulo: "Tenés un cupo puntual reservado",
+        detalle: `Se liberó un lugar para el ${formatearFecha(fechaClase)}. Confirmalo para no perderlo.`,
+      };
+    }
+
+    if (esperaNoAbonado) {
+      return {
+        tipo: "info",
+        titulo: "Estás en cola para esta clase",
+        detalle: `Si se libera un cupo puntual para el ${formatearFecha(fechaClase)}, se te reservará el lugar.`,
+      };
+    }
+
+    if (esperaAbonado) {
+      return {
+        tipo: "info",
+        titulo: "Estás en cola para abonarte",
+        detalle: "Cuando se libere un cupo fijo de abonado, vas a poder tomar ese lugar.",
+      };
+    }
+
+    return {
+      tipo: "neutral",
+      titulo: "No tenés inscripción activa en este turno",
+      detalle: "Podés reservar una clase puntual o abonarte si hay cupo fijo disponible.",
+    };
+  }, [colaAbonadoUsuario, colaNoAbonadoUsuario, esAbonadoActivo, esCliente, fechaClase, ocupacion, reservaConfirmadaUsuario, reservaPresenteUsuario, turno, usuario]);
+
+  const estadoReservaPuntual = useMemo(() => {
+    if (!esCliente || !usuario || !ocupacion) return null;
+    if (reservaConfirmadaUsuario) {
+      return "RESERVADA";
+    }
+
+    const esperaNoAbonado = colaNoAbonadoUsuario;
+
+    if (esperaNoAbonado?.estado === "CUPO_RESERVADO") {
+      return "CUPO_RESERVADO";
+    }
+
+    if (esperaNoAbonado) {
+      return "EN_ESPERA";
+    }
+
+    return null;
+  }, [colaNoAbonadoUsuario, esCliente, ocupacion, reservaConfirmadaUsuario, usuario]);
+
+  const fetchTurnoData = useCallback(async (fecha = fechaClase) => {
     try {
-      setIsReserving(true);
-      // 1. Buscamos la lista de clientes registrados en el sistema
-      const listaClientes = await getClientes();
-      
-      // 2. Transformamos el arreglo de clientes en el formato de opciones que exige SweetAlert2
-      const inputOptions = {};
-      listaClientes.forEach(cli => {
-        inputOptions[cli.id] = `${cli.apellido}, ${cli.nombre} (DNI: ${cli.dni})`;
-      });
+      setLoading(true);
+      const turnoData = await getTurnoById(id);
+      const fechaConsulta = fecha || proximaFechaParaDia(turnoData.dia_semana);
+      const ocupacionData = await getOcupacionTurno(id, fechaConsulta);
 
-      setIsReserving(false);
-
-      // 3. Mostramos el modal interactivo con el desplegable de clientes
-      const { value: clienteSeleccionadoId } = await Swal.fire({
-        title: "Inscribir Cliente",
-        text: "Selecciona el cliente que asistirá a la clase:",
-        input: "select",
-        inputOptions: inputOptions,
-        inputPlaceholder: "Seleccioná un cliente...",
-        showCancelButton: true,
-        confirmButtonColor: "var(--blue)",
-        cancelButtonColor: "var(--gray)",
-        confirmButtonText: "Confirmar Inscripción",
-        cancelButtonText: "Cancelar",
-        inputValidator: (value) => {
-          if (!value) {
-            return "Es obligatorio seleccionar un cliente para proceder";
-          }
-        }
-      });
-
-      // 4. Si el empleado seleccionó un usuario válido y confirmó el modal
-      if (clienteSeleccionadoId) {
-        setIsReserving(true);
-        
-        // Enviamos la petición al endpoint de staff
-        await crearReservaStaff({
-          usuario_id: parseInt(clienteSeleccionadoId, 10),
-          turno_id: turno.id
-        });
-
-        setCantidadInscriptos(prev => prev + 1);
-
-        Swal.fire({
-          toast: true,
-          position: "top-end",
-          icon: "success",
-          title: "Cliente inscripto correctamente",
-          showConfirmButton: false,
-          timer: 2500
-        });
-      }
-
+      setTurno(turnoData);
+      setFechaClase(fechaConsulta);
+      setOcupacion(ocupacionData);
     } catch (err) {
       Swal.fire({
         toast: true,
         position: "top-end",
         icon: "error",
-        title: err.message || err.mensaje || "Error al procesar la inscripción",
+        title: err.message || "Error al cargar el turno",
         showConfirmButton: false,
-        timer: 3500
+        timer: 3000,
+      });
+      navigate("/turnos");
+    } finally {
+      setLoading(false);
+    }
+  }, [fechaClase, id, navigate]);
+
+  useEffect(() => {
+    Promise.resolve().then(() => {
+      fetchTurnoData();
+    });
+  }, [fetchTurnoData]);
+
+  function handleEditToggle() {
+    setFormData({
+      entrenador: turno.entrenador,
+      dia_semana: turno.dia_semana,
+      hora_inicio: turno.hora_inicio?.substring(0, 5),
+      cupo_maximo: turno.cupo_maximo,
+    });
+    setIsEditing(true);
+  }
+
+  function handleFormChange(e) {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  }
+
+  async function handleSaveChanges() {
+    try {
+      setSaving(true);
+      const respuesta = await updateTurno(id, {
+        ...formData,
+        cupo_maximo: parseInt(formData.cupo_maximo, 10),
+      });
+
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "success",
+        title: respuesta.mensaje || "Turno actualizado",
+        showConfirmButton: false,
+        timer: 2500,
+      });
+
+      setIsEditing(false);
+      await fetchTurnoData(fechaClase);
+    } catch (err) {
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "error",
+        title: err.message || err.mensaje || "Error al actualizar",
+        showConfirmButton: false,
+        timer: 3000,
       });
     } finally {
-      setIsReserving(false);
+      setSaving(false);
     }
   }
 
-  if (loading) {
-    return <div className="home-container">Cargando información...</div>;
+  async function handleDelete() {
+    const result = await Swal.fire({
+      title: "Eliminar turno fijo",
+      text: "Solo se eliminará si no tiene reservas o abonados asociados.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Eliminar",
+      cancelButtonText: "Cancelar",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      await deleteTurno(id);
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "success",
+        title: "Turno eliminado",
+        showConfirmButton: false,
+        timer: 2500,
+      });
+      navigate("/turnos");
+    } catch (err) {
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "error",
+        title: err.message || "Error al eliminar",
+        showConfirmButton: false,
+        timer: 3000,
+      });
+    }
   }
 
+  async function ejecutarAccion(accion, mensajeOk) {
+    try {
+      setSaving(true);
+      const respuesta = await accion();
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "success",
+        title: respuesta.message || respuesta.mensaje || mensajeOk,
+        showConfirmButton: false,
+        timer: 3000,
+      });
+      await fetchTurnoData(fechaClase);
+    } catch (err) {
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "error",
+        title: err.message || err.mensaje || "Error al procesar la accion",
+        showConfirmButton: false,
+        timer: 3500,
+      });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function abrirPagoModal(data) {
+    setPagoModal({
+      open: true,
+      mode: data.mode,
+      amount: data.amount,
+      title: data.title,
+      subtitle: data.subtitle,
+    });
+  }
+
+  function cerrarPagoModal() {
+    if (saving) {
+      return;
+    }
+
+    setPagoModal({
+      open: false,
+      mode: null,
+      amount: 0,
+      title: "",
+      subtitle: "",
+    });
+  }
+
+  async function handleConfirmarPago(tarjetaDebito) {
+    try {
+      setSaving(true);
+
+      if (pagoModal.mode === "sena") {
+        const respuestaReserva = await crearReserva({
+          turno_id: turno.id,
+          fecha: fechaClase,
+          tarjetaDebito,
+        });
+
+        Swal.fire({
+          toast: true,
+          position: "top-end",
+          icon: respuestaReserva.enEspera ? "info" : "success",
+          title: respuestaReserva.mensaje || respuestaReserva.message || "Reserva procesada",
+          showConfirmButton: false,
+          timer: 3000,
+        });
+
+        await fetchTurnoData(fechaClase);
+      }
+
+      if (pagoModal.mode === "abonado") {
+        await pagarSuscripcionMensual({
+          turnoId: turno.id,
+          tarjetaDebito,
+          fecha: fechaClase,
+        });
+
+        await ejecutarAccion(() => altaAbonadoTurno(turno.id, { fecha: fechaClase }), "Solicitud de abono procesada");
+      }
+
+      cerrarPagoModal();
+    } catch (err) {
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "error",
+        title: err.message || err.mensaje || "Error al procesar el pago",
+        showConfirmButton: false,
+        timer: 3500,
+      });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handlePagarConCredito() {
+    try {
+      setSaving(true);
+
+      const respuestaReserva = await crearReservaConCredito({
+        turno_id: turno.id,
+        fecha: fechaClase,
+      });
+
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "success",
+        title: "¡Reserva confirmada con crédito!",
+        showConfirmButton: false,
+        timer: 3000,
+      });
+
+      await fetchTurnoData(fechaClase);
+      cerrarPagoModal();
+
+    } catch (err) {
+      // Si el backend dice "No posees créditos", se muestra acá automáticamente.
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "error",
+        title: err.message || err.mensaje || "Error al procesar el crédito",
+        showConfirmButton: false,
+        timer: 3500,
+      });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleReservaNoAbonado() {
+    if (claseYaPaso) {
+      return;
+    }
+
+    if (cuposFecha <= 0) {
+      await ejecutarAccion(
+        () => crearReserva({ turno_id: turno.id, fecha: fechaClase }),
+        "Solicitud procesada"
+      );
+      return;
+    }
+
+    try {
+      setSaving(true);
+      const resultado = await obtenerMontoSenaTurno({ turnoId: turno.id });
+
+      if (!resultado?.monto || Number(resultado.monto) <= 0) {
+        throw new Error("No se pudo calcular el monto de la seña");
+      }
+
+      abrirPagoModal({
+        mode: "sena",
+        amount: Number(resultado.monto),
+        title: `Pagar seña - ${turno?.Actividad?.nombre || "Reserva"}`,
+        subtitle: `Clase del ${formatearFecha(fechaClase)}`,
+      });
+    } catch (err) {
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "error",
+        title: err.message || err.mensaje || "No se pudo calcular el monto de la seña",
+        showConfirmButton: false,
+        timer: 3000,
+      });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleSalirColaNoAbonado() {
+    if (!colaNoAbonadoUsuario) return;
+
+    await ejecutarAccion(
+      () => salirDeColaNoAbonado({ turno_id: turno.id, fecha: fechaClase }),
+      "Saliste de la cola de no abonados"
+    );
+  }
+
+  async function handleSalirColaAbonado() {
+    if (!colaAbonadoUsuario) return;
+
+    const result = await Swal.fire({
+      title: "¿Salir de la cola de abonados?",
+      text: colaAbonadoUsuario.estado === "CUPO_RESERVADO"
+        ? "Si salís, el cupo reservado se podrá reasignar al siguiente en espera."
+        : "Vas a salir de la cola de abonados.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "var(--blue)",
+      cancelButtonColor: "var(--gray)",
+      confirmButtonText: "Sí, salir de la cola",
+      cancelButtonText: "Volver",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      setSaving(true);
+      const response = await salirDeColaAbonadoTurno(turno.id);
+
+      Swal.fire({
+        title: "Cola de abonados actualizada",
+        text: response.message,
+        icon: response.cupoLiberado ? "success" : "info",
+        confirmButtonColor: "var(--blue)",
+      });
+
+      await fetchTurnoData(fechaClase);
+    } catch (err) {
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "error",
+        title: err.message || err.mensaje || "Error al salir de la cola",
+        showConfirmButton: false,
+        timer: 3500,
+      });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleCancelarClaseAbonado() {
+    if (!reservaConfirmadaUsuario) return;
+
+    const tieneSenaAbonada = reservaConfirmadaUsuario.estado_pago !== "PENDIENTE";
+
+    const result = await Swal.fire({
+      title: "¿Estás seguro?",
+      text: tieneSenaAbonada
+        ? "Se evaluará el tiempo restante para determinar la devolución de tu seña."
+        : "La reserva se cancelará y no hay pagos para devolver.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "var(--blue)",
+      cancelButtonColor: "var(--gray)",
+      confirmButtonText: "Sí, cancelar reserva",
+      cancelButtonText: "Volver",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      setSaving(true);
+      const response = await cancelarReserva(reservaConfirmadaUsuario.id);
+
+      Swal.fire({
+        title: "Reserva cancelada",
+        text: response.message,
+        icon: response.devuelveSena ? "success" : "info",
+        confirmButtonColor: "var(--blue)",
+      });
+
+      await fetchTurnoData(fechaClase);
+    } catch (err) {
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "error",
+        title: err.message || err.mensaje || "Error al cancelar",
+        showConfirmButton: false,
+        timer: 3500,
+      });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleAltaAbonado() {
+    try {
+      setSaving(true);
+      const resultado = await obtenerMontoSuscripcionMensual({ turnoId: turno.id, fecha: fechaClase });
+
+      if (!resultado?.monto || Number(resultado.monto) <= 0) {
+        throw new Error("No se pudo calcular el monto del abono mensual");
+      }
+
+      abrirPagoModal({
+        mode: "abonado",
+        amount: Number(resultado.monto),
+        title: `Abonarte al turno - ${turno?.Actividad?.nombre || "Turno"}`,
+        subtitle: "Se cobra el mes en curso con 20% de descuento sobre las clases restantes.",
+      });
+    } catch (err) {
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "error",
+        title: err.message || err.mensaje || "No se pudo calcular el monto del abono mensual",
+        showConfirmButton: false,
+        timer: 3000,
+      });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleIngresarColaNoAbonado() {
+    await ejecutarAccion(
+      () => ingresarColaNoAbonado({ turno_id: turno.id, fecha: fechaClase }),
+      "Ingresaste a la lista de espera de la clase"
+    );
+  }
+
+  async function handleIngresarColaAbonado() {
+    await ejecutarAccion(
+      () => ingresarColaAbonado(turno.id, { fecha: fechaClase })
+    );
+  }
+
+  async function handleInscripcionTercero() {
+    try {
+      setSaving(true);
+      const listaClientes = await getClientes();
+      const inputOptions = {};
+      listaClientes.forEach((cli) => {
+        inputOptions[cli.id] = `${cli.apellido}, ${cli.nombre} (DNI: ${cli.dni})`;
+      });
+      setSaving(false);
+
+      const { value: clienteSeleccionadoId } = await Swal.fire({
+        title: "Reservar no abonado",
+        text: `Clase del ${formatearFecha(fechaClase)}`,
+        input: "select",
+        inputOptions,
+        inputPlaceholder: "Selecciona un cliente...",
+        showCancelButton: true,
+        confirmButtonText: "Confirmar",
+        cancelButtonText: "Cancelar",
+      });
+
+      if (!clienteSeleccionadoId) return;
+
+      await ejecutarAccion(
+        () => crearReservaStaff({
+          usuario_id: parseInt(clienteSeleccionadoId, 10),
+          turno_id: turno.id,
+          fecha: fechaClase,
+        }),
+        "Reserva procesada"
+      );
+    } catch (err) {
+      setSaving(false);
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "error",
+        title: err.message || err.mensaje || "Error al cargar clientes",
+        showConfirmButton: false,
+        timer: 3000,
+      });
+    }
+  }
+
+  async function handleObtenerQR() {
+    try {
+      setSaving(true);
+      const data = await getQRbyId(turno.id);
+      setQrCodeData(data.codigo_qr);
+      setIsQRModalOpen(true);
+    } catch (err) {
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "error",
+        title: err.message || err.mensaje || "No se pudo obtener el QR. Es posible que el turno ya haya transcurrido.",
+        showConfirmButton: false,
+        timer: 4000,
+      });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (loading) return <div className="home-container">Cargando informacion...</div>;
   if (!turno) return null;
 
-  const cupoOcupacion = `${cantidadInscriptos} / ${turno.cupo_maximo}`;
-  const estaLleno = cantidadInscriptos >= turno.cupo_maximo;
-  const esEmpleado = usuario?.rol === "EMPLEADO";
-  const esAdmin = usuario?.rol === "ADMINISTRADOR";
+  const abonadosCount = ocupacion?.abonados?.length || 0;
+  const cuposFecha = ocupacion?.cuposDisponiblesFecha ?? 0;
+
+  const mostrarBotonCancelarClase = Boolean(reservaConfirmadaUsuario) && !claseYaPaso;
+
+  const mostrarBotonSalirColaNoAbonados = esCliente && Boolean(colaNoAbonadoUsuario);
+  const mostrarBotonSalirColaAbonados = esCliente && Boolean(colaAbonadoUsuario);
+
+  const textoBotonSalirColaNoAbonados = colaNoAbonadoUsuario?.estado === "CUPO_RESERVADO"
+    ? "Salir de la lista de espera"
+    : "Salir de la cola de no abonados";
+  const textoBotonSalirColaAbonados = colaAbonadoUsuario?.estado === "CUPO_RESERVADO"
+    ? "Salir de la cola de abonados y liberar mi cupo"
+    : "Salir de la cola de abonados";
+
+  // Puntuales
+  const mostrarBotonReservaPuntual = esCliente && !claseYaPaso;
+  const mostrarBotonIngresoColaNoAbonado = esCliente && !claseYaPaso;
+
+  // Mensuales
+  const mostrarBotonAbonoDirecto = esCliente;
+  const mostrarBotonIngresoColaAbonado = esCliente;
 
   return (
     <div className="home-container">
       <div className="home-header">
         <div>
-          <span className="home-kicker">Detalle del Turno</span>
-          <h1>{turno.Actividad?.nombre || "Actividad Desconocida"}</h1>
-          <p>Gestión e información detallada de la clase.</p>
+          <span className="home-kicker">Detalle del Turno Fijo</span>
+          <h1>{turno.Actividad?.nombre || "Actividad"}</h1>
+          <p>{turno.dia_semana} a las {turno.hora_inicio?.substring(0, 5)} hs</p>
         </div>
-        
+
         <div className="home-header-actions">
-          {/* Si está editando, mostramos botones de Guardar/Cancelar */}
-          {isEditing ? (
+          <button className="btn-secondary" onClick={() => navigate(-1)}>Volver</button>
+          {esAdmin && !isEditing && (
+            <button className="btn-secondary" onClick={handleEditToggle}>Editar</button>
+          )}
+          {esAdmin && !isEditing && (
+            <button className="btn-secondary" onClick={handleDelete}>Eliminar</button>
+          )}
+          {isEditing && (
             <>
-              <button className="btn-secondary" onClick={handleCancelEdit}>
-                Cancelar
+              <button className="btn-secondary" onClick={() => setIsEditing(false)}>Cancelar</button>
+              <button className="btn-primary" onClick={handleSaveChanges} disabled={saving}>
+                {saving ? "Guardando..." : "Guardar"}
               </button>
-              <button className="btn-primary" onClick={handleSaveChanges}>
-                Guardar Cambios
-              </button>
-            </>
-          ) : (
-            /* Si NO está editando, mostramos las acciones normales */
-            <>
-              <button className="btn-secondary" onClick={() => navigate(-1)}>
-                Volver
-              </button>
-
-              {usuario?.rol === "CLIENTE" && (
-                <button 
-                  className="btn-primary" 
-                  onClick={handleInscripcionCliente}
-                  disabled={isReserving || estaLleno}
-                  style={estaLleno ? { backgroundColor: "var(--gray)", cursor: "not-allowed" } : {}}
-                >
-                  {isReserving ? "Procesando..." : estaLleno ? "Sin Cupo" : "Inscribirse"}
-                </button>
-              )}
-
-              {esEmpleado && (
-                <button 
-                  className="btn-primary" 
-                  onClick={handleInscripcionTercero}
-                  disabled={isReserving || estaLleno}
-                  style={estaLleno ? { backgroundColor: "var(--gray)", cursor: "not-allowed" } : {}}
-                >
-                  {isReserving ? "Cargando..." : estaLleno ? "Cupo Completo" : "Inscribir Cliente"}
-                </button>
-              )}
-
-              {esAdmin && (
-                <button className="btn-secondary" onClick={handleEditToggle} style={{ borderColor: "var(--blue)", color: "var(--blue)" }}>
-                  Editar
-                </button>
-              )}
-
-              {esAdmin && (
-                <button className="btn-secondary" onClick={handleDelete} style={{ borderColor: "var(--gray)", color: "var(--gray)" }}>
-                  Eliminar
-                </button>
-              )}
             </>
           )}
         </div>
@@ -386,82 +820,178 @@ export default function DetailTurn() {
       <div className="home-layout">
         <div className="home-panel profile-panel">
           <div className="panel-title">
-            <h2>Información General</h2>
+            <h2>Informacion general</h2>
           </div>
-          
+
           <div className="data-grid">
             <div>
               <span>Entrenador</span>
               {isEditing ? (
-                <input 
-                  type="text" 
-                  name="entrenador" 
-                  value={formData.entrenador} 
-                  onChange={handleFormChange}
-                  required
-                  className="form-input-inline"
-                />
+                <input className="form-input-inline" name="entrenador" value={formData.entrenador} onChange={handleFormChange} />
               ) : (
                 <p>{turno.entrenador}</p>
               )}
             </div>
             <div>
-              <span>Fecha</span>
+              <span>Dia fijo</span>
               {isEditing ? (
-                <input 
-                  type="date" 
-                  name="fecha" 
-                  value={formData.fecha} 
-                  onChange={handleFormChange}
-                  min={new Date().toISOString().split("T")[0]}
-                  className="form-input-inline"
-                />
-              ) : (
-                <p>{turno.fecha}</p>
-              )}
-            </div>
-            <div>
-              <span>Hora de Inicio</span>
-              {isEditing ? (
-                <select
-                  name="hora_inicio"
-                  value={formData.hora_inicio}
-                  onChange={handleFormChange}
-                  className="form-input-inline"
-                >
-                  <option value="">Seleccioná una hora...</option>
-                  {HORAS_TURNO.map((hora) => (
-                    <option key={hora} value={hora}>
-                      {hora}
-                    </option>
-                  ))}
+                <select className="form-input-inline" name="dia_semana" value={formData.dia_semana} onChange={handleFormChange}>
+                  {DIAS.map((dia) => <option key={dia.value} value={dia.value}>{dia.label}</option>)}
                 </select>
               ) : (
-                <p>{turno.hora_inicio}</p>
+                <p>{turno.dia_semana}</p>
               )}
             </div>
             <div>
-              <span>Ocupación / Cupo Máximo</span>
+              <span>Hora</span>
               {isEditing ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <p>{cantidadInscriptos} /</p>
-                  <input 
-                    type="number" 
-                    name="cupo_maximo" 
-                    value={formData.cupo_maximo} 
-                    onChange={handleFormChange}
-                    min={cantidadInscriptos} /* Previene reducir el cupo por debajo de los inscriptos actuales */
-                    className="form-input-inline"
-                    style={{ width: "80px" }}
-                  />
-                </div>
+                <select className="form-input-inline" name="hora_inicio" value={formData.hora_inicio} onChange={handleFormChange}>
+                  {HORAS_TURNO.map((hora) => <option key={hora} value={hora}>{hora}</option>)}
+                </select>
               ) : (
-                <p>{cupoOcupacion}</p>
+                <p>{turno.hora_inicio?.substring(0, 5)} hs</p>
+              )}
+            </div>
+            <div>
+              <span>Cupos abonados</span>
+              {isEditing ? (
+                <input className="form-input-inline" type="number" name="cupo_maximo" min={abonadosCount} value={formData.cupo_maximo} onChange={handleFormChange} />
+              ) : (
+                <p>{abonadosCount} / {turno.cupo_maximo}</p>
               )}
             </div>
           </div>
+
+          {estadoCliente && (
+            <div className={`client-turn-status client-turn-status-${estadoCliente.tipo}`}>
+              <span>Tu estado</span>
+              <strong>{estadoCliente.titulo}</strong>
+              <p>{estadoCliente.detalle}</p>
+
+              {reservaConfirmadaUsuario && (
+                <button
+                  className="btn-primary"
+                  style={{ marginTop: "1rem" }}
+                  disabled={saving}
+                  onClick={handleObtenerQR}
+                >
+                  Obtener código QR
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="home-panel">
+          <div className="panel-title">
+            <h2>Clase puntual</h2>
+          </div>
+          <div className="data-grid">
+            <div>
+              <span>Fecha</span>
+              <p>{fechaClase}</p>
+            </div>
+            <div>
+              <span>Cupos disponibles</span>
+              <p>{cuposFecha} / {turno.cupo_maximo}</p>
+            </div>
+            <div>
+              <span>Cola no abonados</span>
+              <p>{ocupacion?.colaNoAbonados?.length || 0}</p>
+            </div>
+          </div>
+
+          <div className="home-header-actions" style={{ marginTop: "1rem" }}>
+            {mostrarBotonReservaPuntual && (
+              <button
+                className="btn-primary"
+                disabled={saving}
+                onClick={handleReservaNoAbonado}
+              >
+                Reservar clase
+              </button>
+            )}
+            {mostrarBotonIngresoColaNoAbonado && (
+              <button
+                className="btn-primary"
+                disabled={saving}
+                onClick={handleIngresarColaNoAbonado}
+              >
+                Ingresar a lista de espera de no abonados
+              </button>
+            )}
+            {mostrarBotonSalirColaNoAbonados && (
+              <button className="btn-secondary" disabled={saving} onClick={handleSalirColaNoAbonado}>
+                {textoBotonSalirColaNoAbonados}
+              </button>
+            )}
+            {mostrarBotonSalirColaAbonados && (
+              <button className="btn-secondary" disabled={saving} onClick={handleSalirColaAbonado}>
+                {textoBotonSalirColaAbonados}
+              </button>
+            )}
+            {mostrarBotonCancelarClase && (
+              <button className="btn-secondary" disabled={saving} onClick={handleCancelarClaseAbonado}>
+                Cancelar esta clase
+              </button>
+            )}
+            {esEmpleado && (
+              <button className="btn-primary" disabled={saving} onClick={handleInscripcionTercero}>
+                Reservar no abonado
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="home-panel">
+          <div className="panel-title">
+            <h2>Abonados</h2>
+          </div>
+          <div className="data-grid">
+            <div>
+              <span>Abonados activos</span>
+              <p>{abonadosCount}</p>
+            </div>
+            <div>
+              <span>Cola abonados</span>
+              <p>{ocupacion?.colaAbonados?.length || 0}</p>
+            </div>
+          </div>
+
+          <div className="home-header-actions" style={{ marginTop: "1rem" }}>
+            {mostrarBotonAbonoDirecto && (
+              <button className="btn-primary" disabled={saving} onClick={handleAltaAbonado}>
+                Abonarme al turno
+              </button>
+            )}
+            {mostrarBotonIngresoColaAbonado && (
+              <button className="btn-primary" disabled={saving} onClick={handleIngresarColaAbonado}>
+                Ingresar a lista de espera de abonados
+              </button>
+            )}
+          </div>
         </div>
       </div>
+
+      <PaymentModal
+        open={pagoModal.open}
+        title={pagoModal.title}
+        subtitle={pagoModal.subtitle}
+        amount={pagoModal.amount}
+        amountLabel={pagoModal.mode === "abonado" ? "Abono mensual" : "Seña"}
+        confirmLabel={pagoModal.mode === "abonado" ? "Pagar y abonar" : "Pagar y reservar"}
+        isSena={pagoModal.mode === "abonado" ? false : true}
+        onClose={cerrarPagoModal}
+        onSubmit={handleConfirmarPago}
+        loading={saving}
+        onPayWithCredit={handlePagarConCredito}
+      />
+
+      <QRModal
+        open={isQRModalOpen}
+        qrData={qrCodeData}
+        onClose={() => setIsQRModalOpen(false)}
+      />
     </div>
   );
 }

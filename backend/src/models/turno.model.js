@@ -5,7 +5,10 @@ export default (sequelize) => {
   return sequelize.define('Turno', {
     id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
     entrenador: { type: DataTypes.STRING(100), allowNull: false },
-    fecha: { type: DataTypes.DATEONLY, allowNull: false },
+    dia_semana: {
+      type: DataTypes.ENUM('LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO'),
+      allowNull: false
+    },
     hora_inicio: { type: DataTypes.TIME, allowNull: false },
     cupo_maximo: { type: DataTypes.INTEGER, allowNull: false }
   }, {

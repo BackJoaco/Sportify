@@ -2,50 +2,25 @@ import { sequelize } from '../config/database.js';
 
 import UsuarioModel from './usuario.model.js';
 import ActividadModel from './actividad.model.js';
-import SuscripcionAbonadoModel from './suscripcionAbonado.model.js';
 import TurnoModel from './turno.model.js';
 import ReservaModel from './reserva.model.js';
-import ListaEsperaModel from './listaEspera.model.js';
 import PagoModel from './pago.model.js';
 import CreditoModel from './credito.model.js';
+import AbonadoTurnoModel from './abonadoTurno.model.js';
+import ListaEsperaAbonadoModel from './listaEsperaAbonado.model.js';
+import ListaEsperaNoAbonadoModel from './listaEsperaNoAbonado.model.js';
+import NotificacionModel from './notificacion.model.js';
 
 const Usuario = UsuarioModel(sequelize);
 const Actividad = ActividadModel(sequelize);
-const SuscripcionAbonado = SuscripcionAbonadoModel(sequelize);
 const Turno = TurnoModel(sequelize);
 const Reserva = ReservaModel(sequelize);
-const ListaEspera = ListaEsperaModel(sequelize);
 const Pago = PagoModel(sequelize);
 const Credito = CreditoModel(sequelize);
-
-// --- Suscripciones ---
-Usuario.hasMany(SuscripcionAbonado, {
-  foreignKey: {
-    name: 'usuario_id',
-    allowNull: false
-  }
-});
-
-SuscripcionAbonado.belongsTo(Usuario, {
-  foreignKey: {
-    name: 'usuario_id',
-    allowNull: false
-  }
-});
-
-Actividad.hasMany(SuscripcionAbonado, {
-  foreignKey: {
-    name: 'actividad_id',
-    allowNull: false
-  }
-});
-
-SuscripcionAbonado.belongsTo(Actividad, {
-  foreignKey: {
-    name: 'actividad_id',
-    allowNull: false
-  }
-});
+const AbonadoTurno = AbonadoTurnoModel(sequelize);
+const ListaEsperaAbonado = ListaEsperaAbonadoModel(sequelize);
+const ListaEsperaNoAbonado = ListaEsperaNoAbonadoModel(sequelize);
+const Notificacion = NotificacionModel(sequelize);
 
 // --- Turnos ---
 Actividad.hasMany(Turno, {
@@ -58,6 +33,35 @@ Actividad.hasMany(Turno, {
 Turno.belongsTo(Actividad, {
   foreignKey: {
     name: 'actividad_id',
+    allowNull: false
+  }
+});
+
+// --- Abonados a turnos fijos ---
+Usuario.hasMany(AbonadoTurno, {
+  foreignKey: {
+    name: 'usuario_id',
+    allowNull: false
+  }
+});
+
+AbonadoTurno.belongsTo(Usuario, {
+  foreignKey: {
+    name: 'usuario_id',
+    allowNull: false
+  }
+});
+
+Turno.hasMany(AbonadoTurno, {
+  foreignKey: {
+    name: 'turno_id',
+    allowNull: false
+  }
+});
+
+AbonadoTurno.belongsTo(Turno, {
+  foreignKey: {
+    name: 'turno_id',
     allowNull: false
   }
 });
@@ -91,29 +95,57 @@ Reserva.belongsTo(Turno, {
   }
 });
 
-// --- Listas de Espera ---
-Usuario.hasMany(ListaEspera, {
+// --- Listas de Espera nuevas ---
+Usuario.hasMany(ListaEsperaAbonado, {
   foreignKey: {
     name: 'usuario_id',
     allowNull: false
   }
 });
 
-ListaEspera.belongsTo(Usuario, {
+ListaEsperaAbonado.belongsTo(Usuario, {
   foreignKey: {
     name: 'usuario_id',
     allowNull: false
   }
 });
 
-Turno.hasMany(ListaEspera, {
+Turno.hasMany(ListaEsperaAbonado, {
   foreignKey: {
     name: 'turno_id',
     allowNull: false
   }
 });
 
-ListaEspera.belongsTo(Turno, {
+ListaEsperaAbonado.belongsTo(Turno, {
+  foreignKey: {
+    name: 'turno_id',
+    allowNull: false
+  }
+});
+
+Usuario.hasMany(ListaEsperaNoAbonado, {
+  foreignKey: {
+    name: 'usuario_id',
+    allowNull: false
+  }
+});
+
+ListaEsperaNoAbonado.belongsTo(Usuario, {
+  foreignKey: {
+    name: 'usuario_id',
+    allowNull: false
+  }
+});
+
+Turno.hasMany(ListaEsperaNoAbonado, {
+  foreignKey: {
+    name: 'turno_id',
+    allowNull: false
+  }
+});
+
+ListaEsperaNoAbonado.belongsTo(Turno, {
   foreignKey: {
     name: 'turno_id',
     allowNull: false
@@ -149,16 +181,16 @@ Pago.belongsTo(Reserva, {
   }
 });
 
-SuscripcionAbonado.hasMany(Pago, {
+AbonadoTurno.hasMany(Pago, {
   foreignKey: {
-    name: 'suscripcion_id',
+    name: 'abonado_turno_id',
     allowNull: true
   }
 });
 
-Pago.belongsTo(SuscripcionAbonado, {
+Pago.belongsTo(AbonadoTurno, {
   foreignKey: {
-    name: 'suscripcion_id',
+    name: 'abonado_turno_id',
     allowNull: true
   }
 });
@@ -195,16 +227,17 @@ Credito.belongsTo(Usuario, {
   }
 });
 
-Reserva.hasMany(Credito, {
+// --- Notificaciones ---
+Usuario.hasMany(Notificacion, {
   foreignKey: {
-    name: 'reserva_origen_id',
+    name: 'usuario_id',
     allowNull: false
   }
 });
 
-Credito.belongsTo(Reserva, {
+Notificacion.belongsTo(Usuario, {
   foreignKey: {
-    name: 'reserva_origen_id',
+    name: 'usuario_id',
     allowNull: false
   }
 });
@@ -212,10 +245,12 @@ Credito.belongsTo(Reserva, {
 export {
   Usuario,
   Actividad,
-  SuscripcionAbonado,
   Turno,
   Reserva,
-  ListaEspera,
   Pago,
-  Credito
+  Credito,
+  AbonadoTurno,
+  ListaEsperaAbonado,
+  ListaEsperaNoAbonado,
+  Notificacion
 };

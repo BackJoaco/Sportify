@@ -12,6 +12,31 @@ const COLORES_ACTIVIDADES = [
     "#9B59B6", "#00D2FF", "#E67E22", "#16A085",
 ];
 
+const DIA_ENUM_POR_NOMBRE = {
+    Lunes: "LUNES",
+    Martes: "MARTES",
+    "Miércoles": "MIERCOLES",
+    "MiÃ©rcoles": "MIERCOLES",
+    Jueves: "JUEVES",
+    Viernes: "VIERNES",
+    "Sábado": "SABADO",
+    "SÃ¡bado": "SABADO",
+    Domingo: "DOMINGO"
+};
+
+function formatearFechaInput(fecha) {
+    const year = fecha.getFullYear();
+    const month = String(fecha.getMonth() + 1).padStart(2, '0');
+    const day = String(fecha.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function normalizarFecha(fecha) {
+    const resultado = new Date(fecha);
+    resultado.setHours(0, 0, 0, 0);
+    return resultado;
+}
+
 function obtenerLunes(fecha) {
     const d = new Date(fecha);
     d.setHours(0, 0, 0, 0);
@@ -26,6 +51,40 @@ function agregarDias(fecha, dias) {
     return resultado;
 }
 
+function obtenerInicioPeriodoVisible(fechaBase) {
+    const fecha = normalizarFecha(fechaBase);
+    const inicio = new Date(fecha);
+    inicio.setDate(11);
+
+    if (fecha.getDate() < 11) {
+        inicio.setMonth(inicio.getMonth() - 1);
+    }
+
+    return inicio;
+}
+
+function obtenerFinPeriodoVisible(fechaBase) {
+    const inicio = obtenerInicioPeriodoVisible(fechaBase);
+    const fin = new Date(inicio);
+    fin.setMonth(fin.getMonth() + 1);
+    fin.setDate(10);
+
+    const hoy = normalizarFecha(new Date());
+    const milisegundosRestantes = fin.getTime() - hoy.getTime();
+    const diasRestantes = milisegundosRestantes / (1000 * 60 * 60 * 24);
+
+    if (diasRestantes <= 10 && diasRestantes >= 0) {
+        fin.setMonth(fin.getMonth() + 1);
+    }
+
+    return fin;
+}
+
+function esFechaEnRango(fecha, inicio, fin) {
+    const actual = normalizarFecha(fecha);
+    return actual >= normalizarFecha(inicio) && actual <= normalizarFecha(fin);
+}
+
 export default function CalendarioTurnos() {
     const navigate = useNavigate();
     const { usuario } = useAuth();
@@ -34,6 +93,10 @@ export default function CalendarioTurnos() {
     const [filtroActividad, setFiltroActividad] = useState("");
     const [loading, setLoading] = useState(true);
     const [fechaInicioSemana, setFechaInicioSemana] = useState(() => obtenerLunes(new Date()));
+    const esAdministrador = usuario?.rol === "ADMINISTRADOR";
+    const hoy = normalizarFecha(new Date());
+    const inicioPeriodoVisible = esAdministrador ? null : obtenerInicioPeriodoVisible(hoy);
+    const finPeriodoVisible = esAdministrador ? null : obtenerFinPeriodoVisible(hoy);
 
     useEffect(() => {
         async function cargarDatos() {
@@ -62,13 +125,20 @@ export default function CalendarioTurnos() {
         cargarDatos();
     }, []);
 
-    const hoy = new Date();
-    hoy.setHours(0, 0, 0, 0);
     const lunesActual = obtenerLunes(hoy);
-    const puedeVolverAtras = fechaInicioSemana > lunesActual;
+    const lunesInicioPeriodo = inicioPeriodoVisible ? obtenerLunes(inicioPeriodoVisible) : null;
+    const lunesFinPeriodo = finPeriodoVisible ? obtenerLunes(finPeriodoVisible) : null;
+    const puedeVolverAtras = esAdministrador
+        ? fechaInicioSemana > lunesActual
+        : fechaInicioSemana > lunesInicioPeriodo;
+    const puedeAvanzar = esAdministrador
+        ? true
+        : fechaInicioSemana < lunesFinPeriodo;
 
     function weekNext() {
-        setFechaInicioSemana(prev => agregarDias(prev, 7));
+        if (puedeAvanzar) {
+            setFechaInicioSemana(prev => agregarDias(prev, 7));
+        }
     }
 
     function weekPrev() {
@@ -104,23 +174,19 @@ export default function CalendarioTurnos() {
         return true;
     });
 
-    function obtenerTurnosParaCelda(fecha, hora) {
-        const year = fecha.getFullYear();
-        const month = String(fecha.getMonth() + 1).padStart(2, '0');
-        const day = String(fecha.getDate()).padStart(2, '0');
-        const fechaStr = `${year}-${month}-${day}`;
-
+    function obtenerTurnosParaCelda(dia, hora) {
         const horaBuscada = String(hora).padStart(2, '0');
+        const diaSemana = DIA_ENUM_POR_NOMBRE[dia.nombre];
 
         return turnosFiltrados.filter(t => {
-            if (!t.fecha || !t.hora_inicio) return false;
+            if (!t.dia_semana || !t.hora_inicio) return false;
             const horaTurno = t.hora_inicio.substring(0, 2);
-            return (t.fecha === fechaStr && horaTurno === horaBuscada);
+            return (t.dia_semana === diaSemana && horaTurno === horaBuscada);
         });
     }
 
-    function handleTurnoClick(id) {
-        navigate(`/turnos/${id}`); 
+    function handleTurnoClick(id, fecha) {
+        navigate(`/turnos/${id}?fecha=${formatearFechaInput(fecha)}`);
     }
 
     if (loading) return <div className="loading-state">Cargando calendario...</div>;
@@ -182,7 +248,9 @@ export default function CalendarioTurnos() {
             </div>
 
             <div className="mes-indicador">
-                Semana del {fechaInicioSemana.toLocaleDateString()}
+                {esAdministrador
+                    ? `Semana del ${fechaInicioSemana.toLocaleDateString()}`
+                    : `Período visible del ${inicioPeriodoVisible.toLocaleDateString()} al ${finPeriodoVisible.toLocaleDateString()}`}
             </div>
 
             <div className="calendario-grid">
@@ -201,16 +269,21 @@ export default function CalendarioTurnos() {
                             {hora}:00
                         </div>
                         {diasSemana.map((dia) => {
-                            const turnosEnCelda = obtenerTurnosParaCelda(dia.fecha, hora);
+                            const fechaDentroDelRango = esAdministrador || esFechaEnRango(dia.fecha, inicioPeriodoVisible, finPeriodoVisible);
+                            const turnosEnCelda = fechaDentroDelRango ? obtenerTurnosParaCelda(dia, hora) : [];
 
                             return (
-                                <div key={`${hora}-${dia.nombre}`} className="calendario-celda dia-celda">
-                                    {turnosEnCelda.map(turno => (
+                                <div
+                                    key={`${hora}-${dia.nombre}`}
+                                    className={`calendario-celda dia-celda ${fechaDentroDelRango ? "" : "dia-celda-fuera-rango"}`}
+                                    aria-disabled={!fechaDentroDelRango}
+                                >
+                                    {fechaDentroDelRango && turnosEnCelda.map(turno => (
                                         <div
                                             key={turno.id}
                                             className="turno-badge"
                                             style={{ backgroundColor: getColorActividad(turno.actividad_id || turno.ActividadId) }}
-                                            onClick={() => handleTurnoClick(turno.id)}
+                                            onClick={() => handleTurnoClick(turno.id, dia.fecha)}
                                         >
                                             {turno.Actividad?.nombre || (turno.actividad_id ? `Actividad (#${turno.actividad_id})` : 'Sin Actividad')}
                                         </div>

@@ -2,8 +2,10 @@ import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import Swal from "sweetalert2";
-import { FaArrowLeft, FaEye, FaEyeSlash } from "react-icons/fa";
+import { FaArrowLeft, FaEye, FaEyeSlash, FaCheckDouble } from "react-icons/fa";
 import { updateProfile } from "../../api/usuario.api";
+import { getMisNotificaciones, marcarComoLeida, marcarTodasComoLeidas } from "../../api/notificacion.api";
+import NotificationModal from "../../components/NotificationModal/NotificationModal";
 import "./Profile.css";
 
 export default function Profile() {
@@ -12,6 +14,10 @@ export default function Profile() {
     const [isEditing, setIsEditing] = useState(false);
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [notificaciones, setNotificaciones] = useState([]);
+    const [noLeidas, setNoLeidas] = useState(0);
+    const [selectedNotif, setSelectedNotif] = useState(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const [formData, setFormData] = useState({
         nombre: usuario?.nombre || "",
@@ -20,16 +26,59 @@ export default function Profile() {
         confirmContrasena: "",
     });
 
-    useEffect(() => {
-        if (usuario) {
-            setFormData({
-                nombre: usuario.nombre,
-                apellido: usuario.apellido,
-                contrasena: "",
-                confirmContrasena: "",
-            });
+    async function cargarNotificaciones() {
+        try {
+            const data = await getMisNotificaciones();
+            setNotificaciones(data.notificaciones || []);
+            setNoLeidas(data.no_leidas || 0);
+        } catch (error) {
+            console.error("Error al cargar notificaciones:", error);
         }
-    }, [usuario]);
+    }
+
+    useEffect(() => {
+        cargarNotificaciones();
+    }, []);
+
+    async function handleMarcarComoLeida(id) {
+        try {
+            await marcarComoLeida(id);
+            setNotificaciones((prev) =>
+                prev.map((n) => (n.id === id ? { ...n, leida: true } : n))
+            );
+            setNoLeidas((prev) => Math.max(0, prev - 1));
+        } catch (error) {
+            console.error("Error al marcar como leída:", error);
+        }
+    }
+
+    async function handleMarcarTodasComoLeidas() {
+        try {
+            await marcarTodasComoLeidas();
+            setNotificaciones((prev) => prev.map((n) => ({ ...n, leida: true })));
+            setNoLeidas(0);
+        } catch (error) {
+            console.error("Error al marcar todas como leídas:", error);
+        }
+    }
+
+    async function handleVerNotificacion(notif) {
+        setSelectedNotif(notif);
+        setIsModalOpen(true);
+
+        if (!notif.leida) {
+            try {
+                await marcarComoLeida(notif.id);
+                setNotificaciones((prev) =>
+                    prev.map((n) => (n.id === notif.id ? { ...n, leida: true } : n))
+                );
+                setSelectedNotif((prev) => (prev ? { ...prev, leida: true } : null));
+                setNoLeidas((prev) => Math.max(0, prev - 1));
+            } catch (error) {
+                console.error("Error al marcar como leída al abrir modal:", error);
+            }
+        }
+    }
 
     if (!usuario) return null;
 
@@ -285,6 +334,72 @@ export default function Profile() {
                     </form>
                 )}
             </div>
+
+            {!isEditing && (
+                <div className="profile-card profile-notif-card">
+                    <h1>Mis Notificaciones</h1>
+                    
+                    {notificaciones.length > 0 && noLeidas > 0 && (
+                        <button
+                            type="button"
+                            className="btn-mark-all-profile"
+                            onClick={handleMarcarTodasComoLeidas}
+                        >
+                            <FaCheckDouble /> Marcar todas como leídas
+                        </button>
+                    )}
+
+                    <div className="profile-notif-list">
+                        {notificaciones.length === 0 ? (
+                            <p className="no-notif-text">No tienes notificaciones recibidas.</p>
+                        ) : (
+                            notificaciones.map((notif) => (
+                                <div
+                                    key={notif.id}
+                                    className={`profile-notif-item ${
+                                        notif.leida ? "leida" : "no-leida"
+                                    }`}
+                                    onClick={() => handleVerNotificacion(notif)}
+                                    style={{ cursor: "pointer" }}
+                                >
+                                    <div className="notif-body">
+                                        <p className="notif-msg">{notif.mensaje}</p>
+                                        <span className="notif-time">
+                                            {new Date(notif.createdAt).toLocaleString("es-AR", {
+                                                day: "2-digit",
+                                                month: "short",
+                                                hour: "2-digit",
+                                                minute: "2-digit",
+                                            })}
+                                        </span>
+                                    </div>
+                                    {!notif.leida && (
+                                        <button
+                                            type="button"
+                                            className="btn-mark-read-item"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleMarcarComoLeida(notif.id);
+                                            }}
+                                        >
+                                            Marcar leída
+                                        </button>
+                                    )}
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </div>
+            )}
+
+            <NotificationModal
+                isOpen={isModalOpen}
+                onClose={() => {
+                    setIsModalOpen(false);
+                    setSelectedNotif(null);
+                }}
+                notification={selectedNotif}
+            />
         </div>
     );
 }

@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaArrowLeft, FaCreditCard } from "react-icons/fa";
+import { FaArrowLeft, FaFileInvoiceDollar, FaCalendarTimes, FaHistory } from "react-icons/fa";
 import Swal from "sweetalert2";
 import { getMisPagos } from "../../api/pago.api";
+import "../ListTransaction/ListTransaction.css"; 
 import "./Payments.css";
 
 export default function Payments() {
@@ -10,171 +11,130 @@ export default function Payments() {
   const [pagos, setPagos] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  async function cargarPagos() {
-    try {
-      setLoading(true);
-      const data = await getMisPagos();
-      setPagos(data || []);
-    } catch (err) {
-      Swal.fire({
-        toast: true,
-        position: "top-end",
-        icon: "error",
-        title: err.message || "Error al cargar los pagos",
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true,
-      });
-    } finally {
-      setLoading(false);
-    }
-  }
-
   useEffect(() => {
-    Promise.resolve().then(() => {
-      cargarPagos();
-    });
+    async function cargarPagos() {
+      try {
+        setLoading(true);
+        const respuesta = await getMisPagos();
+        setPagos(respuesta.data || []);
+      } catch (err) {
+        Swal.fire({
+          toast: true,
+          position: "top-end",
+          icon: "error",
+          title: err.message || "Error al cargar los pagos",
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+        });
+      } finally {
+        setLoading(false);
+      }
+    }
+    cargarPagos();
   }, []);
 
-  function formatearFecha(fecha) {
-    if (!fecha) return "Sin fecha";
-    const [year, month, day] = fecha.split("-");
-    return `${day}/${month}/${year}`;
-  }
-
-  function formatearHora(hora) {
-    if (!hora) return "Sin horario";
-    return `${hora.substring(0, 5)} hs`;
-  }
-
-  function formatearFechaCompleta(fecha) {
-    if (!fecha) return "Sin fecha";
-
-    return new Date(fecha).toLocaleDateString("es-AR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
+  const formatearFechaCompleta = (fechaString) => {
+    if (!fechaString) return "Sin fecha";
+    const fecha = new Date(fechaString);
+    return fecha.toLocaleDateString("es-AR", { 
+      day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute:"2-digit" 
     });
-  }
+  };
 
-  function formatearMonto(monto) {
-    const montoNumerico = Number(monto);
-
-    if (Number.isNaN(montoNumerico)) {
-      return "$0";
-    }
-
-    return montoNumerico.toLocaleString("es-AR", {
+  const formatearMonto = (monto) => {
+    return Number(monto).toLocaleString("es-AR", {
       style: "currency",
       currency: "ARS",
     });
-  }
+  };
 
-  function mapTipoPago(tipoPago) {
-    const tipos = {
-      SENA: "Sena",
-      RESTO_TURNO: "Resto del turno",
-      CLASE_COMPLETA: "Clase completa",
-      SUSCRIPCION_MENSUAL: "Suscripcion mensual",
-    };
+  // La magia para traducir los conceptos y poner la "ñ"
+  const formatearConcepto = (concepto) => {
+    if (!concepto) return "-";
+    if (concepto === "SENA") return "Seña";
+    if (concepto === "DEVOLUCION_SENA") return "Devolución de Seña";
+    return concepto.replace(/_/g, " "); 
+  };
 
-    return tipos[tipoPago] || tipoPago;
-  }
+  const formatearMetodo = (metodo) => {
+    if (!metodo) return "-";
+    return metodo.replace(/_/g, " ");
+  };
 
-  function mapMetodoPago(metodoPago) {
-    const metodos = {
-      MERCADO_PAGO: "Mercado Pago",
-      EFECTIVO: "Efectivo",
-    };
-
-    return metodos[metodoPago] || metodoPago;
-  }
-
-  function mapEstadoPago(estado) {
-    const estados = {
-      COMPLETADO: "Completado",
-      RECHAZADO: "Rechazado",
-      PENDIENTE: "Pendiente",
-    };
-
-    return estados[estado] || estado;
+  if (loading) {
+    return <div className="home-container">Cargando mis pagos...</div>;
   }
 
   return (
-    <div className="payments-container">
-      <div className="payments-card">
-        <div className="payments-header">
-          <div className="payments-title-group">
-            <button
-              className="btn-back"
-              onClick={() => navigate("/home")}
-              title="Volver al inicio"
-            >
-              <FaArrowLeft />
-            </button>
-            <div>
-              <h1>Mis Pagos</h1>
-              <p className="payments-subtitle">Consulta todos tus pagos registrados.</p>
-            </div>
-          </div>
+    <div className="home-container">
+      <div className="home-header">
+        <div>
+          <span className="home-kicker">Mi Cuenta</span>
+          <h1><FaHistory style={{ marginRight: "0.5rem" }}/> Mis Pagos</h1>
+          <p>Historial detallado de todas tus transacciones, señas y abonos.</p>
         </div>
+        
+        <div className="home-header-actions">
+          <button className="btn-secondary" onClick={() => navigate("/home")}>
+            <FaArrowLeft /> Volver al inicio
+          </button>
+        </div>
+      </div>
 
-        {loading ? (
-          <div className="loading-state">Cargando pagos...</div>
-        ) : pagos.length === 0 ? (
-          <div className="empty-state">
-            <p>No tenes pagos registrados por el momento.</p>
-          </div>
-        ) : (
-          <div className="table-responsive">
-            <table className="payments-table">
-              <thead>
-                <tr>
-                  <th>Pago</th>
-                  <th>Actividad</th>
-                  <th>Fecha del turno</th>
-                  <th>Metodo</th>
-                  <th>Estado</th>
-                  <th>Fecha de pago</th>
-                  <th>Monto</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pagos.map((pago) => (
-                  <tr key={pago.id}>
-                    <td className="payment-type-cell">
-                      <FaCreditCard />
-                      <span>{mapTipoPago(pago.tipo_pago)}</span>
-                    </td>
-                    <td className="fw-bold text-blue">
-                      {pago.Reserva?.Turno?.Actividad?.nombre || "Pago registrado"}
-                    </td>
-                    <td>
-                      {pago.Reserva?.Turno ? (
-                        <div className="payment-date-cell">
-                          <span>{formatearFecha(pago.Reserva.Turno.fecha)}</span>
-                          <span className="payment-hour-text">
-                            {formatearHora(pago.Reserva.Turno.hora_inicio)}
+      <div className="home-layout singular-layout">
+        <div className="home-panel">
+          {pagos.length === 0 ? (
+            <p className="no-data-text">No tenés pagos registrados por el momento.</p>
+          ) : (
+            <div className="deudores-table-container">
+              <table className="deudores-table">
+                <thead>
+                  <tr>
+                    <th>Fecha de pago</th>
+                    <th><FaCalendarTimes /> Detalle de Clase</th>
+                    <th>Concepto y Método</th>
+                    <th>Estado</th>
+                    <th><FaFileInvoiceDollar /> Monto</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pagos.map((pago) => (
+                    <tr key={pago.pago_id}>
+                      <td className="fecha-deuda">
+                        {formatearFechaCompleta(pago.fecha)}
+                      </td>
+                      <td>
+                        <div className="class-cell">
+                          <strong>{pago.clase.actividad}</strong>
+                          <span>{pago.clase.horario}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem", alignItems: "flex-start" }}>
+                          <span className={`concepto-badge ${pago.concepto.toLowerCase()}`}>
+                            {formatearConcepto(pago.concepto)}
+                          </span>
+                          <span className="metodo-texto">
+                            {formatearMetodo(pago.metodo_pago)}
                           </span>
                         </div>
-                      ) : (
-                        "Sin turno asociado"
-                      )}
-                    </td>
-                    <td>{mapMetodoPago(pago.metodo_pago)}</td>
-                    <td>
-                      <span className={`badge-payment ${pago.estado.toLowerCase()}`}>
-                        {mapEstadoPago(pago.estado)}
-                      </span>
-                    </td>
-                    <td>{formatearFechaCompleta(pago.createdAt)}</td>
-                    <td className="payment-amount">{formatearMonto(pago.monto)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                      </td>
+                      <td>
+                        <span className={`estado-badge ${pago.estado.toLowerCase()}`}>
+                          {pago.estado === "COMPLETADO" ? "Completado" : pago.estado === "PENDIENTE" ? "Pendiente" : "Rechazado"}
+                        </span>
+                      </td>
+                      <td className={`monto-deuda-cell ${pago.concepto === 'DEVOLUCION_SENA' ? 'monto-positivo' : ''}`}>
+                        {pago.concepto === 'DEVOLUCION_SENA' ? '+' : ''}{formatearMonto(pago.monto)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
