@@ -106,7 +106,7 @@ function calcularMontoSena(reserva) {
     return precioClase * 0.5;
 }
 
-async function calcularMontoAbonoMensual(turnoId, usuarioId, fechaBase = new Date()) {
+async function calcularMontoAbonoMensual(turnoId, usuarioId) {
     const turno = await turnoService.getTurnoById(turnoId);
     const precioMensual = Number(turno?.Actividad?.precio_mensual);
 
@@ -114,23 +114,19 @@ async function calcularMontoAbonoMensual(turnoId, usuarioId, fechaBase = new Dat
         throw new Error('No se pudo calcular el monto del abono mensual');
     }
 
-    let allDates = getAllClassesInSportifyMonth(turno.dia_semana, fechaBase);
-    let remainingDatesRaw = getRemainingClassesInSportifyMonth(turno.dia_semana, fechaBase);
+    const fechaBase = new Date();
 
-    // Si no quedan clases en el mes actual, se calcula para el mes siguiente (alineado con la validación de abono)
+    const remainingDatesRaw = getRemainingClassesInSportifyMonth(turno.dia_semana, fechaBase);
+
+    // Por restricciones del sistema, el monto base del mes siempre tiene el 20% de descuento
+    const montoBaseMes = precioMensual * 0.8;
+
+    // Si no quedan clases en el mes actual, el abono aplica para el mes siguiente (mes completo sin clases transcurridas)
     if (remainingDatesRaw.length === 0) {
-        const ref = new Date(fechaBase);
-        const day = ref.getDate();
-        let nextCycleDate = new Date(ref);
-        if (day >= 11) {
-            nextCycleDate.setMonth(nextCycleDate.getMonth() + 1);
-            nextCycleDate.setDate(15);
-        } else {
-            nextCycleDate.setDate(15);
-        }
-        allDates = getAllClassesInSportifyMonth(turno.dia_semana, nextCycleDate);
-        remainingDatesRaw = getRemainingClassesInSportifyMonth(turno.dia_semana, nextCycleDate);
+        return Number(montoBaseMes.toFixed(2));
     }
+
+    const allDates = getAllClassesInSportifyMonth(turno.dia_semana, fechaBase);
 
     const ahora = new Date();
     const remainingDates = remainingDatesRaw.filter(fecha => {
@@ -144,8 +140,6 @@ async function calcularMontoAbonoMensual(turnoId, usuarioId, fechaBase = new Dat
     const clasesRestantes = remainingDates.length;
     const clasesTranscurridas = clasesDelMes - clasesRestantes;
 
-    const sinDescuento = await usuarioTieneSuspension(usuarioId);
-    const montoBaseMes = sinDescuento ? precioMensual : precioMensual * 0.8;
     const costoPorClase = montoBaseMes / clasesDelMes;
 
     const montoCalculado = montoBaseMes - (costoPorClase * clasesTranscurridas);
@@ -194,9 +188,9 @@ export async function obtenerMontoSenaTurnoCliente({ turnoId }) {
     };
 }
 
-export async function obtenerMontoSuscripcionMensualCliente({ turnoId, fecha }, usuarioId) {
+export async function obtenerMontoSuscripcionMensualCliente({ turnoId }, usuarioId) {
     return {
-        monto: await calcularMontoAbonoMensual(turnoId, usuarioId, fecha)
+        monto: await calcularMontoAbonoMensual(turnoId, usuarioId)
     };
 }
 
@@ -262,8 +256,8 @@ export async function pagarSenaPresencial({ reservaId }, empleadoId) {
     };
 }
 
-export async function pagarSuscripcionMensualCliente({ turnoId, tarjetaDebito, fecha }, usuarioId) {
-    const montoNumerico = await calcularMontoAbonoMensual(turnoId, usuarioId, fecha);
+export async function pagarSuscripcionMensualCliente({ turnoId, tarjetaDebito }, usuarioId) {
+    const montoNumerico = await calcularMontoAbonoMensual(turnoId, usuarioId);
 
     const resultadoPago = await pagoService.pago(tarjetaDebito);
 
