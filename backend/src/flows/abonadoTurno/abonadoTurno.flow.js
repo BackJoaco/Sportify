@@ -35,7 +35,8 @@ export async function altaAbonado(usuarioId, turnoId, fechaBase = new Date()) {
         fecha: fecha,
         tipo_reserva: 'ABONADO',
         estado: 'CONFIRMADA',
-        estado_pago: 'PAGADO_COMPLETO'
+        estado_pago: 'PAGADO_COMPLETO',
+        codigo_qr: `QR-${turnoId}-${usuarioId}-${fecha}`
       });
       reservasCreadas++;
     }
