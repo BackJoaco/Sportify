@@ -80,6 +80,13 @@ export async function updateEstado(id, estado, transaction) {
   );
 }
 
+export async function quitarDescuento(id) {
+  return AbonadoTurno.update(
+    { pierde_descuento: 1 },
+    { where: { id } }
+  );
+}
+
 export async function darDeBaja(id) {
   return AbonadoTurno.update(
     {

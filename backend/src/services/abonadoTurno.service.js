@@ -36,6 +36,10 @@ export function updateEstado(id, estado, transaction) {
   return abonadoTurnoRepository.updateEstado(id, estado, transaction);
 }
 
+export function quitarDescuento(id) {
+  return abonadoTurnoRepository.quitarDescuento(id);
+}
+
 export function darDeBaja(id) {
   return abonadoTurnoRepository.darDeBaja(id);
 }

@@ -323,6 +323,7 @@ async function _procesarCancelacionAbonado(reserva, usuarioId, horasFaltantes) {
 
   if (nuevoEstado === 'SUSPENDIDO') {
     await reservaService.cancelarReservasFuturasAbonadoByUsuarioTurno(usuarioId, reserva.turno_id);
+    await abonadoTurnoService.quitarDescuento(abono.id);
     
     // Obtener precio mensual
     const turno = await turnoService.getTurnoById(reserva.turno_id);
