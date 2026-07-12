@@ -13,7 +13,8 @@ export async function getMisPagos(req, res) {
     try {
         const pagos = await pagoService.findByUsuarioId(req.usuario.id);
 
-        return res.status(200).json(pagos);
+        // Lo envolvemos en "data" para estandarizar la respuesta
+        return res.status(200).json({ data: pagos }); 
     } catch (error) {
         return res.status(400).json({ message: error.message });
     }
