@@ -734,6 +734,13 @@ export async function seedCreditosCliente1(transaction) {
       },
       transaction
     });
+
+    await Notificacion.create({
+      usuario_id: cliente1.id,
+      mensaje: 'Recordatorio de Pago: Tienes tiempo hasta el día 10 de este mes para regularizar el pago de tu cuota de abonado.',
+      leida: false,
+      createdAt: new Date('2026-07-01T10:00:00Z')
+    }, { transaction });
   }
 }
 
