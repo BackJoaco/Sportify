@@ -889,12 +889,7 @@ export default function DetailTurn() {
           <div className="data-grid">
             <div>
               <span>Fecha</span>
-              <input
-                className="form-input-inline"
-                type="date"
-                value={fechaClase}
-                onChange={(e) => fetchTurnoData(e.target.value)}
-              />
+              <p>{fechaClase}</p>
             </div>
             <div>
               <span>Cupos disponibles</span>
