@@ -300,7 +300,7 @@ export default function ClientHome() {
       </section>
 
       <section className="home-layout">
-        <article className="home-panel profile-panel">
+        <article className="home-panel profile-panel" >
           <div className="panel-title">
             <FaIdCard />
             <h2>Mis datos</h2>
