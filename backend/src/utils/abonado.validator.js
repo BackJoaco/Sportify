@@ -4,7 +4,7 @@ import * as turnoService from '../services/turno.service.js';
 import * as usuarioService from '../services/usuario.service.js';
 import { getRemainingClassesInSportifyMonth, getMesSportify } from './date.utils.js';
 
-export async function validarPuedeAbonarse(usuarioId, turnoId, fechaBase = new Date()) {
+export async function validarPuedeAbonarse(usuarioId, turnoId, fechaBase = new Date(), regularizacion = false) {
   const usuario = await usuarioService.getProfile(usuarioId);
   const turno = await turnoService.getTurnoById(turnoId);
 
@@ -46,7 +46,7 @@ export async function validarPuedeAbonarse(usuarioId, turnoId, fechaBase = new D
   }
 
   const abonadoSuspendido = await abonadoTurnoService.findSuspendidoByMes(usuarioId, turnoId, currentMonthInt);
-  if (abonadoSuspendido) {
+  if (abonadoSuspendido && !regularizacion) {
     return { puede: false, motivo: 'El cliente se encuentra suspendido del abono, para regularizar su situacion pague en el home' };
   }
 

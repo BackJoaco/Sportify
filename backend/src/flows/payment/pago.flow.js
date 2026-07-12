@@ -327,7 +327,7 @@ export async function pagarSuscripcionPendienteCliente({ pagoId, tarjetaDebito }
     }
 
     // Validar si el usuario puede abonarse para el mes evaluado
-    const validacion = await validarPuedeAbonarse(usuarioId, abonoActual.turno_id, fechaBaseValidacion);
+    const validacion = await validarPuedeAbonarse(usuarioId, abonoActual.turno_id, fechaBaseValidacion, true);
     if (!validacion.puede) {
         throw new Error(validacion.motivo);
     }

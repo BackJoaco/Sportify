@@ -323,6 +323,19 @@ async function _procesarCancelacionAbonado(reserva, usuarioId, horasFaltantes) {
 
   if (nuevoEstado === 'SUSPENDIDO') {
     await reservaService.cancelarReservasFuturasAbonadoByUsuarioTurno(usuarioId, reserva.turno_id);
+    
+    // Obtener precio mensual
+    const turno = await turnoService.getTurnoById(reserva.turno_id);
+    const precioMensual = Number(turno?.Actividad?.precio_mensual || 0);
+
+    // Generar pago de suscripción mensual pendiente
+    await pagoService.registrarSuscripcionMensualPendiente({
+      monto: precioMensual,
+      usuarioId,
+      abonadoTurnoId: abono.id,
+      metodoPago: 'MERCADO_PAGO'
+    });
+
     mensajeExtra = ` Llegaste al límite de 3 cancelaciones. Tu abono ha sido suspendido y todas tus clases restantes del mes fueron canceladas.`;
   } else {
     mensajeExtra = ` (Llevas ${nuevasCancelaciones} de 3 cancelaciones permitidas en el mes).`;

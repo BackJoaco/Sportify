@@ -290,3 +290,25 @@ export async function registrarRestoTurno({
 export async function asociarPagoConAbono(usuarioId, abonadoTurnoId, options = {}) {
     return pagoRepository.asociarPagoConAbono(usuarioId, abonadoTurnoId, options);
 }
+
+export async function registrarSuscripcionMensualPendiente({
+    monto,
+    usuarioId,
+    abonadoTurnoId,
+    metodoPago = 'MERCADO_PAGO'
+}) {
+    const montoNumerico = Number(monto);
+
+    if (!monto || Number.isNaN(montoNumerico) || montoNumerico <= 0) {
+        throw new Error('Debe ingresar un monto valido para la suscripcion mensual');
+    }
+
+    return pagoRepository.create({
+        monto,
+        tipo_pago: 'SUSCRIPCION_MENSUAL',
+        metodo_pago: metodoPago,
+        estado: 'PENDIENTE',
+        usuario_id: usuarioId,
+        abonado_turno_id: abonadoTurnoId
+    });
+}
