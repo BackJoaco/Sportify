@@ -269,7 +269,8 @@ export async function registrarRestoTurno({
     monto,
     reservaId,
     usuarioId,
-    metodoPago = 'EFECTIVO'
+    metodoPago = 'EFECTIVO',
+    estado = 'COMPLETADO'
 }) {
     const montoNumerico = Number(monto);
 
@@ -281,7 +282,7 @@ export async function registrarRestoTurno({
         monto,
         tipo_pago: 'RESTO_TURNO',
         metodo_pago: metodoPago,
-        estado: 'COMPLETADO',
+        estado: estado,
         reserva_id: reservaId,
         usuario_id: usuarioId
     });
@@ -311,4 +312,8 @@ export async function registrarSuscripcionMensualPendiente({
         usuario_id: usuarioId,
         abonado_turno_id: abonadoTurnoId
     });
+}
+
+export async function findRestoTurnoPendienteByReserva(reservaId) {
+    return pagoRepository.findRestoTurnoPendienteByReserva(reservaId);
 }

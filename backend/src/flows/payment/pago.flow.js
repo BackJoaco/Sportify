@@ -214,6 +214,14 @@ export async function pagarSenaReserva({ reservaId, tarjetaDebito }) {
         usuarioId: reserva.usuario_id
     });
 
+    await pagoService.registrarRestoTurno({
+        monto: montoSena,
+        reservaId,
+        usuarioId: reserva.usuario_id,
+        metodoPago: 'EFECTIVO',
+        estado: 'PENDIENTE'
+    });
+
     return {
         ...resultadoPago,
         pago,
@@ -245,6 +253,14 @@ export async function pagarSenaPresencial({ reservaId }, empleadoId) {
         usuarioId: reserva.usuario_id,
         metodoPago: 'EFECTIVO',
         empleadoId
+    });
+
+    await pagoService.registrarRestoTurno({
+        monto: montoSena,
+        reservaId,
+        usuarioId: reserva.usuario_id,
+        metodoPago: 'EFECTIVO',
+        estado: 'PENDIENTE'
     });
 
     return {
